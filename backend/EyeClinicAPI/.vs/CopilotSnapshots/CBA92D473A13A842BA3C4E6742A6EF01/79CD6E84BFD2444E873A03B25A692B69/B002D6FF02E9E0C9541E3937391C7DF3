@@ -1,0 +1,50 @@
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace EyeClinicAPI.Models
+{
+    public class Appointment
+    {
+        [Key]
+        public int AppointmentId { get; set; }
+
+        [Required]
+        public int DoctorId { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string PatientName { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(50)]
+        public string PatientId { get; set; } = string.Empty;
+
+        [Required]
+        public DateTime AppointmentDate { get; set; }
+
+        [Required]
+        public TimeSpan AppointmentTime { get; set; }
+
+        public int DurationMinutes { get; set; } = 30;
+
+        [Required]
+        public AppointmentStatus Status { get; set; } = AppointmentStatus.Upcoming;
+
+        [StringLength(500)]
+        public string? Notes { get; set; }
+
+        [StringLength(200)]
+        public string? ReasonForVisit { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [StringLength(10)]
+        public string Gender { get; set; } = "Male"; // "Male" or "Female"
+
+        public DateTime? UpdatedAt { get; set; }
+
+        // Navigation Property
+        [ForeignKey("DoctorId")]
+        public Doctor? Doctor { get; set; }
+    }
+}

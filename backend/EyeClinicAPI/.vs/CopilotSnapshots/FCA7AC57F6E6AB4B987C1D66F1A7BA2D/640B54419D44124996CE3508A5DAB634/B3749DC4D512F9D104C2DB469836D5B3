@@ -1,0 +1,66 @@
+﻿import React, { useState } from 'react'
+
+const initial = {
+  patientName: '',
+  patientId: '',
+  phone: '',
+  email: '',
+  appointmentDate: '',
+  appointmentTime: '',
+  doctorId: 1,
+  patientGender: 'Male',
+  reasonForVisit: ''
+}
+
+export default function AppointmentsForm(){
+  const [form, setForm] = useState(initial)
+  const [message, setMessage] = useState('')
+
+  function onChange(e){
+    const {name, value} = e.target
+    setForm(s => ({...s, [name]: value}))
+  }
+
+  async function onSubmit(e){
+    e.preventDefault()
+    setMessage('Saving...')
+    try{
+      const res = await fetch('https://localhost:7144/api/Appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          PatientName: form.patientName,
+          PatientId: form.patientId,
+          Phone: form.phone,
+          Email: form.email,
+          AppointmentDate: form.appointmentDate,
+          AppointmentTime: form.appointmentTime + ':00',
+          DoctorId: parseInt(form.doctorId),
+          PatientGender: form.patientGender
+        })
+      })
+      if(!res.ok) throw new Error('Failed')
+      setMessage('Saved')
+      setForm(initial)
+    }catch(err){
+      setMessage('Error saving')
+    }
+  }
+
+  return (
+    <form onSubmit={onSubmit}>
+      <h2>New Appointment</h2>
+      <label>Patient name <input name="patientName" value={form.patientName} onChange={onChange} required /></label>
+      <label>Patient ID <input name="patientId" value={form.patientId} onChange={onChange} required /></label>
+      <label>Phone <input name="phone" value={form.phone} onChange={onChange} /></label>
+      <label>Email <input name="email" value={form.email} onChange={onChange} /></label>
+      <label>Date <input type="date" name="appointmentDate" value={form.appointmentDate} onChange={onChange} required /></label>
+      <label>Time <input type="time" name="appointmentTime" value={form.appointmentTime} onChange={onChange} required /></label>
+      <label>Doctor ID <input name="doctorId" value={form.doctorId} onChange={onChange} /></label>
+      <label>Gender <select name="patientGender" value={form.patientGender} onChange={onChange}><option>Male</option><option>Female</option></select></label>
+      <label>Reason <textarea name="reasonForVisit" value={form.reasonForVisit} onChange={onChange} /></label>
+      <button type="submit">Save</button>
+      <div>{message}</div>
+    </form>
+  )
+}

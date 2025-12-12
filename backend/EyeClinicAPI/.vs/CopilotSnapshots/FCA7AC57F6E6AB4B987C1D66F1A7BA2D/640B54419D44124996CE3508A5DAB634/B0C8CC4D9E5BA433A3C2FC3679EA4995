@@ -1,0 +1,41 @@
+﻿import React, { useEffect, useState } from 'react'
+
+export default function Dashboard(){
+  const [stats, setStats] = useState(null)
+  const [today, setToday] = useState([])
+
+  useEffect(()=>{
+    fetchStats()
+    fetchToday()
+  },[])
+
+  async function fetchStats(){
+    const res = await fetch('https://localhost:7144/api/Dashboard/Stats')
+    if(res.ok) setStats(await res.json())
+  }
+
+  async function fetchToday(){
+    const res = await fetch('https://localhost:7144/api/Dashboard/Today')
+    if(res.ok) setToday(await res.json())
+  }
+
+  return (
+    <div>
+      <h2>Dashboard</h2>
+      {stats ? (
+        <div style={{display:'flex', gap:12}}>
+          <div>Total: {stats.TotalAppointments}</div>
+          <div>Completed: {stats.CompletedAppointments}</div>
+          <div>Today: {stats.TodayAppointments}</div>
+          <div>Upcoming: {stats.UpcomingAppointments}</div>
+          <div>Cancelled: {stats.CancelledAppointments}</div>
+        </div>
+      ) : <div>Loading stats...</div>}
+
+      <h3>Today's Appointments</h3>
+      <ul>
+        {today.map((a, idx)=> <li key={idx}>{a.Time} - {a.PatientName} ({a.PatientId}) - {a.Status} - {a.Doctor}</li>)}
+      </ul>
+    </div>
+  )
+}

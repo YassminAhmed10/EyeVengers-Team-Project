@@ -1,0 +1,447 @@
+/* EMR Components Styling */
+
+/* Patient Info Section */
+.patient-info-section {
+  background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
+  border: 2px solid #cae8ff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.patient-info-section .MuiTypography-subtitle1 {
+  color: #1e3a5f;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.patient-info-section .MuiTextField-root {
+  background: white;
+}
+
+.patient-info-section .MuiOutlinedInput-root {
+  border-radius: 8px;
+}
+
+.patient-info-section .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #1e3a5f;
+}
+
+.patient-info-section .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #1e3a5f;
+  border-width: 2px;
+}
+
+.patient-info-section .MuiInputLabel-root.Mui-focused {
+  color: #1e3a5f;
+}
+
+/* Tabs Styling */
+.MuiTabs-root {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 0.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e0e7ff;
+}
+
+.MuiTab-root {
+  text-transform: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #4a6fa5;
+  border-radius: 8px;
+  margin: 0 4px;
+  transition: all 0.3s ease;
+}
+
+.MuiTab-root:hover {
+  background: #f0f8ff;
+  color: #1e3a5f;
+}
+
+.MuiTab-root.Mui-selected {
+  background: linear-gradient(135deg, #cae8ff 0%, #a8d5ff 100%);
+  color: #1e3a5f;
+  font-weight: 700;
+}
+
+.MuiTabs-indicator {
+  display: none;
+}
+
+/* Form Sections */
+.form-section {
+  background: white;
+  border: 2px solid #e0e7ff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.form-section .MuiTypography-h6,
+.form-section .MuiTypography-subtitle1 {
+  color: #1e3a5f;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+/* Text Fields */
+.MuiTextField-root {
+  background: #f8faff;
+  border-radius: 8px;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root:hover {
+  background: #ffffff;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root.Mui-focused {
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+}
+
+.MuiTextField-root .MuiOutlinedInput-notchedOutline {
+  border-color: #cae8ff;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #1e3a5f;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #1e3a5f;
+  border-width: 2px;
+}
+
+.MuiTextField-root .MuiInputLabel-root {
+  color: #4a6fa5;
+  font-weight: 500;
+}
+
+.MuiTextField-root .MuiInputLabel-root.Mui-focused {
+  color: #1e3a5f;
+  font-weight: 600;
+}
+
+/* Buttons */
+.MuiButton-root {
+  text-transform: none;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 8px 16px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.MuiButton-contained {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5575 100%);
+}
+
+.MuiButton-contained:hover {
+  background: linear-gradient(135deg, #2d5575 0%, #1e3a5f 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+}
+
+.MuiButton-outlined {
+  border-width: 2px;
+  border-color: #1e3a5f;
+  color: #1e3a5f;
+}
+
+.MuiButton-outlined:hover {
+  border-width: 2px;
+  background: #1e3a5f;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.MuiButton-outlinedError {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.MuiButton-outlinedError:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+/* Clear Button */
+.MuiBox-root .MuiButton-outlinedError {
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Select Fields */
+.MuiSelect-root {
+  border-radius: 8px;
+}
+
+.MuiSelect-select {
+  background: #f8faff;
+}
+
+.MuiSelect-select:hover {
+  background: #ffffff;
+}
+
+/* Radio Groups */
+.MuiFormControlLabel-root {
+  margin-right: 1.5rem;
+}
+
+.MuiRadio-root {
+  color: #4a6fa5;
+}
+
+.MuiRadio-root.Mui-checked {
+  color: #1e3a5f;
+}
+
+/* Checkboxes */
+.MuiCheckbox-root {
+  color: #4a6fa5;
+}
+
+.MuiCheckbox-root.Mui-checked {
+  color: #1e3a5f;
+}
+
+/* Table Styling */
+.MuiTable-root {
+  border: 1px solid #e0e7ff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.MuiTableHead-root {
+  background: linear-gradient(135deg, #cae8ff 0%, #a8d5ff 100%);
+}
+
+.MuiTableHead-root .MuiTableCell-root {
+  color: #1e3a5f;
+  font-weight: 700;
+  border-bottom: 2px solid #1e3a5f;
+}
+
+.MuiTableBody-root .MuiTableCell-root {
+  border-bottom: 1px solid #e0e7ff;
+}
+
+.MuiTableRow-root:hover {
+  background: #f8faff;
+}
+
+/* Dividers */
+.MuiDivider-root {
+  border-color: #e0e7ff;
+  margin: 1.5rem 0;
+}
+
+/* Dark Mode */
+[data-theme="dark"] .patient-info-section {
+  background: linear-gradient(135deg, #1e293b 0%, #1a3f5f 100%);
+  border-color: #2d5575;
+}
+
+[data-theme="dark"] .patient-info-section .MuiTypography-subtitle1 {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .patient-info-section .MuiTextField-root {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .patient-info-section .MuiInputBase-input {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .patient-info-section .MuiOutlinedInput-notchedOutline {
+  border-color: #2d5575;
+}
+
+[data-theme="dark"] .MuiTabs-root {
+  background: #1e293b;
+  border-color: #2d5575;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .MuiTab-root {
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .MuiTab-root:hover {
+  background: #1a3f5f;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .MuiTab-root.Mui-selected {
+  background: linear-gradient(135deg, #2d5575 0%, #1a3f5f 100%);
+  color: #cae8ff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(202, 232, 255, 0.2);
+}
+
+[data-theme="dark"] .form-section {
+  background: #1e293b;
+  border-color: #2d5575;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .form-section .MuiTypography-h6,
+[data-theme="dark"] .form-section .MuiTypography-subtitle1 {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .form-section .MuiTypography-root {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .form-section .material-symbols-outlined {
+  color: #cae8ff;
+}
+
+[data-theme="dark"] .MuiTextField-root {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .MuiTextField-root .MuiOutlinedInput-root {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .MuiTextField-root .MuiOutlinedInput-root:hover {
+  background: #1a3f5f;
+}
+
+[data-theme="dark"] .MuiTextField-root .MuiOutlinedInput-root.Mui-focused {
+  background: #1a3f5f;
+}
+
+[data-theme="dark"] .MuiTextField-root .MuiOutlinedInput-notchedOutline {
+  border-color: #2d5575;
+}
+
+[data-theme="dark"] .MuiTextField-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #4a6fa5;
+}
+
+[data-theme="dark"] .MuiTextField-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #cae8ff;
+  border-width: 2px;
+}
+
+[data-theme="dark"] .MuiTextField-root .MuiInputLabel-root {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .MuiTextField-root .MuiInputLabel-root.Mui-focused {
+  color: #cae8ff;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .MuiInputBase-input {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .MuiInputBase-input::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+[data-theme="dark"] .MuiButton-contained {
+  background: linear-gradient(135deg, #cae8ff 0%, #a8d5ff 100%);
+  color: #1e3a5f;
+}
+
+[data-theme="dark"] .MuiButton-contained:hover {
+  background: linear-gradient(135deg, #a8d5ff 0%, #cae8ff 100%);
+}
+
+[data-theme="dark"] .MuiButton-outlined {
+  border-color: #cae8ff;
+  color: #cae8ff;
+}
+
+[data-theme="dark"] .MuiButton-outlined:hover {
+  background: #cae8ff;
+  color: #1e3a5f;
+}
+
+[data-theme="dark"] .MuiTable-root {
+  border-color: #2d5575;
+}
+
+[data-theme="dark"] .MuiTableHead-root {
+  background: linear-gradient(135deg, #2d5575 0%, #1a3f5f 100%);
+}
+
+[data-theme="dark"] .MuiTableHead-root .MuiTableCell-root {
+  color: #cae8ff;
+  border-bottom-color: #cae8ff;
+  font-weight: 700;
+}
+
+[data-theme="dark"] .MuiTableBody-root .MuiTableCell-root {
+  border-bottom-color: #2d5575;
+  color: #e2e8f0;
+  background: #1e293b;
+}
+
+[data-theme="dark"] .MuiTableRow-root:hover {
+  background: #1a3f5f !important;
+}
+
+[data-theme="dark"] .MuiTableRow-root:hover .MuiTableCell-root {
+  background: transparent;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .patient-info-section {
+    padding: 1rem;
+  }
+  
+  .form-section {
+    padding: 1rem;
+  }
+  
+  .MuiTabs-root {
+    padding: 0.25rem;
+  }
+  
+  .MuiTab-root {
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .patient-info-section {
+    padding: 0.75rem;
+  }
+  
+  .form-section {
+    padding: 0.75rem;
+  }
+  
+  .MuiButton-root {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+}

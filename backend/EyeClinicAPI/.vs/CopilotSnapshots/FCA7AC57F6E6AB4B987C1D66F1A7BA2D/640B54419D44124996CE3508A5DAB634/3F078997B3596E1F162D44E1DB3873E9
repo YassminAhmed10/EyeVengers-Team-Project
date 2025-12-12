@@ -1,0 +1,99 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using EyeClinicAPI.Data;
+using EyeClinicAPI.Models;
+
+namespace EyeClinicAPI.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class DashboardController : ControllerBase
+    {
+        private readonly EyeClinicDbContext _context;
+
+        public DashboardController(EyeClinicDbContext context)
+        {
+            _context = context;
+        }
+
+        [HttpGet("Stats")]
+        public async Task<IActionResult> GetDashboardStats()
+        {
+            var today = new DateTime(2023, 2, 15); // تاريخ Dashboard
+
+            var stats = new
+            {
+                TotalAppointments = await _context.Appointments.CountAsync(),
+                CompletedAppointments = await _context.Appointments
+                    .CountAsync(a => a.Status == AppointmentStatus.Completed),
+                TodayAppointments = await _context.Appointments
+                    .CountAsync(a => a.AppointmentDate == today),
+                UpcomingAppointments = await _context.Appointments
+                    .CountAsync(a => a.Status == AppointmentStatus.Upcoming &&
+                           a.AppointmentDate >= today),
+                CancelledAppointments = await _context.Appointments
+                    .CountAsync(a => a.Status == AppointmentStatus.Cancelled)
+            };
+
+            return Ok(stats);
+        }
+
+        [HttpGet("Today")]
+        public async Task<IActionResult> GetTodayAppointments()
+        {
+            var today = new DateTime(2023, 2, 15);
+            var appointments = await _context.Appointments
+                .Where(a => a.AppointmentDate == today)
+                .Include(a => a.Doctor)
+                .OrderBy(a => a.AppointmentTime)
+                .Select(a => new
+                {
+                    Time = a.AppointmentTime.ToString(@"hh\:mm"),
+                    a.PatientName,
+                    a.PatientId,
+                    Status = a.Status.ToString(),
+                    Doctor = a.Doctor.FullName
+                })
+                .ToListAsync();
+
+            return Ok(appointments);
+        }
+
+        [HttpGet("Gender")]
+        public async Task<IActionResult> GetGenderStats()
+        {
+            var maleCount = await _context.Appointments
+                .CountAsync(a => a.PatientGender == PatientGender.Male);
+
+            var femaleCount = await _context.Appointments
+                .CountAsync(a => a.PatientGender == PatientGender.Female);
+
+            return Ok(new
+            {
+                Male = maleCount,
+                Female = femaleCount
+            });
+        }
+
+        [HttpGet("All")]
+        public async Task<IActionResult> GetAllAppointments()
+        {
+            var appointments = await _context.Appointments
+                .OrderBy(a => a.AppointmentDate)
+                .ThenBy(a => a.AppointmentTime)
+                .Select(a => new
+                {
+                    a.AppointmentId,
+                    Date = a.AppointmentDate.ToString("yyyy-MM-dd"),
+                    Time = a.AppointmentTime.ToString(@"hh\:mm"),
+                    a.PatientName,
+                    a.PatientId,
+                    Status = a.Status.ToString(),
+                    Gender = a.PatientGender.ToString()
+                })
+                .ToListAsync();
+
+            return Ok(appointments);
+        }
+    }
+}

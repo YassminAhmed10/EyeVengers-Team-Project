@@ -1,0 +1,303 @@
+/* Emergency Cases Styles */
+.emergency-cases {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.emergency-header {
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.emergency-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.expand-toggle-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  width: 36px;
+  height: 36px;
+}
+
+.expand-toggle-btn:hover {
+  background: var(--hover-bg);
+  border-color: var(--text-primary);
+  transform: scale(1.05);
+}
+
+.expand-toggle-btn .material-symbols-outlined {
+  font-size: 1.5rem;
+  transition: transform 0.3s ease;
+}
+
+.expand-toggle-btn .material-symbols-outlined.expanded {
+  transform: rotate(180deg);
+}
+
+.emergency-title-wrapper h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.emergency-icon {
+  font-size: 1.25rem;
+  color: #ef4444;
+  animation: pulse-emergency 2s infinite;
+}
+
+@keyframes pulse-emergency {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+.emergency-badge {
+  background: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+  min-width: 24px;
+  text-align: center;
+  animation: pulse-badge 1.5s infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+.emergency-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.emergency-card {
+  background: var(--primary-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  padding: 12px;
+  transition: all 0.3s ease;
+}
+
+.emergency-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #ef4444;
+}
+
+.emergency-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.patient-info h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 2px 0;
+}
+
+.patient-age {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.severity-badge {
+  font-size: 0.688rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.emergency-card-body {
+  margin-top: 8px;
+}
+
+.condition {
+  font-size: 0.813rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.emergency-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color);
+}
+
+.arrival-time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.arrival-time .material-symbols-outlined {
+  font-size: 1rem;
+}
+
+.status-badge {
+  font-size: 0.688rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 5px;
+}
+
+.status-badge.waiting {
+  background: #fef3c7;
+  color: #f59e0b;
+}
+
+.status-badge.in-progress {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
+.no-emergencies {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+  animation: slideDown 0.3s ease-out;
+}
+
+.no-emergencies .material-symbols-outlined {
+  font-size: 3rem;
+  color: #10b981;
+  margin-bottom: 12px;
+}
+
+.no-emergencies p {
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Dark Mode */
+[data-theme="dark"] .emergency-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .emergency-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .expand-toggle-btn {
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .expand-toggle-btn:hover {
+  background: #334155;
+  border-color: #64748b;
+}
+
+[data-theme="dark"] .status-badge.waiting {
+  background: #78350f;
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .status-badge.in-progress {
+  background: #1e3a8a;
+  color: #60a5fa;
+}
+
+@media (max-width: 768px) {
+  .emergency-cases {
+    padding: 16px;
+    margin-top: 16px;
+  }
+  
+  .emergency-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .emergency-title-wrapper h3 {
+    font-size: 1.1rem;
+  }
+  
+  .emergency-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .emergency-list {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .emergency-cases {
+    padding: 12px;
+  }
+  
+  .emergency-title-wrapper h3 {
+    font-size: 1rem;
+  }
+  
+  .emergency-card {
+    padding: 12px;
+  }
+  
+  .patient-info h4 {
+    font-size: 0.95rem;
+  }
+  
+  .emergency-details {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
