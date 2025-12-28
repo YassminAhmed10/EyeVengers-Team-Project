@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { appointmentsAPI } from '../services/apiConfig';
 import './PatientsChart.css';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -8,9 +9,8 @@ const PatientsChart = () => {
   useEffect(() => {
     const fetchChartData = async () => {
       try {
-        // Get appointments data and create chart
-        const response = await fetch('http://localhost:5201/api/Appointments');
-        const appointments = await response.json();
+        // Get appointments data and create chart based on reason for visit
+        const appointments = await appointmentsAPI.getAll();
         
         // Create last 7 days data
         const last7Days = [];
@@ -25,9 +25,14 @@ const PatientsChart = () => {
             return apptDate === dateStr;
           });
           
+          // Count unique reasons for visit
+          const reasonsForVisit = dayAppointments
+            .filter(a => a.reasonForVisit)
+            .map(a => a.reasonForVisit);
+          
           last7Days.push({
             day: dayName,
-            appointments: dayAppointments.length,
+            appointments: reasonsForVisit.length,
             patients: dayAppointments.length
           });
         }

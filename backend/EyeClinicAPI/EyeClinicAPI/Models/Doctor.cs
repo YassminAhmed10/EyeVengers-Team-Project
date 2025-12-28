@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace EyeClinicAPI.Models
 {
@@ -8,38 +10,50 @@ namespace EyeClinicAPI.Models
         public int DoctorId { get; set; }
 
         [Required]
-        [StringLength(100)]
+        [MaxLength(100)]
         public string FullName { get; set; } = string.Empty;
 
         [Required]
-        [EmailAddress]
-        [StringLength(100)]
+        [MaxLength(100)]
+        public string Specialization { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(100)]
         public string Email { get; set; } = string.Empty;
 
         [Required]
-        [Phone]
-        [StringLength(20)]
+        [MaxLength(20)]
         public string PhoneNumber { get; set; } = string.Empty;
 
-        [StringLength(200)]
-        public string Specialization { get; set; } = "Ophthalmologist";
-
-        [StringLength(50)]
+        [Required]
+        [MaxLength(50)]
         public string LicenseNumber { get; set; } = string.Empty;
+
+        [Required]
+        public string Gender { get; set; } = string.Empty;
 
         public int YearsOfExperience { get; set; }
 
-        public bool IsActive { get; set; } = true;
+        [MaxLength(500)]
+        public string? Qualifications { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [MaxLength(200)]
+        public string? ClinicAddress { get; set; }
+
+        [MaxLength(20)]
+        public string? EmergencyContact { get; set; }
+
+        public bool IsAvailable { get; set; }
+
+        [MaxLength(500)]
+        public string? Notes { get; set; }
+
+        public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
 
-        // Navigation Properties
-        public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
-        public ICollection<DoctorSchedule> Schedules { get; set; } = new List<DoctorSchedule>();
-
-        [StringLength(10)]
-        public string Gender { get; set; } = "Male"; // "Male" or "Female"
+        // Navigation properties
+        public virtual ICollection<Appointment>? Appointments { get; set; }
+        public virtual ICollection<DoctorSchedule>? Schedules { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { appointmentsAPI } from '../services/apiConfig';
 import './AppointmentsCalendar.css';
 
 const AppointmentsCalendar = ({ onDateSelect }) => {
@@ -24,10 +25,10 @@ const AppointmentsCalendar = ({ onDateSelect }) => {
   React.useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const res = await fetch("http://localhost:5201/api/Appointments");
-        const data = await res.json();
+        const data = await appointmentsAPI.getAll();
         setAppointments(data);
-      } catch {
+      } catch (error) {
+        console.error('Error fetching appointments:', error);
         setAppointments([]);
       }
     };
@@ -117,21 +118,22 @@ const AppointmentsCalendar = ({ onDateSelect }) => {
   };
 
   return (
-    <div className="appointments-calendar-card">
-      <h3 className="calendar-title">Your Appointments</h3>
-      <div className="calendar-header">
-        <h4 className="calendar-month">
-          {monthNames[currentDate.getMonth()]}, {currentDate.getFullYear()}
-        </h4>
-        <div className="calendar-navigation">
-          <button className="nav-btn" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}>
-            <span className="material-symbols-outlined">chevron_left</span>
-          </button>
-          <button className="nav-btn" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}>
-            <span className="material-symbols-outlined">chevron_right</span>
-          </button>
+    <div className="dashboard-calendar-wrapper">
+      <div className="appointments-calendar-card">
+        <h3 className="calendar-title">Your Appointments</h3>
+        <div className="calendar-header">
+          <div className="calendar-navigation">
+            <button className="nav-btn" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}>
+              <span className="material-symbols-outlined">chevron_left</span>
+            </button>
+            <button className="nav-btn" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}>
+              <span className="material-symbols-outlined">chevron_right</span>
+            </button>
+          </div>
+          <h4 className="calendar-month">
+            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+          </h4>
         </div>
-      </div>
       <div className="calendar-grid">
         <div className="calendar-weekdays">
           <span>S</span>
@@ -193,6 +195,7 @@ const AppointmentsCalendar = ({ onDateSelect }) => {
           })}
         </div>
       </div>
+    </div>
     </div>
   );
 };

@@ -65,13 +65,12 @@ const ReceptionistLayout = () => {
           toggleSidebar={toggleSidebar}
         />
         <main 
-          className="overflow-y-auto overflow-x-hidden" 
+          className="overflow-y-auto overflow-x-hidden flex-1" 
           style={{ 
             background: 'var(--primary-bg)', 
-            minHeight: 'calc(100vh - 70px)',
             width: '100%',
             maxWidth: '100%',
-            padding: '12px 16px'
+            padding: '20px 24px'
           }}
         >
           <Outlet />

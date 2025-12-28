@@ -1,0 +1,1479 @@
+/* BookAppointment.css */
+@import './AboutUs.css';
+@import './PatientHomepage.css';
+
+.book-appointment-page {
+    min-height: 100vh;
+    background-color: white;
+    background-image: url('/assets/ok.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    position: relative;
+}
+
+.book-appointment-page .appointment-content {
+    padding: 2rem;
+    padding-top: 100px; /* Space for fixed header */
+    position: relative;
+    z-index: 1;
+}
+
+.book-appointment-page .appointment-header {
+    text-align: center;
+    color: white;
+    margin-bottom: 2rem;
+}
+
+.book-appointment-page .appointment-header h1 {
+    font-size: 2.5rem;
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.book-appointment-page .appointment-header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.book-appointment-page .appointment-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    padding: 3rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* Step Indicator - Scoped to book-appointment-page only */
+.book-appointment-page .step-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+.book-appointment-page .step-indicator::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    right: 10%;
+    width: 80%;
+    height: 2px;
+    background: #e0e0e0;
+    z-index: 0;
+}
+
+.book-appointment-page .step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.book-appointment-page .step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.book-appointment-page .step.active .step-number {
+    background: #667eea;
+    color: white;
+}
+
+.book-appointment-page .step.current .step-number {
+    background: #764ba2;
+    color: white;
+    box-shadow: 0 0 0 4px rgba(118, 75, 162, 0.2);
+}
+
+.book-appointment-page .step-label {
+    font-size: 0.85rem;
+    color: #666;
+    text-align: center;
+}
+
+.book-appointment-page .step.active .step-label {
+    color: #333;
+    font-weight: 600;
+}
+
+/* Form Styles - Scoped to book-appointment-page */
+.book-appointment-page .appointment-form h2 {
+    color: #333;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: 1.7rem;
+    border-bottom: 3px solid #667eea;
+    padding-bottom: 0.8rem;
+}
+
+/* Appointment Details Layout */
+.book-appointment-page .appointment-details-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    margin-top: 2rem;
+}
+
+.book-appointment-page .calendar-wrapper,
+.book-appointment-page .visit-details-wrapper {
+    background: #f8f9ff;
+    padding: 1.5rem;
+    border-radius: 15px;
+    border: 2px solid #e8ebf9;
+}
+
+.book-appointment-page .section-subtitle {
+    color: #667eea;
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-weight: 600;
+}
+
+.book-appointment-page .appointment-summary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.5rem;
+    border-radius: 12px;
+    color: white;
+    margin-top: 1.5rem;
+}
+
+.book-appointment-page .appointment-summary h4 {
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.book-appointment-page .summary-item {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 0;
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.book-appointment-page .summary-item:last-child {
+    border-bottom: none;
+}
+
+.book-appointment-page .visit-details-wrapper textarea {
+    min-height: 200px;
+    resize: vertical;
+}
+
+/* Appointment Details Layout */
+.book-appointment-page .appointment-details-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    margin-top: 2rem;
+}
+
+.book-appointment-page .calendar-wrapper,
+.book-appointment-page .visit-details-wrapper {
+    background: #f8f9ff;
+    padding: 1.5rem;
+    border-radius: 15px;
+    border: 2px solid #e8ebf9;
+}
+
+.book-appointment-page .section-subtitle {
+    color: #667eea;
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-weight: 600;
+}
+
+.book-appointment-page .appointment-summary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.5rem;
+    border-radius: 12px;
+    color: white;
+    margin-top: 1.5rem;
+}
+
+.book-appointment-page .appointment-summary h4 {
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.book-appointment-page .summary-item {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 0;
+    font-size: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.book-appointment-page .summary-item:last-child {
+    border-bottom: none;
+}
+
+.book-appointment-page .visit-details-wrapper textarea {
+    min-height: 200px;
+    resize: vertical;
+}
+
+.book-appointment-page .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+}
+
+.book-appointment-page .form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.book-appointment-page .form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.book-appointment-page .form-group label {
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    font-size: 1.05rem;
+}
+
+.book-appointment-page .form-group label svg {
+    font-size: 1.4rem;
+    color: #667eea;
+    margin-bottom: 0.2rem;
+}
+
+.book-appointment-page .form-group input,
+.book-appointment-page .form-group select,
+.book-appointment-page .form-group textarea {
+    padding: 1.3rem 1.4rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    background: #fafafa;
+}
+
+.book-appointment-page .form-group input:focus,
+.book-appointment-page .form-group select:focus,
+.book-appointment-page .form-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.book-appointment-page .section-title {
+    grid-column: 1 / -1;
+    color: #667eea;
+    font-size: 1.2rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.book-appointment-page .visit-details-wrapper textarea {
+    min-height: 200px;
+    resize: vertical;
+}
+
+/* Payment Notice Section - Scoped to book-appointment-page */
+.book-appointment-page .payment-notice-section {
+    margin-top: 2.5rem;
+    background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+    border-radius: 15px;
+    border: 2px solid #e8ebf9;
+    overflow: hidden;
+}
+
+.book-appointment-page .payment-notice-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: white;
+}
+
+.book-appointment-page .payment-notice-header h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.book-appointment-page .payment-icon {
+    font-size: 1.8rem;
+}
+
+.book-appointment-page .payment-notice-content {
+    padding: 2rem;
+}
+
+.book-appointment-page .payment-method-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+}
+
+.book-appointment-page .payment-method-badge svg {
+    font-size: 1.3rem;
+}
+
+.book-appointment-page .payment-notice-info {
+    display: flex;
+    gap: 1rem;
+    background: #f8f9ff;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border-left: 4px solid #667eea;
+    margin-bottom: 1.5rem;
+}
+
+.book-appointment-page .payment-notice-info svg {
+    color: #667eea;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    margin-top: 0.2rem;
+}
+
+.book-appointment-page .payment-details p {
+    margin: 0.5rem 0;
+    color: #333;
+    font-size: 1rem;
+}
+
+.book-appointment-page .payment-details strong {
+    color: #667eea;
+    margin-right: 0.5rem;
+}
+
+.book-appointment-page .pending-badge {
+    display: inline-block;
+    background: #ffc107;
+    color: #856404;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.book-appointment-page .payment-notice-alert {
+    display: flex;
+    gap: 1rem;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    padding: 1.2rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.book-appointment-page .payment-notice-alert svg {
+    color: #856404;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.book-appointment-page .payment-notice-alert p {
+    margin: 0;
+    color: #856404;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.book-appointment-page .price-summary {
+    background: white;
+    border: 2px solid #e8ebf9;
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.book-appointment-page .price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 0;
+    font-size: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.book-appointment-page .price-row:last-child {
+    border-bottom: none;
+}
+
+.book-appointment-page .price-row.total {
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    border-top: 2px solid #667eea;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #667eea;
+}
+
+.book-appointment-page .price-amount {
+    font-weight: 700;
+    color: #11998e;
+    font-size: 1.1rem;
+}
+
+.book-appointment-page .price-row.total .price-amount {
+    color: #667eea;
+    font-size: 1.4rem;
+}
+
+/* Calendar Styles */
+.book-appointment-page .calendar-section {
+    margin: 0;
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+}
+
+.book-appointment-page .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.2rem;
+    border-radius: 12px;
+    color: white;
+}
+
+.book-appointment-page .calendar-header button {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.book-appointment-page .calendar-header button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.book-appointment-page .calendar-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.book-appointment-page .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.7rem;
+    padding: 0.5rem;
+}
+
+.book-appointment-page .calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 1rem;
+    padding: 0.5rem;
+}
+
+.book-appointment-page .calendar-day.header {
+    background: #f5f5f5;
+    font-weight: 600;
+    color: #666;
+    cursor: default;
+}
+
+.book-appointment-page .calendar-day:not(.header):not(.empty):not(.past):hover {
+    background: #e8ebf9;
+    transform: scale(1.05);
+}
+
+.book-appointment-page .calendar-day.selected {
+    background: #667eea;
+    color: white;
+    font-weight: bold;
+}
+
+.book-appointment-page .calendar-day.today {
+    border: 2px solid #667eea;
+}
+
+.book-appointment-page .calendar-day.past {
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Time Slots - Scoped to book-appointment-page */
+.book-appointment-page .time-slots-section {
+    margin-top: 2rem;
+}
+
+.book-appointment-page .time-slots-section h3 {
+    color: #333;
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.book-appointment-page .time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.book-appointment-page .time-slots-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.book-appointment-page .time-slots-grid::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.book-appointment-page .time-slots-grid::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 10px;
+}
+
+.book-appointment-page .time-slot {
+    padding: 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.book-appointment-page .time-slot:hover {
+    border-color: #667eea;
+    background: #f8f9ff;
+    transform: translateY(-2px);
+}
+
+.book-appointment-page .time-slot.selected {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* No Date Selected Message - Scoped to book-appointment-page */
+.book-appointment-page .no-date-selected {
+    background: #f8f9ff;
+    border: 2px dashed #e0e0e0;
+    border-radius: 10px;
+    padding: 3rem 2rem;
+    text-align: center;
+    color: #999;
+    font-size: 1rem;
+}
+
+.book-appointment-page .no-date-selected p {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+/* Reason Section - Scoped to book-appointment-page */
+.book-appointment-page .reason-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid #e8ebf9;
+}
+
+.book-appointment-page .reason-section label {
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+}
+
+.book-appointment-page .reason-section textarea {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: inherit;
+    background: white;
+    transition: all 0.3s ease;
+    resize: vertical;
+    min-height: 120px;
+}
+
+.book-appointment-page .reason-section textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Navigation Buttons */
+.book-appointment-page .form-navigation {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid #f0f0f0;
+}
+
+.book-appointment-page .form-navigation button {
+    flex: 1;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.book-appointment-page .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.book-appointment-page .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.book-appointment-page .btn-secondary {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.book-appointment-page .btn-secondary:hover {
+    background: #e0e0e0;
+}
+
+.book-appointment-page .btn-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+}
+
+.book-appointment-page .btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+}
+
+.book-appointment-page .btn-success:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .book-appointment-page .appointment-container {
+        max-width: 900px;
+        padding: 2.5rem;
+    }
+    
+    .book-appointment-page .appointment-details-layout {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .book-appointment-page .time-slots-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .book-appointment-page .appointment-content {
+        padding: 1rem;
+        padding-top: 80px;
+    }
+
+    .book-appointment-page .appointment-container {
+        padding: 1.5rem;
+    }
+
+    .book-appointment-page .form-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .book-appointment-page .appointment-details-layout {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .book-appointment-page .calendar-wrapper,
+    .book-appointment-page .visit-details-wrapper {
+        padding: 1rem;
+    }
+
+    .book-appointment-page .step-indicator {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .book-appointment-page .step-indicator::before {
+        display: none;
+    }
+
+    .book-appointment-page .appointment-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .book-appointment-page .time-slots-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .book-appointment-page .form-navigation {
+        flex-direction: column;
+    }
+}
+
+/* Medical History Styles */
+.book-appointment-page .medical-history-notice,
+.book-appointment-page .insurance-notice {
+    display: flex;
+    gap: 1rem;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    padding: 1.2rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.book-appointment-page .medical-history-notice .notice-icon,
+.book-appointment-page .insurance-notice .notice-icon {
+    color: #856404;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.book-appointment-page .medical-history-notice .notice-content,
+.book-appointment-page .insurance-notice .notice-content {
+    color: #856404;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.book-appointment-page .medical-grid-3x2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.book-appointment-page .medical-grid-item {
+    background: #f8f9ff;
+    padding: 1.5rem;
+    border-radius: 15px;
+    border: 2px solid #e8ebf9;
+}
+
+.book-appointment-page .medical-grid-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.book-appointment-page .medical-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 1.2rem;
+    color: #667eea;
+}
+
+.book-appointment-page .medical-section-icon {
+    font-size: 1.3rem;
+}
+
+.book-appointment-page .medical-section-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.book-appointment-page .medical-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+}
+
+.book-appointment-page .medical-checkbox-grid.symptoms-grid {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.book-appointment-page .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    cursor: pointer;
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: white;
+    border: 1px solid #e0e0e0;
+}
+
+.book-appointment-page .checkbox-label:hover {
+    background: #f8f9ff;
+    border-color: #667eea;
+}
+
+.book-appointment-page .checkbox-input {
+    position: absolute;
+    opacity: 0;
+}
+
+.book-appointment-page .checkbox-custom {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #667eea;
+    border-radius: 4px;
+    position: relative;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.book-appointment-page .checkbox-input:checked + .checkbox-custom {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+}
+
+.book-appointment-page .checkbox-input:checked + .checkbox-custom::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.book-appointment-page .checkbox-text {
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.book-appointment-page .checkbox-hint {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.5rem;
+    margin-left: 1.7rem;
+}
+
+.book-appointment-page .checkbox-group {
+    padding: 1rem;
+    background: #f8f9ff;
+    border-radius: 10px;
+    border: 2px solid #e8ebf9;
+}
+
+.book-appointment-page .input-hint {
+    font-size: 0.85rem;
+    color: #666;
+    font-style: italic;
+}
+
+.book-appointment-page .textarea-container {
+    position: relative;
+}
+
+.book-appointment-page .textarea-icon {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    color: #667eea;
+    font-size: 1.2rem;
+    pointer-events: none;
+}
+
+.book-appointment-page .form-textarea {
+    width: 100%;
+    padding: 0.9rem 1rem 0.9rem 3rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: inherit;
+    background: white;
+    transition: all 0.3s ease;
+    resize: vertical;
+}
+
+.book-appointment-page .form-textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.book-appointment-page .step-subtitle {
+    color: #666;
+    font-size: 1rem;
+    margin-top: -1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Insurance Provider Styles */
+.book-appointment-page .input-container {
+    position: relative;
+}
+
+.book-appointment-page .input-icon {
+    position: absolute;
+    top: 50%;
+    left: 1.2rem;
+    transform: translateY(-50%);
+    color: #667eea;
+    font-size: 1.3rem;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.book-appointment-page .form-input,
+.book-appointment-page .form-select {
+    width: 100%;
+    padding: 1.1rem 1.2rem 1.1rem 3.5rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1.05rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    background: white;
+}
+
+.book-appointment-page .form-input:focus,
+.book-appointment-page .form-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.book-appointment-page .form-input:disabled,
+.book-appointment-page .form-select:disabled {
+    background: #f5f5f5;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.book-appointment-page .select-container {
+    position: relative;
+}
+
+.book-appointment-page .select-arrow {
+    position: absolute;
+    top: 50%;
+    right: 1.2rem;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #667eea;
+    font-size: 1rem;
+}
+
+.book-appointment-page .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.book-appointment-page .label-text {
+    font-weight: 600;
+    color: #444;
+    font-size: 1.05rem;
+}
+
+.book-appointment-page .date-input {
+    cursor: pointer;
+}
+
+/* Insurance Preview Card */
+.book-appointment-page .insurance-preview-card,
+.book-appointment-page .price-summary-card {
+    margin-top: 2rem;
+    background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+    border-radius: 15px;
+    border: 2px solid #e8ebf9;
+    overflow: hidden;
+}
+
+.book-appointment-page .preview-title,
+.book-appointment-page .price-summary-title {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.2rem 1.5rem;
+    margin: 0;
+    color: white;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.book-appointment-page .title-icon {
+    font-size: 1.3rem;
+}
+
+.book-appointment-page .preview-details,
+.book-appointment-page .price-details {
+    padding: 1.5rem;
+}
+
+.book-appointment-page .preview-row,
+.book-appointment-page .price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 0;
+    font-size: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.book-appointment-page .preview-row:last-child,
+.book-appointment-page .price-row:last-child {
+    border-bottom: none;
+}
+
+.book-appointment-page .preview-label,
+.book-appointment-page .price-label {
+    color: #666;
+}
+
+.book-appointment-page .preview-value,
+.book-appointment-page .price-value {
+    font-weight: 600;
+    color: #333;
+}
+
+.book-appointment-page .discount-value {
+    color: #11998e;
+}
+
+.book-appointment-page .amount-value {
+    color: #667eea;
+    font-size: 1.2rem;
+}
+
+.book-appointment-page .highlight-row {
+    background: #f8f9ff;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+}
+
+.book-appointment-page .preview-divider,
+.book-appointment-page .price-divider {
+    height: 1px;
+    background: #e8ebf9;
+    margin: 1rem 0;
+}
+
+.book-appointment-page .discount-description {
+    font-size: 0.9rem;
+    font-style: italic;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.book-appointment-page .info-icon {
+    color: #667eea;
+}
+
+.book-appointment-page .total-row {
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    border-top: 2px solid #667eea !important;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.book-appointment-page .total-value {
+    color: #667eea !important;
+    font-size: 1.4rem !important;
+}
+
+.book-appointment-page .price-savings {
+    margin-top: 1rem;
+}
+
+.book-appointment-page .savings-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+}
+
+.book-appointment-page .savings-icon {
+    font-size: 1.1rem;
+}
+
+.book-appointment-page .price-note {
+    display: flex;
+    gap: 0.7rem;
+    background: #fff3cd;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.book-appointment-page .note-icon {
+    color: #856404;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 0.2rem;
+}
+
+.book-appointment-page .note-text {
+    color: #856404;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Appointment Summary Section */
+.book-appointment-page .appointment-summary-section {
+    margin-top: 2rem;
+    background: white;
+    border-radius: 15px;
+    border: 2px solid #e8ebf9;
+    padding: 1.5rem;
+}
+
+.book-appointment-page .summary-title {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: #667eea;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e8ebf9;
+}
+
+.book-appointment-page .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.book-appointment-page .summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.8rem;
+    background: #f8f9ff;
+    border-radius: 8px;
+}
+
+.book-appointment-page .summary-label {
+    font-size: 0.85rem;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.book-appointment-page .summary-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    .book-appointment-page .medical-grid-3x2 {
+        grid-template-columns: 1fr;
+    }
+    
+    .book-appointment-page .medical-checkbox-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .book-appointment-page .medical-checkbox-grid.symptoms-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .book-appointment-page .summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Success Confirmation Page Styles */
+.success-container {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    padding-top: 120px;
+}
+
+.success-card {
+    background: white;
+    border-radius: 20px;
+    padding: 3rem;
+    max-width: 700px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.success-icon {
+    font-size: 5rem;
+    color: #4CAF50;
+    margin-bottom: 1.5rem;
+    animation: scaleIn 0.6s ease-out;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+.success-title {
+    font-size: 2rem;
+    color: #2C3E50;
+    margin-bottom: 1rem;
+    font-weight: 700;
+}
+
+.success-message {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.booking-details-card {
+    background: #F8F9FA;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.booking-details-card h3 {
+    font-size: 1.3rem;
+    color: #2C3E50;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.detail-row {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #E0E0E0;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-icon {
+    font-size: 1.2rem;
+    color: #667eea;
+    margin-right: 0.75rem;
+    min-width: 25px;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #555;
+    margin-right: 0.5rem;
+    flex: 0 0 150px;
+}
+
+.detail-value {
+    color: #2C3E50;
+    font-weight: 500;
+}
+
+.next-steps {
+    background: #E8F4FD;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.next-steps h3 {
+    font-size: 1.2rem;
+    color: #2C3E50;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.next-steps ul {
+    list-style: none;
+    padding: 0;
+}
+
+.next-steps li {
+    padding: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+    color: #555;
+    line-height: 1.6;
+}
+
+.next-steps li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.success-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.success-actions .btn-primary,
+.success-actions .btn-secondary {
+    padding: 0.9rem 2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+}
+
+.success-actions .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.success-actions .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.success-actions .btn-secondary {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.success-actions .btn-secondary:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .success-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .success-title {
+        font-size: 1.5rem;
+    }
+    
+    .detail-label {
+        flex: 0 0 120px;
+        font-size: 0.9rem;
+    }
+    
+    .success-actions {
+        flex-direction: column;
+    }
+    
+    .success-actions .btn-primary,
+    .success-actions .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+}

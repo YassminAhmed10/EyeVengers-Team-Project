@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+﻿import React, { useState } from 'react';
+import { useMedicalRecord } from '../../hooks/useMedicalRecord';
 import Equipment from "./Equipment";
 import Sanitization from "./Sanitization";
 import Supplies from "./Supplies";
@@ -7,7 +8,8 @@ import WasteManagement from "./WasteManagement";
 import Reports from "./Reports";
 
 function ClinicOperations() {
-  const [activeSection, setActiveSection] = useState("equipment");
+  const { saveData, loading, error } = useMedicalRecord(patientId);
+    const [activeSection, setActiveSection] = useState("equipment");
 
   const renderSection = () => {
     switch (activeSection) {
@@ -37,7 +39,10 @@ function ClinicOperations() {
     { key: "reports", label: "Reports", icon: "assessment" }
   ];
 
-  return (
+  
+
+nction
+    return \(
     <>
       <nav className="operations-nav">
         {navigationItems.map((item) => (

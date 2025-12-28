@@ -1,81 +1,136 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EyeClinicAPI.Models
 {
-    public enum PatientGender
-    {
-        Male = 0,
-        Female = 1
-    }
-
     public class Appointment
     {
         [Key]
         public int AppointmentId { get; set; }
 
+        // Patient Basic Info
         [Required]
-        public int DoctorId { get; set; }
+        [MaxLength(50)]
+        public string PatientId { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(100)]
+        [MaxLength(100)]
         public string PatientName { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(50)]
-    public string PatientId { get; set; } = string.Empty;
+        public PatientGender PatientGender { get; set; }
 
-    [StringLength(20)]
-    public string? Phone { get; set; }
+        [MaxLength(20)]
+        public string? Phone { get; set; }
 
-    [StringLength(100)]
-    public string? Email { get; set; }
-
-    [StringLength(200)]
-    public string? Address { get; set; }
-
-    [Required]
-    public DateTime AppointmentDate { get; set; }        [Required]
-        public TimeSpan AppointmentTime { get; set; }
-
-        public int DurationMinutes { get; set; } = 30;
-
-        [Required]
-        public AppointmentStatus Status { get; set; } = AppointmentStatus.Upcoming;
-
-        public bool IsSurgery { get; set; } = false;
-
-        [StringLength(500)]
-        public string? Notes { get; set; }
-
-        [StringLength(200)]
-        public string? ReasonForVisit { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [Required]
-        public PatientGender PatientGender { get; set; } = PatientGender.Male;
+        [MaxLength(100)]
+        public string? Email { get; set; }
 
         public DateTime? PatientBirthDate { get; set; }
 
+        [MaxLength(3)]
+        public string? Age { get; set; }
+
+        [MaxLength(20)]
+        public string? NationalId { get; set; }
+
+        [MaxLength(200)]
+        public string? Address { get; set; }
+
+        // Appointment Details
+        public int DoctorId { get; set; }
+        public DateTime AppointmentDate { get; set; }
+        public TimeSpan AppointmentTime { get; set; }
+        public int DurationMinutes { get; set; }
+        public AppointmentStatus Status { get; set; }
+        public bool IsSurgery { get; set; }
+        
+        [MaxLength(20)]
+        public string AppointmentType { get; set; } = "offline"; // "online" or "offline"
+
+        [MaxLength(200)]
+        public string? ReasonForVisit { get; set; }
+
+        [MaxLength(500)]
+        public string? Notes { get; set; }
+
+        // Medical History
+        [MaxLength(500)]
+        public string? ChronicDiseases { get; set; }
+
+        [MaxLength(500)]
+        public string? CurrentMedications { get; set; }
+
+        [MaxLength(500)]
+        public string? OtherAllergies { get; set; }
+
+        [MaxLength(500)]
+        public string? VisionSymptoms { get; set; }
+
+        [MaxLength(500)]
+        public string? FamilyEyeDiseases { get; set; }
+
+        [MaxLength(500)]
+        public string? OtherFamilyDiseases { get; set; }
+
+        [MaxLength(500)]
+        public string? EyeAllergies { get; set; }
+
+        [MaxLength(500)]
+        public string? EyeSurgeries { get; set; }
+
+        [MaxLength(500)]
+        public string? OtherEyeSurgeries { get; set; }
+
+        // Insurance Info
+        [MaxLength(100)]
+        public string? InsuranceCompany { get; set; }
+
+        [MaxLength(50)]
+        public string? InsuranceId { get; set; }
+
+        [MaxLength(50)]
+        public string? PolicyNumber { get; set; }
+
+        [MaxLength(10)]
+        public string? Coverage { get; set; }
+
+        [MaxLength(50)]
+        public string? CoverageType { get; set; }
+
+        public DateTime? InsuranceExpiryDate { get; set; }
+
+        [MaxLength(20)]
+        public string? InsuranceContact { get; set; }
+
+        // Payment Information
+        [MaxLength(50)]
+        public string? PaymentMethod { get; set; }
+
+        [MaxLength(50)]
+        public string? PaymentStatus { get; set; }
+
+        public decimal? FinalPrice { get; set; }
+
+        // Emergency Contact
+        [MaxLength(100)]
+        public string? EmergencyContactName { get; set; }
+
+        [MaxLength(20)]
+        public string? EmergencyContactPhone { get; set; }
+
+        // Timestamps
+        public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
-        // Navigation Property
+        // Navigation properties
         [ForeignKey("DoctorId")]
-        public Doctor? Doctor { get; set; }
+        public virtual Doctor? Doctor { get; set; }
+    }
 
-        // Calculated property for Age
-        [NotMapped]
-        public int? Age
-        {
-            get
-            {
-                if (!PatientBirthDate.HasValue) return null;
-                var today = DateTime.Today;
-                var age = today.Year - PatientBirthDate.Value.Year;
-                if (PatientBirthDate.Value.Date > today.AddYears(-age)) age--;
-                return age;
-            }
-        }
+    public enum PatientGender
+    {
+        Male = 0,
+        Female = 1
     }
 }

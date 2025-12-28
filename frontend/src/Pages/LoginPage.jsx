@@ -59,9 +59,9 @@ export default function LoginPage() {
       if (data.user.role === "Doctor") {
         navigate("/doctor");
       } else if (data.user.role === "Receptionist") {
-        navigate("/appointments");
+        navigate("/receptionist");
       } else if (data.user.role === "Patient") {
-        navigate("/about-us");
+        navigate("/patient");
       }
     } catch (err) {
       console.error('Login error:', err);

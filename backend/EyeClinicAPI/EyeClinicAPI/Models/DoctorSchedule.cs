@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EyeClinicAPI.Models
@@ -20,16 +20,16 @@ namespace EyeClinicAPI.Models
         [Required]
         public TimeSpan EndTime { get; set; }
 
-        public int SlotDurationMinutes { get; set; } = 30;
+        public int SlotDurationMinutes { get; set; }
 
-        public bool IsAvailable { get; set; } = true;
+        public bool IsAvailable { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; }
 
         public DateTime? UpdatedAt { get; set; }
 
         // Navigation Property
         [ForeignKey("DoctorId")]
-        public Doctor Doctor { get; set; } = null!;
+        public virtual Doctor Doctor { get; set; }
     }
 }

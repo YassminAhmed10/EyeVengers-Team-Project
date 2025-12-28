@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import "./AboutUs.css";
 import "./ContactPage.css";
 import { Link, useNavigate } from "react-router-dom";
@@ -27,7 +27,9 @@ const AboutUs = () => {
           <Link to="/contact">Contact</Link>
         </nav>
         <div className="header-buttons">
-          <button className="book-btn">Book an Appointment</button>
+          <button className="book-btn" onClick={() => navigate('/book-appointment')}>
+            Book an Appointment
+          </button>
           <button className="logout-btn" onClick={handleLogout}>
             <span className="logout-icon"></span>
             Logout
