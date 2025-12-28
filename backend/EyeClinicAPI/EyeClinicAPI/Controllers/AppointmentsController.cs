@@ -1,16 +1,42 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EyeClinicAPI.Data;
 using EyeClinicAPI.Models;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace EyeClinicAPI.Controllers
 {
+    // ===================== DTOs =====================
+
     public class UpdateAppointmentRequest
     {
         public int? Status { get; set; }
         public bool? IsSurgery { get; set; }
     }
+
+    public class PatientInfoDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public string PatientId { get; set; } = string.Empty;
+        public int? Age { get; set; }
+        public string? Gender { get; set; }
+        public DateTime? LastVisit { get; set; }
+        public string? ContactNumber { get; set; }
+        public string? Email { get; set; }
+        public string? InsuranceCompany { get; set; }
+        public DateTime? BirthDate { get; set; }
+        public string? Address { get; set; }
+        public string? NationalId { get; set; }
+        public string? InsuranceId { get; set; }
+        public string? PolicyNumber { get; set; }
+        public string? Coverage { get; set; }
+        public string? CoverageType { get; set; }
+        public string? EmergencyContactName { get; set; }
+        public string? EmergencyContactPhone { get; set; }
+    }
+
+    // ===================== Controller =====================
 
     [Route("api/[controller]")]
     [ApiController]
@@ -19,30 +45,24 @@ namespace EyeClinicAPI.Controllers
         private readonly EyeClinicDbContext _context;
         private readonly ILogger<AppointmentsController> _logger;
 
-        public AppointmentsController(EyeClinicDbContext context, ILogger<AppointmentsController> logger)
+        public AppointmentsController(
+            EyeClinicDbContext context,
+            ILogger<AppointmentsController> logger)
         {
             _context = context;
             _logger = logger;
         }
 
-        // GET: api/Appointments
+        // ===================== GET =====================
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Appointment>>> GetAppointments()
         {
-            try
-            {
-                return await _context.Appointments
-                    .Include(a => a.Doctor)
-                    .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting appointments");
-                return StatusCode(500, "Internal server error");
-            }
+            return await _context.Appointments
+                .Include(a => a.Doctor)
+                .ToListAsync();
         }
 
-        // GET: api/Appointments/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Appointment>> GetAppointment(int id)
         {
@@ -51,201 +71,134 @@ namespace EyeClinicAPI.Controllers
                 .FirstOrDefaultAsync(a => a.AppointmentId == id);
 
             if (appointment == null)
-            {
                 return NotFound();
-            }
 
             return appointment;
         }
 
-        // GET: api/Appointments/ByDoctor/5
-        [HttpGet("ByDoctor/{doctorId}")]
-        public async Task<ActionResult<IEnumerable<Appointment>>> GetAppointmentsByDoctor(int doctorId)
+        [HttpGet("ByPatient/{patientId}")]
+        public async Task<ActionResult<IEnumerable<Appointment>>> GetAppointmentsByPatient(string patientId)
         {
-            return await _context.Appointments
-                .Where(a => a.DoctorId == doctorId)
+            var appointments = await _context.Appointments
+                .Where(a => a.PatientId.ToLower() == patientId.ToLower())
                 .Include(a => a.Doctor)
-                .OrderBy(a => a.AppointmentDate)
-                .ThenBy(a => a.AppointmentTime)
+                .OrderByDescending(a => a.AppointmentDate)
                 .ToListAsync();
+
+            if (!appointments.Any())
+                return NotFound();
+
+            return Ok(appointments);
         }
 
-        // GET: api/Appointments/ByDate/2024-12-05
         [HttpGet("ByDate/{date}")]
-        public async Task<ActionResult<IEnumerable<Appointment>>> GetAppointmentsByDate(DateTime date)
+        public async Task<ActionResult<IEnumerable<Appointment>>> GetAppointmentsByDate(string date)
         {
-            return await _context.Appointments
-                .Where(a => a.AppointmentDate.Date == date.Date)
+            if (!DateTime.TryParse(date, out DateTime parsedDate))
+                return BadRequest(new { message = "Invalid date format" });
+
+            var appointments = await _context.Appointments
+                .Where(a => a.AppointmentDate.Date == parsedDate.Date)
                 .Include(a => a.Doctor)
                 .OrderBy(a => a.AppointmentTime)
                 .ToListAsync();
+
+            return Ok(appointments);
         }
 
-        // GET: api/Appointments/Upcoming
-        [HttpGet("Upcoming")]
-        public async Task<ActionResult<IEnumerable<Appointment>>> GetUpcomingAppointments()
+        [HttpGet("statistics/{date}")]
+        public async Task<ActionResult<object>> GetAppointmentStatistics(string date)
         {
-            var today = DateTime.Today;
-            return await _context.Appointments
-                .Where(a => a.AppointmentDate >= today && a.Status == AppointmentStatus.Upcoming)
-                .Include(a => a.Doctor)
-                .OrderBy(a => a.AppointmentDate)
-                .ThenBy(a => a.AppointmentTime)
+            if (!DateTime.TryParse(date, out DateTime parsedDate))
+                return BadRequest(new { message = "Invalid date format" });
+
+            var startDate = parsedDate.Date;
+            var endDate = startDate.AddDays(1);
+
+            var appointmentsOnDate = await _context.Appointments
+                .Where(a => a.AppointmentDate >= startDate && a.AppointmentDate < endDate)
                 .ToListAsync();
+
+            var totalOnlineConfirmed = appointmentsOnDate.Count(a => a.AppointmentType.ToLower() == "online" && a.Status == AppointmentStatus.Upcoming);
+            var totalOffline = appointmentsOnDate.Count(a => a.AppointmentType.ToLower() != "online");
+            var totalAppointments = appointmentsOnDate.Count;
+            var pendingRequests = appointmentsOnDate.Count(a => a.AppointmentType.ToLower() == "online" && a.Status != AppointmentStatus.Upcoming && a.Status != AppointmentStatus.Completed);
+
+            return Ok(new
+            {
+                date = parsedDate.Date.ToString("yyyy-MM-dd"),
+                totalOnlineAppointments = totalOnlineConfirmed,
+                totalOfflineAppointments = totalOffline,
+                totalAppointments = totalAppointments,
+                pendingOnlineRequests = pendingRequests,
+                confirmedAppointments = appointmentsOnDate.Count(a => a.Status == AppointmentStatus.Upcoming),
+                completedAppointments = appointmentsOnDate.Count(a => a.Status == AppointmentStatus.Completed),
+                cancelledAppointments = appointmentsOnDate.Count(a => a.Status == AppointmentStatus.Cancelled),
+                surgeryAppointments = appointmentsOnDate.Count(a => a.IsSurgery)
+            });
         }
 
-        // GET: api/Appointments/Today
-        [HttpGet("Today")]
-        public async Task<ActionResult<IEnumerable<Appointment>>> GetTodaysAppointments()
-        {
-            var today = DateTime.Today;
-            return await _context.Appointments
-                .Where(a => a.AppointmentDate.Date == today)
-                .Include(a => a.Doctor)
-                .OrderBy(a => a.AppointmentTime)
-                .ToListAsync();
-        }
+        // ===================== POST (FIXED) =====================
 
-        // GET: api/Appointments/ByDoctorToday/{doctorId}
-        [HttpGet("ByDoctorToday/{doctorId}")]
-        public async Task<ActionResult<IEnumerable<Appointment>>> GetTodaysAppointmentsByDoctor(int doctorId)
-        {
-            var today = DateTime.Today;
-            return await _context.Appointments
-                .Where(a => a.DoctorId == doctorId && a.AppointmentDate.Date == today)
-                .Include(a => a.Doctor)
-                .OrderBy(a => a.AppointmentTime)
-                .ToListAsync();
-        }
-
-        // GET: api/Appointments/ByMonth/{year}/{month}
-        [HttpGet("ByMonth/{year:int}/{month:int}")]
-        public async Task<ActionResult<IEnumerable<Appointment>>> GetAppointmentsByMonth(int year, int month)
-        {
-            var start = new DateTime(year, month, 1);
-            var end = start.AddMonths(1);
-            return await _context.Appointments
-                .Where(a => a.AppointmentDate >= start && a.AppointmentDate < end)
-                .Include(a => a.Doctor)
-                .OrderBy(a => a.AppointmentDate)
-                .ThenBy(a => a.AppointmentTime)
-                .ToListAsync();
-        }
-
-        // GET: api/Appointments/SearchByPatientId/{patientId}
-        [HttpGet("SearchByPatientId/{patientId}")]
-        public async Task<ActionResult<IEnumerable<Appointment>>> SearchByPatientId(string patientId)
-        {
-            return await _context.Appointments
-                .Where(a => a.PatientId == patientId)
-                .Include(a => a.Doctor)
-                .OrderBy(a => a.AppointmentDate)
-                .ThenBy(a => a.AppointmentTime)
-                .ToListAsync();
-        }
-
-        // POST: api/Appointments
         [HttpPost]
-        public async Task<ActionResult<Appointment>> PostAppointment(Appointment appointment)
+        public async Task<IActionResult> PostAppointment([FromBody] Appointment appointment)
         {
+            // Log the incoming request
+            _logger.LogInformation("Received appointment: PatientName={PatientName}, Date={Date}, Time={Time}", 
+                appointment?.PatientName, appointment?.AppointmentDate, appointment?.AppointmentTime);
+
+            if (appointment == null)
+                return BadRequest(new { message = "Appointment data is required" });
+
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                _logger.LogError("Invalid model state: {errors}", string.Join(", ", errors));
+                return BadRequest(new { message = "Validation failed", errors = errors });
+            }
+
+            // Set default values for required fields
+            if (appointment.CreatedAt == default)
+                appointment.CreatedAt = DateTime.Now;
+            
+            if (appointment.DurationMinutes == 0)
+                appointment.DurationMinutes = 30;
+
             try
             {
-                // Validate required fields
-                if (string.IsNullOrEmpty(appointment.PatientName))
-                {
-                    return BadRequest("Patient name is required");
-                }
-                
-                if (string.IsNullOrEmpty(appointment.PatientId))
-                {
-                    return BadRequest("Patient ID is required");
-                }
-
-                // Check if doctor exists
-                var doctorExists = await _context.Doctors.AnyAsync(d => d.DoctorId == appointment.DoctorId);
-                if (!doctorExists)
-                {
-                    return BadRequest($"Doctor with ID {appointment.DoctorId} does not exist");
-                }
-
-                appointment.CreatedAt = DateTime.Now;
-                appointment.UpdatedAt = null;
-                
-                if (appointment.Status == 0)
-                {
-                    appointment.Status = AppointmentStatus.Upcoming;
-                }
-
                 _context.Appointments.Add(appointment);
                 await _context.SaveChangesAsync();
-
-                var created = await _context.Appointments
-                    .Include(a => a.Doctor)
-                    .FirstOrDefaultAsync(a => a.AppointmentId == appointment.AppointmentId);
-
-                return CreatedAtAction(nameof(GetAppointment), new { id = appointment.AppointmentId }, created);
+                _logger.LogInformation("Appointment created successfully: {appointmentId}", appointment.AppointmentId);
+                return Ok(appointment);
             }
             catch (DbUpdateException ex)
             {
-                _logger.LogError(ex, "Database error creating appointment");
-                return StatusCode(500, $"Database error: {ex.InnerException?.Message ?? ex.Message}");
+                _logger.LogError(ex, "Database error while creating appointment");
+                return BadRequest(new { message = "Database error", error = ex.InnerException?.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating appointment");
-                return StatusCode(500, $"Error: {ex.Message}");
+                return StatusCode(500, new { message = "Server error", error = ex.Message });
             }
         }
 
-        // PUT: api/Appointments/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutAppointment(int id, Appointment appointment)
-        {
-            if (id != appointment.AppointmentId)
-            {
-                return BadRequest();
-            }
+        // ===================== PATCH =====================
 
-            appointment.UpdatedAt = DateTime.Now;
-            _context.Entry(appointment).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!AppointmentExists(id))
-                {
-                    return NotFound();
-                }
-                throw;
-            }
-
-            return NoContent();
-        }
-
-        // PATCH: api/Appointments/5 - Update appointment status and/or surgery flag
         [HttpPatch("{id}")]
-        public async Task<IActionResult> PatchAppointment(int id, [FromBody] UpdateAppointmentRequest request)
+        public async Task<IActionResult> PatchAppointment(
+            int id,
+            [FromBody] UpdateAppointmentRequest request)
         {
             var appointment = await _context.Appointments.FindAsync(id);
             if (appointment == null)
-            {
                 return NotFound();
-            }
 
-            if (request.Status.HasValue)
+            if (request.Status.HasValue &&
+                Enum.IsDefined(typeof(AppointmentStatus), request.Status.Value))
             {
-                if (Enum.IsDefined(typeof(AppointmentStatus), request.Status.Value))
-                {
-                    appointment.Status = (AppointmentStatus)request.Status.Value;
-                    appointment.UpdatedAt = DateTime.Now;
-                }
-                else
-                {
-                    return BadRequest("Invalid status value");
-                }
+                appointment.Status = (AppointmentStatus)request.Status.Value;
+                appointment.UpdatedAt = DateTime.Now;
             }
 
             if (request.IsSurgery.HasValue)
@@ -258,25 +211,55 @@ namespace EyeClinicAPI.Controllers
             return NoContent();
         }
 
-        // DELETE: api/Appointments/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAppointment(int id)
+        // ===================== CONFIRM ONLINE APPOINTMENT =====================
+
+        [HttpPut("confirm/{id}")]
+        public async Task<IActionResult> ConfirmAppointment(int id)
         {
-            var appointment = await _context.Appointments.FindAsync(id);
+            var appointment = await _context.Appointments
+                .Include(a => a.Doctor)
+                .FirstOrDefaultAsync(a => a.AppointmentId == id);
+
             if (appointment == null)
+                return NotFound(new { message = "Appointment not found" });
+
+            if (appointment.AppointmentType != "online")
+                return BadRequest(new { message = "Only online appointments can be confirmed" });
+
+            // Update appointment status based on time
+            var currentDateTime = DateTime.Now;
+            var appointmentDateTime = appointment.AppointmentDate.Date + appointment.AppointmentTime;
+
+            // If appointment is in the past or within 15 minutes, mark as InProgress
+            if (appointmentDateTime <= currentDateTime.AddMinutes(15))
             {
-                return NotFound();
+                appointment.Status = AppointmentStatus.InProgress;
+            }
+            else
+            {
+                // Otherwise mark as Upcoming
+                appointment.Status = AppointmentStatus.Upcoming;
             }
 
-            _context.Appointments.Remove(appointment);
-            await _context.SaveChangesAsync();
+            appointment.UpdatedAt = DateTime.Now;
 
-            return NoContent();
-        }
-
-        private bool AppointmentExists(int id)
-        {
-            return _context.Appointments.Any(e => e.AppointmentId == id);
+            try
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Appointment {id} confirmed successfully", id);
+                
+                return Ok(new 
+                { 
+                    message = "Appointment confirmed successfully",
+                    appointment = appointment,
+                    notificationSent = true
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error confirming appointment {id}", id);
+                return StatusCode(500, new { message = "Error confirming appointment", error = ex.Message });
+            }
         }
     }
 }

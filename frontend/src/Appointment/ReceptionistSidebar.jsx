@@ -51,8 +51,8 @@ const ReceptionistSidebar = ({ collapsed }) => {
         </Link>
 
         <Link 
-          to="/appointments" 
-          className={`nav-item ${isActive('/appointments') ? 'active' : ''}`}
+          to="/receptionist/appointments" 
+          className={`nav-item ${isActive('/receptionist/appointments') || isActive('/appointments') ? 'active' : ''}`}
         >
           <div className="nav-icon">
             <span className="material-symbols-outlined">calendar_month</span>
@@ -68,16 +68,6 @@ const ReceptionistSidebar = ({ collapsed }) => {
             <span className="material-symbols-outlined">groups</span>
           </div>
           <span className="nav-text">Patients</span>
-        </Link>
-
-        <Link 
-          to="/receptionist/finance" 
-          className={`nav-item ${isActive('/receptionist/finance') ? 'active' : ''}`}
-        >
-          <div className="nav-icon">
-            <span className="material-symbols-outlined">payments</span>
-          </div>
-          <span className="nav-text">Finance</span>
         </Link>
 
         <Link 

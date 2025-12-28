@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { appointmentsAPI } from '../services/apiConfig';
 import './GenderChart.css';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -8,14 +9,16 @@ const GenderChart = () => {
   useEffect(() => {
     const fetchGenderData = async () => {
       try {
-        const response = await fetch('http://localhost:5201/api/Dashboard/Gender');
-        const result = await response.json();
-        if (result) {
-          setData([
-            { name: 'Men', value: result.male || 0 },
-            { name: 'Women', value: result.female || 0 }
-          ]);
-        }
+        const appointments = await appointmentsAPI.getAll();
+        
+        // Count gender distribution from appointments
+        const maleCount = appointments.filter(a => a.patientGender === 0).length;
+        const femaleCount = appointments.filter(a => a.patientGender === 1).length;
+        
+        setData([
+          { name: 'Men', value: maleCount },
+          { name: 'Women', value: femaleCount }
+        ]);
       } catch (error) {
         console.error('Error fetching gender data:', error);
         setData([

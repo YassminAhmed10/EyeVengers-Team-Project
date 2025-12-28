@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import PageHeader from "./PageHeader";
+import Header from "./PageHeader";
 import SearchBar from "./SearchBar";
 import PatientTable from "./PatientTable";
 import Pagination from "./Pagination";
@@ -23,7 +23,7 @@ function PatientDashboard() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <main className="flex-1 p-6" style={{ marginLeft: 0 }}>
-        <PageHeader />
+        <Header />
         <SearchBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
         <PatientTable patients={filteredPatients} />
         <Pagination />

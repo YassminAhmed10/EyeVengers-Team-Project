@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { appointmentsAPI } from '../services/apiConfig';
 import './AppointmentsTable.css';
 
 const AppointmentsTable = ({ selectedDate }) => {
@@ -10,15 +11,29 @@ const AppointmentsTable = ({ selectedDate }) => {
   const [notification, setNotification] = useState("");
   const navigate = useNavigate();
 
+  // Helper function to get time status
+  const getTimeStatus = (appointmentDate, appointmentTime) => {
+    const now = new Date();
+    const [hours, minutes] = appointmentTime.split(':');
+    const aptDateTime = new Date(appointmentDate);
+    aptDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    
+    const diffMinutes = (aptDateTime - now) / (1000 * 60);
+    
+    if (diffMinutes >= -15 && diffMinutes <= 15) {
+      return 'Now';
+    } else if (diffMinutes > 15) {
+      return 'Upcoming';
+    } else {
+      return 'Late';
+    }
+  };
+
   // Fetch appointments from API
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const response = await fetch('http://localhost:5201/api/Appointments');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
+        const data = await appointmentsAPI.getAll();
         const statusMap = {
           0: 'Upcoming',
           1: 'Completed',
@@ -26,12 +41,13 @@ const AppointmentsTable = ({ selectedDate }) => {
           3: 'In Progress',
           4: 'No Show'
         };
-        const transformedData = data.filter(apt => apt && apt.patientName && apt.patientId).map(apt => ({
+        const transformedData = data.filter(apt => apt && apt.patientName).map(apt => ({
           ...apt,
           time: apt.appointmentTime ? new Date(`2000-01-01T${apt.appointmentTime}`).toLocaleTimeString('en-US', {
             hour: '2-digit', minute: '2-digit', hour12: true
           }) : '',
-          status: statusMap[apt.status] || 'Upcoming'
+          status: statusMap[apt.status] || 'Upcoming',
+          timeStatus: getTimeStatus(apt.appointmentDate, apt.appointmentTime)
         }));
         setAppointments(transformedData);
         setLoading(false);
@@ -79,17 +95,22 @@ const AppointmentsTable = ({ selectedDate }) => {
     );
   }
   
-  // Filter by selectedDate or today's date if no date is selected
-  const filterDate = selectedDate || new Date();
-  const dateStr = filterDate.toLocaleDateString('en-CA');
-  filteredAppointments = filteredAppointments.filter(a => {
-    const apptDate = new Date(a.appointmentDate).toLocaleDateString('en-CA');
-    return apptDate === dateStr;
-  });
+  // Only filter by selectedDate if a specific date is selected
+  if (selectedDate) {
+    const dateStr = selectedDate.toLocaleDateString('en-CA');
+    filteredAppointments = filteredAppointments.filter(a => {
+      const apptDate = new Date(a.appointmentDate).toLocaleDateString('en-CA');
+      return apptDate === dateStr;
+    });
+  }
 
-  const handleViewMedicalRecord = (patientName, patientId) => {
+  const handleViewMedicalRecord = (patientName, appointment) => {
+    // Prefer the real patientId from the appointment if available, otherwise fall back to a generated dynamic id
+    const dynamicId = `P-${appointment.patientId || patientName.replace(/\s+/g, '').substring(0, 5).toUpperCase()}`;
+    const patientIdToSend = appointment.patientId && appointment.patientId.trim() !== '' ? appointment.patientId : dynamicId;
+
     navigate(`/doctor/view-medical-record/${encodeURIComponent(patientName)}`, {
-      state: { patientId } 
+      state: { patientId: patientIdToSend }
     });
   };
 
@@ -121,7 +142,7 @@ const AppointmentsTable = ({ selectedDate }) => {
           3: 'In Progress',
           4: 'No Show'
         };
-        const transformedData = data.filter(apt => apt && apt.patientName && apt.patientId).map(apt => ({
+        const transformedData = data.filter(apt => apt && apt.patientName).map(apt => ({
           ...apt,
           time: apt.appointmentTime ? new Date(`2000-01-01T${apt.appointmentTime}`).toLocaleTimeString('en-US', {
             hour: '2-digit', minute: '2-digit', hour12: true
@@ -223,19 +244,20 @@ const AppointmentsTable = ({ selectedDate }) => {
               <th>Patient Name</th>
               <th>Patient ID</th>
               <th>Status</th>
+              <th>Time Status</th>
               <th style={{ textAlign: 'right' }}>Action</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>
                   Loading appointments...
                 </td>
               </tr>
             ) : filteredAppointments.length === 0 ? (
               <tr>
-                <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>
                   No appointments found
                 </td>
               </tr>
@@ -247,15 +269,27 @@ const AppointmentsTable = ({ selectedDate }) => {
                   <tr key={index}>
                     <td>{appointment.time}</td>
                     <td style={{ fontWeight: 500 }}>{appointment.patientName}</td>
-                    <td style={{ fontFamily: 'monospace' }}>{dynamicId}</td>
+                    <td style={{ fontFamily: 'monospace' }}>{appointment.patientId || dynamicId}</td>
                     <td>
                       <span className={`status-badge status-${appointment.status.toLowerCase()}`}>
                         {appointment.status}
                       </span>
                     </td>
+                    <td>
+                      <span className={`time-status-badge time-${appointment.timeStatus.toLowerCase()}`}>
+                        {appointment.timeStatus}
+                      </span>
+                    </td>
                     <td style={{ textAlign: 'right' }}>
                       <button
-                        onClick={() => handleViewMedicalRecord(appointment.patientName, dynamicId)}
+                        onClick={() => navigate(`/doctor/appointment-details/${appointment.appointmentId}`)}
+                        className="view-button details-button"
+                        title="View Appointment Details"
+                      >
+                        Details
+                      </button>
+                      <button
+                        onClick={() => handleViewMedicalRecord(appointment.patientName, appointment)}
                         className="view-button"
                       >
                         EMR

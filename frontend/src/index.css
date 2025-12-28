@@ -43,7 +43,7 @@
 }
 
 body {
-  background-color: var(--primary-bg);
+  background: white;
   color: var(--text-primary);
   transition: all 0.3s ease;
   overflow-x: hidden;

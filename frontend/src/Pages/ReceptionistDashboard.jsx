@@ -3,6 +3,12 @@ import './ReceptionistDashboard.css';
 
 const ReceptionistDashboard = () => {
   const [appointments, setAppointments] = useState([]);
+  const [statistics, setStatistics] = useState({
+    totalOnlineAppointments: 0,
+    totalOfflineAppointments: 0,
+    totalAppointments: 0,
+    pendingOnlineRequests: 0
+  });
   const [filter, setFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -11,14 +17,26 @@ const ReceptionistDashboard = () => {
     try {
       const response = await fetch(`http://localhost:5201/api/Appointments/ByDate/${selectedDate}`);
       const data = await response.json();
-      setAppointments(data);
+      setAppointments(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching appointments:', error);
+      setAppointments([]);
+    }
+  };
+
+  const fetchStatistics = async () => {
+    try {
+      const response = await fetch(`http://localhost:5201/api/Appointments/statistics/${selectedDate}`);
+      const data = await response.json();
+      setStatistics(data);
+    } catch (error) {
+      console.error('Error fetching statistics:', error);
     }
   };
 
   useEffect(() => {
     fetchAppointments();
+    fetchStatistics();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
@@ -87,41 +105,41 @@ const ReceptionistDashboard = () => {
       <div className="dashboard-stats">
         <div className="stat-card baby-blue">
           <div className="stat-icon">
-            <span className="material-symbols-outlined">groups</span>
+            <span className="material-symbols-outlined">computer</span>
           </div>
           <div className="stat-content">
-            <h3>Total</h3>
-            <p className="stat-number">{appointments.length}</p>
+            <h3>Online Appointments</h3>
+            <p className="stat-number">{statistics.totalOnlineAppointments}</p>
           </div>
         </div>
 
         <div className="stat-card light-purple">
           <div className="stat-icon">
-            <span className="material-symbols-outlined">check_circle</span>
+            <span className="material-symbols-outlined">location_on</span>
           </div>
           <div className="stat-content">
-            <h3>Upcoming</h3>
-            <p className="stat-number">{appointments.filter(a => a.status === 0).length}</p>
+            <h3>Offline Appointments</h3>
+            <p className="stat-number">{statistics.totalOfflineAppointments}</p>
           </div>
         </div>
 
         <div className="stat-card mint-green">
           <div className="stat-icon">
-            <span className="material-symbols-outlined">medical_services</span>
+            <span className="material-symbols-outlined">calendar_month</span>
           </div>
           <div className="stat-content">
-            <h3>Surgery</h3>
-            <p className="stat-number">{appointments.filter(a => a.isSurgery).length}</p>
+            <h3>Total Appointments</h3>
+            <p className="stat-number">{statistics.totalAppointments}</p>
           </div>
         </div>
 
         <div className="stat-card soft-pink">
           <div className="stat-icon">
-            <span className="material-symbols-outlined">task_alt</span>
+            <span className="material-symbols-outlined">pending_actions</span>
           </div>
           <div className="stat-content">
-            <h3>Completed</h3>
-            <p className="stat-number">{appointments.filter(a => a.status === 1).length}</p>
+            <h3>Pending Requests</h3>
+            <p className="stat-number">{statistics.pendingOnlineRequests}</p>
           </div>
         </div>
       </div>

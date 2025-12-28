@@ -1,11 +1,11 @@
-﻿namespace EyeClinicAPI.Models
+namespace EyeClinicAPI.Models
 {
     public enum AppointmentStatus
     {
-        Upcoming = 0,      // موعد قادم
-        Completed = 1,     // موعد مكتمل
-        Cancelled = 2,     // موعد ملغي
-        InProgress = 3,    // موعد جاري
-        NoShow = 4         // المريض لم يحضر
+        Upcoming = 0,      // ???? ????
+        Completed = 1,     // ???? ?????
+        Cancelled = 2,     // ???? ????
+        InProgress = 3,    // ???? ????
+        NoShow = 4         // ?????? ?? ????
     }
 }
