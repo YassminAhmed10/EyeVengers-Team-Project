@@ -1,40 +1,10 @@
 import React from "react";
 import "./AboutUs.css";
 import "./ContactPage.css";
-import { Link, useNavigate } from "react-router-dom";
 
 const AboutUs = () => {
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    navigate("/login"); 
-  };
-
   return (
-    <div className="aboutus-container">
-      
-      <header className="aboutus-header">
-        <div className="logo">
-          
-          <img src="src/images/logo.png" alt="Clinic Logo" className="logo-img" />
-          <h2>Mohab Khairy Eye Clinic</h2>
-        </div>
-        <nav className="nav-links">
-          <a href="#home">Home</a>
-          <a className="active" href="#aboutus">About Us</a>
-          <a href="#services">Services</a>
-          <Link to="/contact">Contact</Link>
-        </nav>
-        <div className="header-buttons">
-          <button className="book-btn">Book an Appointment</button>
-          <button className="logout-btn" onClick={handleLogout}>
-            <span className="logout-icon"></span>
-            Logout
-          </button>
-        </div>
-      </header>
-
+    <div className="aboutus-main-content">
       <section className="hero" id="home">
         <div className="hero-text">
           <h1>About Dr. Mohab Khairy Clinic</h1>
@@ -136,21 +106,5 @@ const AboutUs = () => {
     </div>
   );
 };
-
-const WorkingHours = () => (
-  <div className="card working-hours">
-    <h3>Working Hours</h3>
-    <ul>
-      <li>
-        <span>Saturday - Thursday</span>
-        <span>16:00 PM - 22:00 PM</span>
-      </li>
-      <li>
-        <span>Friday</span>
-        <span>14:00 PM - 19:00 PM</span>
-      </li>
-    </ul>
-  </div>
-);
 
 export default AboutUs;

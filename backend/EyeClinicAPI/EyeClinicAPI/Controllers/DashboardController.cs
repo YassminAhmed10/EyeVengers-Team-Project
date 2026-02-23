@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EyeClinicAPI.Data;
 using EyeClinicAPI.Models;
@@ -77,6 +77,51 @@ namespace EyeClinicAPI.Controllers
             {
                 _logger.LogError(ex, "Error getting today's appointments");
                 return StatusCode(500, "Error loading today's appointments");
+            }
+        }
+
+        [HttpGet("AgeGroups")]
+        public async Task<IActionResult> GetAgeGroupStats()
+        {
+            try
+            {
+                var appointments = await _context.Appointments
+                    .Where(a => a.PatientBirthDate != null)
+                    .ToListAsync();
+
+                var today = DateTime.Today;
+                int childrenCount = 0;    // 0-17
+                int adultsCount = 0;      // 18-59
+                int elderlyCount = 0;     // 60+
+
+                foreach (var appointment in appointments)
+                {
+                    if (appointment.PatientBirthDate.HasValue)
+                    {
+                        var age = today.Year - appointment.PatientBirthDate.Value.Year;
+                        if (appointment.PatientBirthDate.Value.Date > today.AddYears(-age))
+                            age--;
+
+                        if (age < 18)
+                            childrenCount++;
+                        else if (age < 60)
+                            adultsCount++;
+                        else
+                            elderlyCount++;
+                    }
+                }
+
+                return Ok(new
+                {
+                    Children = childrenCount,
+                    Adults = adultsCount,
+                    Elderly = elderlyCount
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting age group stats");
+                return StatusCode(500, "Error loading age group statistics");
             }
         }
 

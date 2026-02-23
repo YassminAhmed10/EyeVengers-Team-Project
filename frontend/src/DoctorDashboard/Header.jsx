@@ -2,15 +2,33 @@ import React, { useState, useEffect } from "react";
 import { useLocation } from 'react-router-dom';
 import { Bell, Sun, Moon, Menu } from 'lucide-react';
 import { FaCalendarCheck, FaExclamationTriangle, FaInfoCircle, FaUserPlus } from 'react-icons/fa';
+import { useLanguage } from '../context/LanguageContext';
 import './Header.css';
 
 const Header = ({ toggleDarkMode, darkMode, toggleSidebar }) => {
+  const { t, language } = useLanguage();
   const location = useLocation();
   const [notificationCount, setNotificationCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [dateTime, setDateTime] = useState(new Date());
   const [notifications, setNotifications] = useState([]);
   const [lastAppointmentCount, setLastAppointmentCount] = useState(0);
+  const [profilePhoto, setProfilePhoto] = useState(() => {
+    return localStorage.getItem('doctorProfilePhoto') || '/src/images/doctor.jpg';
+  });
+
+  // Listen for profile updates
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      const newPhoto = localStorage.getItem('doctorProfilePhoto');
+      if (newPhoto) {
+        setProfilePhoto(newPhoto);
+      }
+    };
+
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    return () => window.removeEventListener('profileUpdated', handleProfileUpdate);
+  }, []);
 
   // Fetch appointments and check for new ones
   useEffect(() => {
@@ -27,10 +45,10 @@ const Header = ({ toggleDarkMode, darkMode, toggleSidebar }) => {
           newAppointments.forEach(appointment => {
             const newNotification = {
               id: Date.now() + Math.random(),
-              title: "New Patient Added",
-              message: `${appointment.patientName} has been added to the appointments list.`,
+              title: t('header.newPatientAdded'),
+              message: `${appointment.patientName} ${t('header.hasBeenAdded')}.`,
               type: "patient",
-              time: "Just now",
+              time: t('header.justNow'),
               unread: true,
             };
             
@@ -61,11 +79,11 @@ const Header = ({ toggleDarkMode, darkMode, toggleSidebar }) => {
 
   const formatDate = () => {
     const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
-    return dateTime.toLocaleDateString('en-US', options);
+    return dateTime.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', options);
   };
 
   const formatTime = () => {
-    return dateTime.toLocaleTimeString('en-US', { 
+    return dateTime.toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { 
       hour: '2-digit', 
       minute: '2-digit'
     });
@@ -74,14 +92,14 @@ const Header = ({ toggleDarkMode, darkMode, toggleSidebar }) => {
   // Get page title based on current route
   const getPageTitle = () => {
     const path = location.pathname;
-    if (path === '/doctor' || path === '/doctor/') return 'Dashboard';
-    if (path.includes('/patients')) return 'Patients Management';
-    if (path.includes('/appointments')) return 'Appointments';
-    if (path.includes('/finance')) return 'Finance';
-    if (path.includes('/clinic-system')) return 'Clinic System';
-    if (path.includes('/settings')) return 'Settings';
-    if (path.includes('/view-medical-record')) return 'Medical Record';
-    return 'Dashboard';
+    if (path === '/doctor' || path === '/doctor/') return t('header.dashboard');
+    if (path.includes('/patients')) return t('header.patientsManagement');
+    if (path.includes('/appointments')) return t('header.appointments');
+    if (path.includes('/finance')) return t('header.finance');
+    if (path.includes('/clinic-system')) return t('header.clinicSystem');
+    if (path.includes('/settings')) return t('header.settings');
+    if (path.includes('/view-medical-record')) return t('header.medicalRecord');
+    return t('header.dashboard');
   };
 
   const handleNotificationClick = (e) => {
@@ -158,7 +176,7 @@ const Header = ({ toggleDarkMode, darkMode, toggleSidebar }) => {
           {/* NOTIFICATION DROPDOWN */}
           <div className="notification-dropdown">
             <div className="notification-header">
-              <h3>Notifications</h3>
+              <h3>{t('header.notifications')}</h3>
               <button 
                 className="mark-all-read"
                 onClick={(e) => {
@@ -169,7 +187,7 @@ const Header = ({ toggleDarkMode, darkMode, toggleSidebar }) => {
                   setNotificationCount(0);
                 }}
               >
-                Mark all as read
+                {t('header.markAllRead')}
               </button>
             </div>
 
@@ -194,13 +212,13 @@ const Header = ({ toggleDarkMode, darkMode, toggleSidebar }) => {
                 ))
               ) : (
                 <div className="no-notifications">
-                  <p>No new notifications</p>
+                  <p>{t('header.noNotifications')}</p>
                 </div>
               )}
             </div>
 
             <div className="notification-footer">
-              <a href="#" className="view-all-link">View all notifications</a>
+              <a href="#" className="view-all-link">{t('header.viewAllNotifications')}</a>
             </div>
           </div>
         </div>
@@ -208,7 +226,7 @@ const Header = ({ toggleDarkMode, darkMode, toggleSidebar }) => {
         {/* Profile */}
         <a href="#" className="profile" onClick={handleProfileClick}>
           <img 
-            src="/src/images/doctor.jpg" 
+            src={profilePhoto}
             alt="Doctor Profile"
             onError={(e) => {
               e.target.src = 'https://via.placeholder.com/42x42?text=Dr';

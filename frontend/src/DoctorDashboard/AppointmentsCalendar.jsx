@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { appointmentsAPI } from '../services/apiConfig';
 import './AppointmentsCalendar.css';
 
 const AppointmentsCalendar = ({ onDateSelect }) => {
@@ -24,14 +25,22 @@ const AppointmentsCalendar = ({ onDateSelect }) => {
   React.useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const res = await fetch("http://localhost:5201/api/Appointments");
-        const data = await res.json();
+        const data = await appointmentsAPI.getAll();
         setAppointments(data);
-      } catch {
+      } catch (error) {
+        console.error('Error fetching appointments:', error);
         setAppointments([]);
       }
     };
+    
+    // Initial fetch
     fetchAppointments();
+    
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(fetchAppointments, 30000);
+    
+    // Cleanup interval on unmount
+    return () => clearInterval(interval);
   }, [currentDate]);
 
   // Filter appointments for the selected day
@@ -117,23 +126,22 @@ const AppointmentsCalendar = ({ onDateSelect }) => {
   };
 
   return (
-    <div className="appointments-calendar-card">
-      <h3 className="calendar-title">Your Appointments</h3>
-      <div className="calendar-header">
-        <h4 className="calendar-month">
-          {monthNames[currentDate.getMonth()]}, {currentDate.getFullYear()}
-        </h4>
-        <div className="calendar-navigation">
-          <button className="nav-btn" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}>
+    <div className="dashboard-calendar-wrapper">
+      <div className="appointments-calendar-card">
+        <h3 className="calendar-title">Your Appointments</h3>
+        <div className="doctor-calendar-header">
+          <button className="doctor-nav-btn" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}>
             <span className="material-symbols-outlined">chevron_left</span>
           </button>
-          <button className="nav-btn" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}>
+          <h4 className="doctor-calendar-month">
+            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+          </h4>
+          <button className="doctor-nav-btn" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}>
             <span className="material-symbols-outlined">chevron_right</span>
           </button>
         </div>
-      </div>
-      <div className="calendar-grid">
-        <div className="calendar-weekdays">
+      <div className="doctor-calendar-grid">
+        <div className="doctor-calendar-weekdays">
           <span>S</span>
           <span>M</span>
           <span>T</span>
@@ -142,11 +150,11 @@ const AppointmentsCalendar = ({ onDateSelect }) => {
           <span>F</span>
           <span>S</span>
         </div>
-        <div className="calendar-days">
+        <div className="doctor-calendar-days">
           {days.map((dayObj, index) => (
             <button
               key={index}
-              className={`calendar-day ${
+              className={`doctor-calendar-day ${
                 !dayObj.isCurrentMonth ? 'other-month' : ''
               } ${
                 dayObj.day === selectedDate && dayObj.isCurrentMonth ? 'selected' : ''
@@ -158,9 +166,9 @@ const AppointmentsCalendar = ({ onDateSelect }) => {
           ))}
         </div>
       </div>
-      <div className="calendar-appointments">
-        <h4 className="time-slots-title">Available Time Slots</h4>
-        <div className="time-slots-grid">
+      <div className="doctor-calendar-appointments">
+        <h4 className="doctor-time-slots-title">Available Time Slots</h4>
+        <div className="doctor-time-slots-grid">
           {timeSlots.map((slot) => {
             const isBooked = bookedTimeSlots.includes(slot);
             const appointment = selectedDayAppointments.find(
@@ -174,25 +182,26 @@ const AppointmentsCalendar = ({ onDateSelect }) => {
             return (
               <div
                 key={slot}
-                className={`time-slot ${isBooked ? 'booked' : 'available'}`}
+                className={`doctor-time-slot ${isBooked ? 'booked' : 'available'}`}
               >
-                <div className="time-slot-time">
+                <div className="doctor-time-slot-time">
                   <span className="material-symbols-outlined">schedule</span>
                   {slot}
                 </div>
                 {isBooked && appointment ? (
-                  <div className="time-slot-patient">
+                  <div className="doctor-time-slot-patient">
                     <span className="material-symbols-outlined">person</span>
                     {appointment.patientName}
                   </div>
                 ) : (
-                  <div className="time-slot-status">Available</div>
+                  <div className="doctor-time-slot-status">Available</div>
                 )}
               </div>
             );
           })}
         </div>
       </div>
+    </div>
     </div>
   );
 };

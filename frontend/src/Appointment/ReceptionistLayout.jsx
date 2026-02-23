@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import ReceptionistSidebar from './ReceptionistSidebar';
 import ReceptionistHeader from './ReceptionistHeader';
-import '../DoctorDashboard/Sidebar.css';
-import '../DoctorDashboard/Header.css';
+import './ReceptionistLayout.css';
 
 const ReceptionistLayout = () => {
   const [darkMode, setDarkMode] = useState(() => {
@@ -13,12 +12,28 @@ const ReceptionistLayout = () => {
   
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebarCollapsed');
-    return saved ? JSON.parse(saved) : false;
+    // على الموبايل، نبدأ مغلق. على الديسكتوب، نبدأ مفتوح
+    if (saved !== null) {
+      return JSON.parse(saved);
+    }
+    return window.innerWidth <= 768; // مغلق على الموبايل، مفتوح على الديسكتوب
   });
 
   useEffect(() => {
     applyDarkMode(darkMode);
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setSidebarCollapsed(true);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const applyDarkMode = (isDark) => {
@@ -47,33 +62,21 @@ const ReceptionistLayout = () => {
   };
 
   return (
-    <div className="flex h-screen bg-neutral text-text font-body" style={{ background: 'var(--primary-bg)' }}>
-      <ReceptionistSidebar collapsed={sidebarCollapsed} />
-      <div 
-        className="flex-1 flex flex-col" 
-        style={{ 
-          marginLeft: window.innerWidth > 768 ? (sidebarCollapsed ? '120px' : '320px') : '0',
-          transition: 'margin-left 0.3s ease',
-          width: '100%',
-          maxWidth: '100vw',
-          overflow: 'hidden'
-        }}
-      >
+    <div className="receptionist-main-layout" style={{ background: 'var(--primary-bg)' }}>
+      <ReceptionistSidebar 
+        isCollapsed={sidebarCollapsed} 
+        onToggle={toggleSidebar} 
+      />
+      
+      <div className={`receptionist-content ${sidebarCollapsed ? 'sidebar-closed' : 'sidebar-open'}`}>
         <ReceptionistHeader 
           toggleDarkMode={toggleDarkMode} 
           darkMode={darkMode}
           toggleSidebar={toggleSidebar}
+          sidebarCollapsed={sidebarCollapsed}
         />
-        <main 
-          className="overflow-y-auto overflow-x-hidden" 
-          style={{ 
-            background: 'var(--primary-bg)', 
-            minHeight: 'calc(100vh - 70px)',
-            width: '100%',
-            maxWidth: '100%',
-            padding: '12px 16px'
-          }}
-        >
+        
+        <main className="receptionist-main-content">
           <Outlet />
         </main>
       </div>

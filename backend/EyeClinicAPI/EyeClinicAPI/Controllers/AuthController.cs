@@ -1,11 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using EyeClinicAPI.Data;
+using EyeClinicAPI.DTOs;
 using EyeClinicAPI.Models;
+using EyeClinicAPI.Services;
 
 namespace EyeClinicAPI.Controllers
 {
@@ -14,90 +12,107 @@ namespace EyeClinicAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly EyeClinicDbContext _context;
-        private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthController> _logger;
+        private readonly IEmailService _emailService;
 
-        public AuthController(EyeClinicDbContext context, IConfiguration configuration)
+        public AuthController(EyeClinicDbContext context, ILogger<AuthController> logger, IEmailService emailService)
         {
             _context = context;
-            _configuration = configuration;
-        }
-
-        [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
-        {
-            // Only allow Patient registration
-            if (request.Role.ToLower() != "patient")
-            {
-                return BadRequest(new { message = "Only patients can register. Doctor and Receptionist accounts are predefined." });
-            }
-
-            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
-            {
-                return BadRequest(new { message = "Email already exists" });
-            }
-
-            var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-
-            var user = new User
-            {
-                Username = request.Username,
-                Email = request.Email,
-                PasswordHash = passwordHash,
-                Role = "Patient"  // Force role to be Patient
-            };
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Patient registered successfully" });
+            _logger = logger;
+            _emailService = emailService;
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-
-            if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            try
             {
-                return Unauthorized(new { message = "Invalid credentials" });
-            }
+                _logger.LogInformation("Login attempt for email: {Email}", request.Email);
 
-            var token = GenerateJwtToken(user);
+                // Find user by email
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == request.Email);
 
-            return Ok(new
-            {
-                token,
-                user = new
+                if (user == null)
                 {
-                    user.Id,
-                    user.Username,
-                    user.Email,
-                    user.Role
+                    _logger.LogWarning("Login failed: User not found for email {Email}", request.Email);
+                    return Unauthorized(new { message = "Invalid email or password" });
                 }
-            });
+
+                // Verify password (simple comparison - in production use proper hashing)
+                if (user.PasswordHash != request.Password)
+                {
+                    _logger.LogWarning("Login failed: Invalid password for email {Email}", request.Email);
+                    return Unauthorized(new { message = "Invalid email or password" });
+                }
+
+                _logger.LogInformation("Login successful for email: {Email}, Role: {Role}", request.Email, user.Role);
+
+                // Send login notification email (don't wait for it)
+                _ = _emailService.SendLoginEmailAsync(user.Email, user.Username);
+
+                // Return user info (excluding password)
+                return Ok(new
+                {
+                    user = new
+                    {
+                        id = user.Id,
+                        username = user.Username,
+                        email = user.Email,
+                        role = user.Role
+                    },
+                    token = "mock-jwt-token" // In production, generate actual JWT
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during login for email: {Email}", request.Email);
+                return StatusCode(500, new { message = "An error occurred during login" });
+            }
         }
 
-        private string GenerateJwtToken(User user)
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] User newUser)
         {
-            var claims = new[]
+            try
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role)
-            };
+                // Check if user already exists
+                var existingUser = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == newUser.Email);
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                if (existingUser != null)
+                {
+                    return BadRequest(new { message = "User with this email already exists" });
+                }
 
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddDays(7),
-                signingCredentials: creds
-            );
+                // In production, hash the password properly
+                // For now, storing as-is (NOT RECOMMENDED FOR PRODUCTION)
+                newUser.CreatedAt = DateTime.UtcNow;
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+                _context.Users.Add(newUser);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("User registered successfully: {Email}", newUser.Email);
+
+                // Send welcome email (don't wait for it)
+                _ = _emailService.SendWelcomeEmailAsync(newUser.Email, newUser.Username);
+
+                return Ok(new
+                {
+                    user = new
+                    {
+                        id = newUser.Id,
+                        username = newUser.Username,
+                        email = newUser.Email,
+                        role = newUser.Role
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during registration for email: {Email}", newUser.Email);
+                return StatusCode(500, new { message = "An error occurred during registration" });
+            }
         }
     }
 }

@@ -1,14 +1,16 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import logo from "../images/logo.png";
 import "./Sidebar.css";
 
 const Sidebar = ({ collapsed }) => {
+  const { t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to logout?')) {
+    if (window.confirm(t('sidebar.logoutConfirm'))) {
       localStorage.removeItem("userRole");
       localStorage.removeItem("isAuthenticated");
       navigate("/login");
@@ -36,7 +38,7 @@ const Sidebar = ({ collapsed }) => {
         </div>
         <div className="doctor-profile-header">
           <h1>Dr. Mohab Khairy</h1>
-          <p>Ophthalmologist</p>
+          <p>{t('sidebar.ophthalmologist')}</p>
         </div>
       </div>
 
@@ -49,7 +51,7 @@ const Sidebar = ({ collapsed }) => {
           <div className="nav-icon">
             <span className="material-symbols-outlined">dashboard</span>
           </div>
-          <span className="nav-label">Dashboard</span>
+          <span className="nav-label">{t('sidebar.dashboard')}</span>
         </Link>
 
         <Link 
@@ -59,7 +61,7 @@ const Sidebar = ({ collapsed }) => {
           <div className="nav-icon">
             <span className="material-symbols-outlined">group</span>
           </div>
-          <span className="nav-label">Patients</span>
+          <span className="nav-label">{t('sidebar.patients')}</span>
         </Link>
 
         <Link 
@@ -69,7 +71,7 @@ const Sidebar = ({ collapsed }) => {
           <div className="nav-icon">
             <span className="material-symbols-outlined">calendar_month</span>
           </div>
-          <span className="nav-label">Appointments</span>
+          <span className="nav-label">{t('sidebar.appointments')}</span>
         </Link>
 
         <Link 
@@ -79,7 +81,7 @@ const Sidebar = ({ collapsed }) => {
           <div className="nav-icon">
             <span className="material-symbols-outlined">payments</span>
           </div>
-          <span className="nav-label">Finance</span>
+          <span className="nav-label">{t('sidebar.finance')}</span>
         </Link>
 
         <Link 
@@ -89,7 +91,7 @@ const Sidebar = ({ collapsed }) => {
           <div className="nav-icon">
             <span className="material-symbols-outlined">medical_services</span>
           </div>
-          <span className="nav-label">Clinic System</span>
+          <span className="nav-label">{t('sidebar.clinicSystem')}</span>
         </Link>
 
         <Link 
@@ -99,7 +101,7 @@ const Sidebar = ({ collapsed }) => {
           <div className="nav-icon">
             <span className="material-symbols-outlined">settings</span>
           </div>
-          <span className="nav-label">Settings</span>
+          <span className="nav-label">{t('sidebar.settings')}</span>
         </Link>
 
         {/* Logout Button */}
@@ -107,7 +109,7 @@ const Sidebar = ({ collapsed }) => {
           <div className="nav-icon">
             <span className="material-symbols-outlined">logout</span>
           </div>
-          <span className="nav-label">Logout</span>
+          <span className="nav-label">{t('sidebar.logout')}</span>
         </div>
       </nav>
 
@@ -125,7 +127,7 @@ const Sidebar = ({ collapsed }) => {
         </div>
         <div className="user-info">
           <h3>Dr. Mohab Khairy</h3>
-          <p>Ophthalmologist</p>
+          <p>{t('sidebar.ophthalmologist')}</p>
         </div>
       </div>
     </aside>

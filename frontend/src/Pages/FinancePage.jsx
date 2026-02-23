@@ -1,24 +1,74 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Finance.css';
 
 const FinancePage = () => {
   const [dateRange, setDateRange] = useState('thisMonth');
   const [searchTerm, setSearchTerm] = useState('');
-  const [invoices, setInvoices] = useState([
-    { id: 'RV-001', patient: 'Doha Waleed', doctor: 'Dr. Mohab', service: 'Eye Exam', amount: 250, status: 'Paid', payment: 'Cash', date: 'Oct 24, 2023' },
-    { id: 'RV-002', patient: 'Myrna Ahmed', doctor: 'Dr. Mohab', service: 'Consultation', amount: 250, status: 'Paid', payment: 'Cash', date: 'Oct 24, 2023' },
-    { id: 'RV-003', patient: 'Yassmin Ahmed', doctor: 'Dr. Mohab', service: 'Surgery', amount: 4550, status: 'Paid', payment: 'Cash', date: 'Sep 15, 2023' },
-  ]);
-
-  const [expenses, setExpenses] = useState([
-    { id: 'EXP-001', category: 'Medical Supplies', amount: 1200, date: 'Oct 20, 2023', addedBy: 'Admin', notes: 'Monthly supplies' },
-    { id: 'EXP-002', category: 'Equipment', amount: 4500, date: 'Oct 15, 2023', addedBy: 'Admin', notes: 'New microscope' },
-    { id: 'EXP-003', category: 'Utilities', amount: 800, date: 'Oct 10, 2023', addedBy: 'Manager', notes: 'Monthly bills' },
-  ]);
-
+  const [invoices, setInvoices] = useState([]);
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
   const navigate = useNavigate();
   const userRole = localStorage.getItem('userRole');
+  const API_BASE_URL = 'http://localhost:5201/api';
+
+  // Fetch invoices and expenses from backend
+  useEffect(() => {
+    if (!userRole) {
+      navigate('/login');
+      return;
+    }
+    
+    fetchFinanceData();
+  }, [dateRange]);
+
+  const fetchFinanceData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch invoices (appointments with payment info)
+      const invoicesResponse = await fetch(`${API_BASE_URL}/Appointments`);
+      if (!invoicesResponse.ok) throw new Error('Failed to fetch invoices');
+      const invoicesData = await invoicesResponse.json();
+      
+      // Transform appointments to invoices format
+      const transformedInvoices = invoicesData.map(apt => ({
+        id: apt.appointmentId || apt.id,
+        patient: apt.patientName,
+        doctor: `Dr. ${apt.doctorName || 'Mohab'}`,
+        service: apt.reasonForVisit || 'Consultation',
+        amount: apt.consultationFee || 250,
+        status: apt.paymentStatus || 'Pending',
+        payment: apt.paymentMethod || 'Cash',
+        date: new Date(apt.appointmentDate).toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric' 
+        })
+      }));
+      
+      setInvoices(transformedInvoices);
+      
+      // For now, keep expenses as static until backend is ready
+      setExpenses([
+        { id: 'EXP-001', category: 'Medical Supplies', amount: 1200, date: 'Oct 20, 2023', addedBy: 'Admin', notes: 'Monthly supplies' },
+        { id: 'EXP-002', category: 'Equipment', amount: 4500, date: 'Oct 15, 2023', addedBy: 'Admin', notes: 'New microscope' },
+        { id: 'EXP-003', category: 'Utilities', amount: 800, date: 'Oct 10, 2023', addedBy: 'Manager', notes: 'Monthly bills' },
+      ]);
+      
+    } catch (err) {
+      console.error('Error fetching finance data:', err);
+      setError(err.message);
+      // Keep default data on error
+      setInvoices([]);
+      setExpenses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const revenueExpenseData = [
     { month: 'Jan', revenue: 42000, expenses: 18000 },
@@ -114,7 +164,7 @@ const FinancePage = () => {
               {['today', 'thisMonth', 'custom'].map(range => (
                 <button
                   key={range}
-                  className={`date-button {dateRange === range ? 'active' : ''}`}
+                  className={`date-button ${dateRange === range ? 'active' : ''}`}
                   onClick={() => setDateRange(range)}
                 >
                   {range === 'today' ? 'Today' : range === 'thisMonth' ? 'This Month' : 'Custom'}
@@ -143,6 +193,41 @@ const FinancePage = () => {
           </div>
         </header>
 
+        {loading && (
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#0D47A1' }}>
+            <p style={{ fontSize: '1.2rem' }}>Loading financial data...</p>
+          </div>
+        )}
+
+        {error && (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '2rem', 
+            background: '#ffebee', 
+            color: '#d32f2f',
+            borderRadius: '8px',
+            margin: '1rem 0'
+          }}>
+            <p style={{ fontSize: '1.1rem' }}>Error: {error}</p>
+            <button 
+              onClick={fetchFinanceData}
+              style={{
+                marginTop: '1rem',
+                padding: '0.5rem 1.5rem',
+                background: '#0D47A1',
+                color: 'white',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer'
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <>
         <section className="stats-grid">
           <div className="stat-card">
             <h3 className="stat-title">Total Revenue</h3>

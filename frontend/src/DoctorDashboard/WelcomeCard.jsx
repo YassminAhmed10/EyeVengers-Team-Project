@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 import './WelcomeCard.css';
 
 const WelcomeCard = () => {
+  const { t } = useLanguage();
   const [appointmentCount, setAppointmentCount] = useState(12);
 
   useEffect(() => {
@@ -23,7 +25,7 @@ const WelcomeCard = () => {
     <div className="welcome-card-modern">
       <div className="welcome-content">
         <div className="welcome-text">
-          <h1 className="welcome-greeting">Welcome back, Dr. Mohab Khairy</h1>
+          <h1 className="welcome-greeting">{t('dashboard.welcomeDoctor')}</h1>
         </div>
         <div className="welcome-illustration">
           <div className="doctor-image-wrapper">
