@@ -1,0 +1,4 @@
+import { jsxs as _jsxs, jsx as _jsx } from "react/jsx-runtime";
+export function StickyBookingFooter({ selectedDateText, selectedTimeText, price, canConfirm, onConfirm, }) {
+    return (_jsxs("div", { className: "radiology-panel sticky bottom-2 z-20 mt-5 p-4", dir: "ltr", children: [_jsxs("div", { className: "mb-3 flex flex-wrap items-center justify-between gap-2 text-sm text-slate-700", children: [_jsxs("span", { children: ["Date: ", selectedDateText || 'Not selected'] }), _jsxs("span", { children: ["Time: ", selectedTimeText || 'Not selected'] }), _jsxs("span", { className: "font-semibold text-blue-700", children: ["Price: EGP ", price] })] }), _jsx("button", { type: "button", disabled: !canConfirm, onClick: onConfirm, className: "w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-slate-300", children: "Confirm Booking" })] }));
+}
