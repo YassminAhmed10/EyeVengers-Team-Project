@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import glassBG6 from "../assets/glassBG6.jpg";
 import "./CartPage.css";
 
 const EGP_FORMATTER = new Intl.NumberFormat("en-US", {
@@ -92,7 +93,7 @@ export default function CartPage({ cartItems, onUpdateQty, onRemoveItem }) {
   /* ── Empty cart ── */
   if (!cartItems.length) {
     return (
-      <div className="cart-page">
+      <div className="cart-page" style={{ backgroundImage: `url(${glassBG6})`, backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" }}>
         <div className="cart-empty">
           <h2>Your cart is empty</h2>
           <p>Add your favorite frame first, then complete your prescription details here.</p>
@@ -106,7 +107,7 @@ export default function CartPage({ cartItems, onUpdateQty, onRemoveItem }) {
 
   /* ── Main ── */
   return (
-    <div className="cart-page">
+    <div className="cart-page" style={{ backgroundImage: `url(${glassBG6})`, backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" }}>
       <motion.div
         className="cart-grid"
         variants={staggerContainer}

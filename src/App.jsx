@@ -113,13 +113,23 @@ export default function App() {
   }, [location.pathname]);
 
   const handleAddToCart = (item) => {
-    setCartItems((prev) => [
-      ...prev,
-      {
-        ...item,
-        cartItemId: `${item.productId}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      },
-    ]);
+    setCartItems((prev) => {
+      const existingIndex = prev.findIndex(
+        (i) => i.productId === item.productId && i.color === item.color && i.lens === item.lens
+      );
+      if (existingIndex !== -1) {
+        return prev.map((i, idx) =>
+          idx === existingIndex ? { ...i, qty: (i.qty ?? 1) + (item.qty ?? 1) } : i
+        );
+      }
+      return [
+        ...prev,
+        {
+          ...item,
+          cartItemId: `${item.productId}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        },
+      ];
+    });
   };
 
   const handleUpdateQty = (cartItemId, qty) => {
