@@ -1,0 +1,212 @@
+.pharmacy-sidebar {
+  width: 280px;
+  background: #a3c4f3; /* baby blue theme */
+  color: #1e3a8a;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  height: 100vh;
+  z-index: 1000;
+  overflow: hidden;
+  transition: width 0.3s ease;
+}
+
+.sidebar-header {
+  padding: 2rem 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pharmacy-logo {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #60a5fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem; /* زيادة المسافة بين العناصر */
+  overflow-y: auto;
+}
+
+.pharmacy-sidebar .sidebar-nav .nav-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  color: #1e3a8a;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-radius: 12px;
+  position: relative;
+  cursor: pointer;
+  background-color: #93c5fd;
+}
+
+.nav-item:hover {
+  background: #60a5fa;
+  color: white;
+}
+
+.nav-item.active {
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.nav-icon {
+  font-size: 1.25rem;
+  width: 24px;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.nav-item:hover .nav-icon {
+  transform: scale(1.1);
+}
+
+.nav-label {
+  font-size: 0.938rem;
+  font-weight: 500;
+}
+
+.nav-badge {
+  margin-left: auto;
+  background: #f87171;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  color: #1e3a8a;
+  background: transparent;
+  border-radius: 12px;
+  margin-top: auto;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout-button:hover {
+  background: #f87171;
+  color: white;
+}
+
+.user-profile {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.user-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #60a5fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.user-info h3 {
+  font-size: 0.938rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.user-info p {
+  font-size: 0.813rem;
+  color: #1e3a8a;
+  margin: 0;
+}
+
+/* Scrollbar */
+.sidebar-nav::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(30, 58, 138, 0.3);
+  border-radius: 4px;
+}
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(30, 58, 138, 0.5);
+}
+
+/* Collapsed State */
+.pharmacy-sidebar.collapsed {
+  width: 80px;
+}
+
+.pharmacy-sidebar.collapsed .sidebar-header {
+  padding: 1.5rem 0.5rem;
+}
+
+.pharmacy-sidebar.collapsed .pharmacy-logo {
+  width: 50px;
+  height: 50px;
+  font-size: 1rem;
+}
+
+.pharmacy-sidebar.collapsed .sidebar-header h2,
+.pharmacy-sidebar.collapsed .sidebar-header p {
+  display: none;
+}
+
+.pharmacy-sidebar.collapsed .nav-label,
+.pharmacy-sidebar.collapsed .logout-button .nav-label,
+.pharmacy-sidebar.collapsed .user-info {
+  display: none;
+}
+
+.pharmacy-sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 0.875rem;
+}
+
+.pharmacy-sidebar.collapsed .sidebar-nav {
+  padding: 1rem 0.5rem;
+}
+
+.pharmacy-sidebar.collapsed .logout-button {
+  justify-content: center;
+  padding: 0.875rem;
+}
+
+.pharmacy-sidebar.collapsed .user-profile {
+  justify-content: center;
+  padding: 1rem 0.5rem;
+}
+
+.pharmacy-sidebar.collapsed .nav-icon {
+  margin: 0;
+}
