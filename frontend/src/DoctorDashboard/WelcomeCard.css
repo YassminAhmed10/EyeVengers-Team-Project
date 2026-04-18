@@ -1,13 +1,147 @@
+/* ══════════════════════════════════════════
+   WELCOME CARD — clean medical banner
+══════════════════════════════════════════ */
 .welcome-card-modern {
-  background: linear-gradient(135deg, #a8d5ff 0%, #6ba3d8 100%);
-  border-radius: 18px;
-  padding: 1.25rem 1.75rem 1rem 1.75rem;
-  margin-bottom: 0.75rem;
-  margin-top: 1.5rem;
-  box-shadow: 0 10px 30px rgba(107, 163, 216, 0.3);
+  background: linear-gradient(120deg, #1565c0 0%, #1e88e5 60%, #42a5f5 100%);
+  border-radius: 16px;
+  padding: 0;
+  margin-bottom: 1.25rem;
+  margin-top: 0;
+  box-shadow: 0 4px 24px rgba(21, 101, 192, 0.22);
   position: relative;
-  overflow: visible;
-  min-height: 130px;
+  overflow: hidden;
+  min-height: 140px;
+}
+
+/* top-right decorative circles */
+.welcome-card-modern::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 260px;
+  height: 260px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.welcome-card-modern::after {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  right: 220px;
+  width: 200px;
+  height: 200px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.welcome-content {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: flex-end;
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  min-height: 140px;
+  padding: 1.5rem 1.75rem 0 1.75rem;
+}
+
+.welcome-text {
+  padding-bottom: 1.5rem;
+}
+
+.welcome-greeting-small {
+  color: rgba(255,255,255,0.75);
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 0.3rem;
+}
+
+.welcome-text h1.welcome-greeting {
+  color: #ffffff;
+  font-size: 1.65rem;
+  font-weight: 700;
+  margin-bottom: 0.45rem;
+  line-height: 1.2;
+}
+
+.welcome-subtitle {
+  color: rgba(255,255,255,0.8);
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
+/* quick-stat pills inside banner */
+.welcome-stats-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.welcome-stat-pill {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 20px;
+  padding: 0.3rem 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: #fff;
+  backdrop-filter: blur(4px);
+}
+.welcome-stat-pill .pill-num {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* Doctor illustration */
+.welcome-illustration {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  min-height: 140px;
+  width: 320px;
+}
+
+.doctor-image-wrapper {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+.doctor-photo {
+  width: 340px;
+  height: 175px;
+  object-fit: contain;
+  object-position: bottom;
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,0.18));
+  display: block;
+}
+
+.floating-elements { display: none; }
+
+/* Dark mode */
+[data-theme="dark"] .welcome-card-modern {
+  background: linear-gradient(120deg, #0d2657 0%, #1a3a6e 60%, #1e4d94 100%);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .welcome-illustration { width: 220px; }
+  .doctor-photo { width: 240px; }
+}
+@media (max-width: 768px) {
+  .welcome-content { grid-template-columns: 1fr; padding-bottom: 1rem; }
+  .welcome-illustration { display: none; }
+  .welcome-text h1.welcome-greeting { font-size: 1.35rem; }
 }
 
 .welcome-card-modern::before {

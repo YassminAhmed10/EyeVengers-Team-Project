@@ -1,0 +1,617 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Operation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Operation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\PatientController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\PatientController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Patient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Patient.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\EMRcontrol\\MedicalRecordController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\EMRcontrol\\MedicalRecordController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalRecord.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalRecord.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\User.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\User.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\Appointment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\Appointment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\Doctor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\Doctor.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalTestFile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalTestFile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\PrescriptionItem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\PrescriptionItem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Prescription.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Prescription.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\PatientComplaint.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\PatientComplaint.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalHistory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalHistory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Investigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Investigation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\EyeExamination.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\EyeExamination.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Diagnosis.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Diagnosis.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Data\\EyeClinicDbContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Data\\EyeClinicDbContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\frontend\\src\\Pages\\AppointmentsPage.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\Pages\\AppointmentsPage.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\AppointmentsController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\AppointmentsController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\MedicalRecord\\MedicalRecordDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\MedicalRecord\\MedicalRecordDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\Prescription\\PrescriptionItemDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\Prescription\\PrescriptionItemDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\MedicalRecord\\MedicalRecordOperationsDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\MedicalRecord\\MedicalRecordOperationsDto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\frontend\\src\\Pages\\Appointments.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\Pages\\Appointments.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\SeedController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\SeedController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\DoctorsControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\DoctorsControllers.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\DashboardController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\DashboardController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\AuthController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\AuthController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Migrations\\20251208072419_SeedDoctorData.Designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Migrations\\20251208072419_SeedDoctorData.Designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\frontend\\src\\Pages\\DoctorPage.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\Pages\\DoctorPage.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\frontend\\src\\ReceptionistLayout.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\ReceptionistLayout.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\frontend\\src\\AllProject.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:frontend\\src\\AllProject.jsx||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\DoctorSchedule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\DoctorSchedule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 1,
+      "VerticalTabListWidth": 245,
+      "DocumentGroups": [
+        {
+          "DockedHeight": 205,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "AppointmentsPage.jsx",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\frontend\\src\\Pages\\AppointmentsPage.jsx",
+              "RelativeDocumentMoniker": "frontend\\src\\Pages\\AppointmentsPage.jsx",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\frontend\\src\\Pages\\AppointmentsPage.jsx",
+              "RelativeToolTip": "frontend\\src\\Pages\\AppointmentsPage.jsx",
+              "ViewState": "AgIAAAQIAAAAAAAAAAAwwMMKAAArAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2025-12-13T06:54:12.105Z",
+              "IsPinned": true
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Operation.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Operation.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Operation.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Operation.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Operation.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB0AAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T12:27:25.417Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:3:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c64b9c2-e352-428e-a56d-0ace190b99a6}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 33,
+              "Title": "DoctorSchedule.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\DoctorSchedule.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\DoctorSchedule.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\DoctorSchedule.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\DoctorSchedule.cs",
+              "ViewState": "AgIAACEAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T14:04:20.428Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "MedicalRecordController.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\EMRcontrol\\MedicalRecordController.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\EMRcontrol\\MedicalRecordController.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\EMRcontrol\\MedicalRecordController.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\EMRcontrol\\MedicalRecordController.cs",
+              "ViewState": "AgIAAHkBAAAAAAAAAAAwwKgBAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T12:31:56.006Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "PatientController.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\PatientController.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\PatientController.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\PatientController.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\PatientController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB4AAAAzAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T12:31:21.609Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "User.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\User.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\User.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\User.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\User.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T12:29:35.8Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "Doctor.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\Doctor.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\Doctor.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\Doctor.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\Doctor.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T12:29:11.922Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "MedicalTestFile.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalTestFile.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalTestFile.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalTestFile.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalTestFile.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T12:28:50.718Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "PrescriptionItem.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\PrescriptionItem.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\PrescriptionItem.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\PrescriptionItem.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\PrescriptionItem.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T12:28:27.54Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "Prescription.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Prescription.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Prescription.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Prescription.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Prescription.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T12:28:13.694Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "PatientComplaint.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\PatientComplaint.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\PatientComplaint.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\PatientComplaint.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\PatientComplaint.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T12:27:57.094Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "MedicalHistory.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalHistory.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalHistory.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalHistory.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalHistory.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T12:26:52.209Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "Investigation.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Investigation.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Investigation.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Investigation.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Investigation.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T12:26:17.542Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "EyeExamination.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\EyeExamination.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\EyeExamination.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\EyeExamination.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\EyeExamination.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T12:25:51.161Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "Diagnosis.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Diagnosis.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Diagnosis.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Diagnosis.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Diagnosis.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T12:25:34.893Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "EMR.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T12:11:25.599Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "MedicalRecord.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalRecord.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalRecord.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalRecord.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\MedicalRecord.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T11:57:02.002Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Patient.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Patient.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Patient.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Patient.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Patient.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-18T11:50:48.549Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "MedicalRecordDto.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\MedicalRecord\\MedicalRecordDto.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\MedicalRecord\\MedicalRecordDto.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\MedicalRecord\\MedicalRecordDto.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\MedicalRecord\\MedicalRecordDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-15T12:18:57.061Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "PrescriptionItemDto.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\Prescription\\PrescriptionItemDto.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\Prescription\\PrescriptionItemDto.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\Prescription\\PrescriptionItemDto.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\Prescription\\PrescriptionItemDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-15T12:18:19.774Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "MedicalRecordOperationsDto.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\MedicalRecord\\MedicalRecordOperationsDto.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\MedicalRecord\\MedicalRecordOperationsDto.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\MedicalRecord\\MedicalRecordOperationsDto.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\DTOs\\EMRd\\MedicalRecord\\MedicalRecordOperationsDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-15T12:17:32.181Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Appointment.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\Appointment.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\Appointment.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\Appointment.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\Appointment.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-15T12:10:35.522Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "SeedController.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\SeedController.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\SeedController.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\SeedController.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\SeedController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-13T13:09:43.161Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "DoctorsControllers.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\DoctorsControllers.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\DoctorsControllers.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\DoctorsControllers.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\DoctorsControllers.cs",
+              "ViewState": "AgIAADMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-13T13:09:34.826Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "DashboardController.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\DashboardController.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\DashboardController.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\DashboardController.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\DashboardController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-13T13:09:26.034Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\AuthController.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\AuthController.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\AuthController.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\AuthController.cs",
+              "ViewState": "AgIAABsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-13T13:00:03.031Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "20251208072419_SeedDoctorData.Designer.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Migrations\\20251208072419_SeedDoctorData.Designer.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Migrations\\20251208072419_SeedDoctorData.Designer.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Migrations\\20251208072419_SeedDoctorData.Designer.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Migrations\\20251208072419_SeedDoctorData.Designer.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-13T12:56:10.436Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "EyeClinicDbContext.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Data\\EyeClinicDbContext.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Data\\EyeClinicDbContext.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Data\\EyeClinicDbContext.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Data\\EyeClinicDbContext.cs",
+              "ViewState": "AgIAAJgAAAAAAAAAAAAwwNMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-13T12:55:57.3Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "AppointmentsController.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\AppointmentsController.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\AppointmentsController.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\AppointmentsController.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Controllers\\AppointmentsController.cs",
+              "ViewState": "AgIAAIgAAAAAAAAAAAAAAIgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-13T12:55:36.452Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Program.cs",
+              "RelativeDocumentMoniker": "backend\\EyeClinicAPI\\EyeClinicAPI\\Program.cs",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\backend\\EyeClinicAPI\\EyeClinicAPI\\Program.cs",
+              "RelativeToolTip": "backend\\EyeClinicAPI\\EyeClinicAPI\\Program.cs",
+              "ViewState": "AgIAACgAAAAAAAAAAAAswFcAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-13T12:46:26.066Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "DoctorPage.jsx",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\frontend\\src\\Pages\\DoctorPage.jsx",
+              "RelativeDocumentMoniker": "frontend\\src\\Pages\\DoctorPage.jsx",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\frontend\\src\\Pages\\DoctorPage.jsx",
+              "RelativeToolTip": "frontend\\src\\Pages\\DoctorPage.jsx",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2025-12-13T07:16:41.745Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "AllProject.jsx",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\frontend\\src\\AllProject.jsx",
+              "RelativeDocumentMoniker": "frontend\\src\\AllProject.jsx",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\frontend\\src\\AllProject.jsx",
+              "RelativeToolTip": "frontend\\src\\AllProject.jsx",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2025-12-13T07:10:23.255Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "Appointments.css",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\frontend\\src\\Pages\\Appointments.css",
+              "RelativeDocumentMoniker": "frontend\\src\\Pages\\Appointments.css",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\frontend\\src\\Pages\\Appointments.css",
+              "RelativeToolTip": "frontend\\src\\Pages\\Appointments.css",
+              "ViewState": "AgIAAEMFAAAAAAAAAAAqwHQFAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2025-12-13T06:54:27.294Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "ReceptionistLayout.jsx",
+              "DocumentMoniker": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\frontend\\src\\ReceptionistLayout.jsx",
+              "RelativeDocumentMoniker": "frontend\\src\\ReceptionistLayout.jsx",
+              "ToolTip": "C:\\Users\\LOQ\\source\\repos\\YassminAhmed10\\EyeVengers-Team-Project\\frontend\\src\\ReceptionistLayout.jsx",
+              "RelativeToolTip": "frontend\\src\\ReceptionistLayout.jsx",
+              "ViewState": "AgIAACUAAAAAAAAAAAAIwFQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003663|",
+              "WhenOpened": "2025-12-13T06:54:01.884Z"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:2:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:4:0:{d212f56b-c48a-434c-a121-1c5d80b59b9f}"
+            }
+          ]
+        },
+        {
+          "DockedHeight": 195,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{0ad07096-bba9-4900-a651-0598d26f6d24}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

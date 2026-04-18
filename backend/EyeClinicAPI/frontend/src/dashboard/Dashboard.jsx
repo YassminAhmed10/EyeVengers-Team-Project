@@ -54,7 +54,7 @@ export default function DoctorDashboard() {
     };
 
     const handleViewEMR = (appointment) => {
-        navigate(`/emr/${encodeURIComponent(appointment.patientName)}`, {
+        navigate(`/emr/${encodeURIComponent(appointment.patientId)}`, {
             state: {
                 patientId: appointment.patientId,
                 patientName: appointment.patientName,
@@ -289,7 +289,7 @@ export default function DoctorDashboard() {
                                                     <div className="patient-info">
                                                         <div className="patient-name">{appt.patientName}</div>
                                                         <div className="patient-meta">
-                                                            ID: {appt.patientId} • {calculateAge(appt.patientBirthDate)} yrs
+                                                            ID: {appt.patientId} ï¿½ {calculateAge(appt.patientBirthDate)} yrs
                                                         </div>
                                                     </div>
                                                 </div>

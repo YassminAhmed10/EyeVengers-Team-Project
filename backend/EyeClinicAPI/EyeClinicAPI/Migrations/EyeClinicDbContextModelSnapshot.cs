@@ -46,8 +46,10 @@ namespace EyeClinicAPI.Migrations
 
                     b.Property<string>("AppointmentType")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("");
 
                     b.Property<string>("ChronicDiseases")
                         .HasMaxLength(500)
@@ -99,8 +101,7 @@ namespace EyeClinicAPI.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<decimal?>("FinalPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<string>("InsuranceCompany")
                         .HasMaxLength(100)
@@ -188,172 +189,9 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("AppointmentId");
 
-                    b.HasIndex("DoctorId", "AppointmentDate", "AppointmentTime");
+                    b.HasIndex(new[] { "DoctorId", "AppointmentDate", "AppointmentTime" }, "IX_Appointments_DoctorId_AppointmentDate_AppointmentTime");
 
-                    b.ToTable("Appointments");
-                });
-
-            modelBuilder.Entity("EyeClinicAPI.Models.Clinic.Equipment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("LastMaintenance")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("NextMaintenance")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("SerialNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Equipments");
-                });
-
-            modelBuilder.Entity("EyeClinicAPI.Models.Clinic.MaintenanceTask", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AssignedTo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("CompletedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DueDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Priority")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Task")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("MaintenanceTasks");
-                });
-
-            modelBuilder.Entity("EyeClinicAPI.Models.Clinic.Sanitization", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Area")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CleanedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Frequency")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("LastCleaned")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("NextCleaning")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Sanitizations");
-                });
-
-            modelBuilder.Entity("EyeClinicAPI.Models.Clinic.Supply", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("LastRestocked")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ReorderLevel")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Supplier")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Unit")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Supplies");
+                    b.ToTable("Appointments", (string)null);
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.Doctor", b =>
@@ -423,13 +261,13 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("DoctorId");
 
-                    b.HasIndex("Email")
+                    b.HasIndex(new[] { "Email" }, "IX_Doctors_Email")
                         .IsUnique();
 
-                    b.HasIndex("LicenseNumber")
+                    b.HasIndex(new[] { "LicenseNumber" }, "IX_Doctors_LicenseNumber")
                         .IsUnique();
 
-                    b.ToTable("Doctors");
+                    b.ToTable("Doctors", (string)null);
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.DoctorSchedule", b =>
@@ -449,6 +287,9 @@ namespace EyeClinicAPI.Migrations
                     b.Property<int>("DoctorId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("DoctorId1")
+                        .HasColumnType("int");
+
                     b.Property<TimeSpan>("EndTime")
                         .HasColumnType("time");
 
@@ -466,9 +307,11 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("ScheduleId");
 
-                    b.HasIndex("DoctorId", "DayOfWeek");
+                    b.HasIndex("DoctorId1");
 
-                    b.ToTable("DoctorSchedules");
+                    b.HasIndex(new[] { "DoctorId", "DayOfWeek" }, "IX_DoctorSchedules_DoctorId_DayOfWeek");
+
+                    b.ToTable("DoctorSchedules", (string)null);
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.Diagnosis", b =>
@@ -492,7 +335,8 @@ namespace EyeClinicAPI.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ICD10Code")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ICD10Code");
 
                     b.Property<int>("MedicalRecordId")
                         .HasColumnType("int");
@@ -511,11 +355,11 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CheckupDate");
+                    b.HasIndex(new[] { "CheckupDate" }, "IX_Diagnoses_CheckupDate");
 
-                    b.HasIndex("MedicalRecordId");
+                    b.HasIndex(new[] { "MedicalRecordId" }, "IX_Diagnoses_MedicalRecordId");
 
-                    b.ToTable("Diagnoses");
+                    b.ToTable("Diagnoses", (string)null);
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.EyeExamination", b =>
@@ -585,11 +429,11 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IsArchived");
+                    b.HasIndex(new[] { "IsArchived" }, "IX_EyeExaminations_IsArchived");
 
-                    b.HasIndex("MedicalRecordId");
+                    b.HasIndex(new[] { "MedicalRecordId" }, "IX_EyeExaminations_MedicalRecordId");
 
-                    b.ToTable("EyeExaminations");
+                    b.ToTable("EyeExaminations", (string)null);
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.Investigation", b =>
@@ -604,6 +448,9 @@ namespace EyeClinicAPI.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("MedicalRecordId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("MedicalRecordId1")
                         .HasColumnType("int");
 
                     b.Property<string>("Notes")
@@ -626,9 +473,11 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MedicalRecordId");
+                    b.HasIndex("MedicalRecordId1");
 
-                    b.ToTable("Investigations");
+                    b.HasIndex(new[] { "MedicalRecordId" }, "IX_Investigations_MedicalRecordId");
+
+                    b.ToTable("Investigations", (string)null);
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.MedicalHistory", b =>
@@ -654,6 +503,9 @@ namespace EyeClinicAPI.Migrations
                     b.Property<int>("MedicalRecordId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("MedicalRecordId1")
+                        .HasColumnType("int");
+
                     b.Property<string>("PastMedicalHistory")
                         .HasColumnType("nvarchar(max)");
 
@@ -665,11 +517,13 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IsArchived");
+                    b.HasIndex("MedicalRecordId1");
 
-                    b.HasIndex("MedicalRecordId");
+                    b.HasIndex(new[] { "IsArchived" }, "IX_MedicalHistories_IsArchived");
 
-                    b.ToTable("MedicalHistories");
+                    b.HasIndex(new[] { "MedicalRecordId" }, "IX_MedicalHistories_MedicalRecordId");
+
+                    b.ToTable("MedicalHistories", (string)null);
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.MedicalRecord", b =>
@@ -683,7 +537,7 @@ namespace EyeClinicAPI.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("PatientId")
+                    b.Property<int?>("PatientId")
                         .HasColumnType("int");
 
                     b.Property<string>("PatientIdentifier")
@@ -698,11 +552,11 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Id");
+                    b.HasIndex(new[] { "Id" }, "IX_MedicalRecords_Id");
 
-                    b.HasIndex("PatientId");
+                    b.HasIndex(new[] { "PatientId" }, "IX_MedicalRecords_PatientId");
 
-                    b.ToTable("MedicalRecords");
+                    b.ToTable("MedicalRecords", (string)null);
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.MedicalTestFile", b =>
@@ -736,11 +590,11 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FileType");
+                    b.HasIndex(new[] { "FileType" }, "IX_MedicalTestFiles_FileType");
 
-                    b.HasIndex("MedicalRecordId");
+                    b.HasIndex(new[] { "MedicalRecordId" }, "IX_MedicalTestFiles_MedicalRecordId");
 
-                    b.ToTable("MedicalTestFiles");
+                    b.ToTable("MedicalTestFiles", (string)null);
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.Operation", b =>
@@ -793,11 +647,15 @@ namespace EyeClinicAPI.Migrations
 
                     b.Property<string>("Notes")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("");
 
                     b.Property<string>("OperationName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("");
 
                     b.Property<string>("PostMedications")
                         .IsRequired()
@@ -824,13 +682,13 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Date");
+                    b.HasIndex(new[] { "Date" }, "IX_Operations_Date");
 
-                    b.HasIndex("IsArchived");
+                    b.HasIndex(new[] { "IsArchived" }, "IX_Operations_IsArchived");
 
-                    b.HasIndex("MedicalRecordId");
+                    b.HasIndex(new[] { "MedicalRecordId" }, "IX_Operations_MedicalRecordId");
 
-                    b.ToTable("Operations");
+                    b.ToTable("Operations", (string)null);
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.Patient", b =>
@@ -857,15 +715,21 @@ namespace EyeClinicAPI.Migrations
 
                     b.Property<string>("EmergencyContactName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("");
 
                     b.Property<string>("EmergencyContactPhone")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("");
 
                     b.Property<string>("Gender")
                         .IsRequired()
@@ -873,15 +737,21 @@ namespace EyeClinicAPI.Migrations
 
                     b.Property<string>("InsuranceCompany")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("");
 
                     b.Property<string>("InsuranceId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("");
 
                     b.Property<string>("NationalId")
                         .IsRequired()
@@ -893,14 +763,14 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Email");
+                    b.HasIndex(new[] { "Email" }, "IX_Patients_Email");
 
-                    b.HasIndex("Id")
+                    b.HasIndex(new[] { "Id" }, "IX_Patients_Id")
                         .IsUnique();
 
-                    b.HasIndex("Phone");
+                    b.HasIndex(new[] { "Phone" }, "IX_Patients_Phone");
 
-                    b.ToTable("Patients");
+                    b.ToTable("Patients", (string)null);
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.PatientComplaint", b =>
@@ -926,6 +796,9 @@ namespace EyeClinicAPI.Migrations
                     b.Property<int>("MedicalRecordId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("MedicalRecordId1")
+                        .HasColumnType("int");
+
                     b.Property<string>("OriginalText")
                         .HasColumnType("nvarchar(max)");
 
@@ -940,11 +813,13 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IsArchived");
+                    b.HasIndex("MedicalRecordId1");
 
-                    b.HasIndex("MedicalRecordId");
+                    b.HasIndex(new[] { "IsArchived" }, "IX_PatientComplaints_IsArchived");
 
-                    b.ToTable("PatientComplaints");
+                    b.HasIndex(new[] { "MedicalRecordId" }, "IX_PatientComplaints_MedicalRecordId");
+
+                    b.ToTable("PatientComplaints", (string)null);
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.Prescription", b =>
@@ -964,6 +839,9 @@ namespace EyeClinicAPI.Migrations
                     b.Property<int>("MedicalRecordId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("MedicalRecordId1")
+                        .HasColumnType("int");
+
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
@@ -975,9 +853,11 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MedicalRecordId");
+                    b.HasIndex("MedicalRecordId1");
 
-                    b.ToTable("Prescriptions");
+                    b.HasIndex(new[] { "MedicalRecordId" }, "IX_Prescriptions_MedicalRecordId");
+
+                    b.ToTable("Prescriptions", (string)null);
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.PrescriptionItem", b =>
@@ -1028,7 +908,265 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasIndex("PrescriptionId");
 
-                    b.ToTable("PrescriptionItems");
+                    b.ToTable("PrescriptionItem", (string)null);
+                });
+
+            modelBuilder.Entity("EyeClinicAPI.Models.Equipment", b =>
+                {
+                    b.Property<int>("EquipmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EquipmentId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EquipmentName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("EquipmentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("LastMaintenanceDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("MaintenanceFrequencyDays")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Manufacturer")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ModelNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("NextMaintenanceDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("PurchaseDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SerialNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("WarrantyExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("EquipmentId");
+
+                    b.ToTable("Equipment", (string)null);
+                });
+
+            modelBuilder.Entity("EyeClinicAPI.Models.MaintenanceTasks", b =>
+                {
+                    b.Property<int>("TaskId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TaskId"));
+
+                    b.Property<decimal?>("ActualCost")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("AssignedTo")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("CompletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EquipmentId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("EstimatedCost")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Priority")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("ScheduledDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ServiceProvider")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TaskDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TaskType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("TaskId");
+
+                    b.HasIndex("EquipmentId");
+
+                    b.ToTable("MaintenanceTasks", (string)null);
+                });
+
+            modelBuilder.Entity("EyeClinicAPI.Models.MedicalSupplies", b =>
+                {
+                    b.Property<int>("SupplyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SupplyId"));
+
+                    b.Property<string>("BatchNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CurrentQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastRestockDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("MaxStockLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ReorderLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StorageLocation")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Supplier")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("SupplierContact")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("SupplyName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal?>("UnitPrice")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SupplyId");
+
+                    b.ToTable("MedicalSupplies", (string)null);
+                });
+
+            modelBuilder.Entity("EyeClinicAPI.Models.SanitizationSchedule", b =>
+                {
+                    b.Property<int>("SanitizationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SanitizationId"));
+
+                    b.Property<string>("AreaName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("AreaType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CleaningFrequency")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("CleaningMethod")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastCleanedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("LastCleanedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("NextScheduledCleaning")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProductsUsed")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SanitizationId");
+
+                    b.ToTable("SanitizationSchedule", (string)null);
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.User", b =>
@@ -1044,7 +1182,7 @@ namespace EyeClinicAPI.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -1060,30 +1198,70 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Email")
-                        .IsUnique();
+                    b.ToTable("Users", (string)null);
+                });
 
-                    b.ToTable("Users");
+            modelBuilder.Entity("EyeClinicAPI.Models.WasteManagement", b =>
+                {
+                    b.Property<int>("WasteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            CreatedAt = new DateTime(2025, 12, 8, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "mohab@eyeclinic.com",
-                            PasswordHash = "$2a$11$I5sDH4p8l2a/mGBM8hfPAe.E18svY1aaDco91sU7a9ZA.EKrAXz/.",
-                            Role = "Doctor",
-                            Username = "Dr. Mohab Khairy"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedAt = new DateTime(2025, 12, 8, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Email = "reception@eyeclinic.com",
-                            PasswordHash = "$2a$11$1Ov1AN/4vidto4EKX.rmkuwY.CKjjtOVPLtUVspWYnROXSFgTb6K6",
-                            Role = "Receptionist",
-                            Username = "Receptionist"
-                        });
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("WasteId"));
+
+                    b.Property<string>("CertificateNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("CollectedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal?>("Cost")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DisposalCompany")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("DisposalDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DisposalMethod")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("GeneratedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("WasteType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("WasteId");
+
+                    b.ToTable("WasteManagement", (string)null);
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.Appointment", b =>
@@ -1091,7 +1269,6 @@ namespace EyeClinicAPI.Migrations
                     b.HasOne("EyeClinicAPI.Models.Doctor", "Doctor")
                         .WithMany("Appointments")
                         .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Doctor");
@@ -1100,10 +1277,14 @@ namespace EyeClinicAPI.Migrations
             modelBuilder.Entity("EyeClinicAPI.Models.DoctorSchedule", b =>
                 {
                     b.HasOne("EyeClinicAPI.Models.Doctor", "Doctor")
-                        .WithMany("Schedules")
+                        .WithMany()
                         .HasForeignKey("DoctorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("EyeClinicAPI.Models.Doctor", null)
+                        .WithMany("Schedules")
+                        .HasForeignKey("DoctorId1");
 
                     b.Navigation("Doctor");
                 });
@@ -1133,10 +1314,14 @@ namespace EyeClinicAPI.Migrations
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.Investigation", b =>
                 {
                     b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", "MedicalRecord")
-                        .WithMany("Investigations")
+                        .WithMany()
                         .HasForeignKey("MedicalRecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", null)
+                        .WithMany("Investigations")
+                        .HasForeignKey("MedicalRecordId1");
 
                     b.Navigation("MedicalRecord");
                 });
@@ -1144,10 +1329,14 @@ namespace EyeClinicAPI.Migrations
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.MedicalHistory", b =>
                 {
                     b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", "MedicalRecord")
-                        .WithMany("Histories")
+                        .WithMany()
                         .HasForeignKey("MedicalRecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", null)
+                        .WithMany("Histories")
+                        .HasForeignKey("MedicalRecordId1");
 
                     b.Navigation("MedicalRecord");
                 });
@@ -1156,9 +1345,7 @@ namespace EyeClinicAPI.Migrations
                 {
                     b.HasOne("EyeClinicAPI.Models.EMR.Patient", null)
                         .WithMany("MedicalRecords")
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PatientId");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.MedicalTestFile", b =>
@@ -1186,10 +1373,14 @@ namespace EyeClinicAPI.Migrations
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.PatientComplaint", b =>
                 {
                     b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", "MedicalRecord")
-                        .WithMany("Complaints")
+                        .WithMany()
                         .HasForeignKey("MedicalRecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", null)
+                        .WithMany("Complaints")
+                        .HasForeignKey("MedicalRecordId1");
 
                     b.Navigation("MedicalRecord");
                 });
@@ -1197,10 +1388,14 @@ namespace EyeClinicAPI.Migrations
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.Prescription", b =>
                 {
                     b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", "MedicalRecord")
-                        .WithMany("Prescriptions")
+                        .WithMany()
                         .HasForeignKey("MedicalRecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", null)
+                        .WithMany("Prescriptions")
+                        .HasForeignKey("MedicalRecordId1");
 
                     b.Navigation("MedicalRecord");
                 });
@@ -1214,6 +1409,15 @@ namespace EyeClinicAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Prescription");
+                });
+
+            modelBuilder.Entity("EyeClinicAPI.Models.MaintenanceTasks", b =>
+                {
+                    b.HasOne("EyeClinicAPI.Models.Equipment", "Equipment")
+                        .WithMany("MaintenanceTasks")
+                        .HasForeignKey("EquipmentId");
+
+                    b.Navigation("Equipment");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.Doctor", b =>
@@ -1250,6 +1454,11 @@ namespace EyeClinicAPI.Migrations
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.Prescription", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("EyeClinicAPI.Models.Equipment", b =>
+                {
+                    b.Navigation("MaintenanceTasks");
                 });
 #pragma warning restore 612, 618
         }

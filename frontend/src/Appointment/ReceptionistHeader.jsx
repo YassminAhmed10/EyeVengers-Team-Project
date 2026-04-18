@@ -243,11 +243,10 @@ const ReceptionistHeader = ({ toggleDarkMode, darkMode, toggleSidebar }) => {
           </div>
         </div>
 
-        {/* Profile Dropdown */}
+        {/* Profile */}
         <div className="profile-wrapper">
           <button 
             className="profile"
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
             title={receptionist.name}
           >
             <div style={{
@@ -265,60 +264,6 @@ const ReceptionistHeader = ({ toggleDarkMode, darkMode, toggleSidebar }) => {
               {receptionist.name.charAt(0).toUpperCase()}
             </div>
           </button>
-
-          {showProfileMenu && (
-            <div className="profile-dropdown">
-              <div className="profile-header">
-                <div style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 'bold',
-                  fontSize: '20px',
-                  color: 'white',
-                  flexShrink: 0
-                }}>
-                  {receptionist.name.charAt(0).toUpperCase()}
-                </div>
-                <div className="profile-info">
-                  <h4>{receptionist.name}</h4>
-                  <p>{receptionist.email}</p>
-                </div>
-              </div>
-              <div className="profile-divider"></div>
-              <div className="profile-menu">
-                <button 
-                  className="profile-menu-item"
-                  onClick={() => {
-                    navigate('/receptionist/settings');
-                    setShowProfileMenu(false);
-                  }}
-                >
-                  <Settings size={18} />
-                  <span>Settings</span>
-                </button>
-              </div>
-              <div className="profile-divider"></div>
-              <button 
-                className="profile-menu-item logout"
-                onClick={() => {
-                  if (window.confirm('Are you sure you want to logout?')) {
-                    localStorage.removeItem('userRole');
-                    localStorage.removeItem('isAuthenticated');
-                    localStorage.removeItem('userName');
-                    navigate('/login');
-                  }
-                }}
-              >
-                <LogOut size={18} />
-                <span>Logout</span>
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </header>

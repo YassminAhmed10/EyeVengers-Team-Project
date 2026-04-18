@@ -1,8 +1,17 @@
-import React from 'react';
+﻿import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import logo from "../images/logo.png";
 import "./Sidebar.css";
+
+const NAV_ITEMS = [
+  { to: '/doctor',                 icon: 'dashboard',        labelKey: 'sidebar.dashboard',    exact: true  },
+  { to: '/doctor/patients',        icon: 'group',            labelKey: 'sidebar.patients'               },
+  { to: '/doctor/appointments',    icon: 'calendar_month',   labelKey: 'sidebar.appointments'           },
+  { to: '/doctor/finance',         icon: 'payments',         labelKey: 'sidebar.finance'                },
+  { to: '/doctor/clinic-system',   icon: 'medical_services', labelKey: 'sidebar.clinicSystem'           },
+  { to: '/doctor/settings',        icon: 'settings',         labelKey: 'sidebar.settings'               },
+];
 
 const Sidebar = ({ collapsed }) => {
   const { t } = useLanguage();
@@ -11,101 +20,61 @@ const Sidebar = ({ collapsed }) => {
 
   const handleLogout = () => {
     if (window.confirm(t('sidebar.logoutConfirm'))) {
-      localStorage.removeItem("userRole");
-      localStorage.removeItem("isAuthenticated");
-      navigate("/login");
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('isAuthenticated');
+      navigate('/login');
     }
   };
 
-  const isActive = (path) => {
-    if (path === '/doctor' && location.pathname === '/doctor') return true;
-    return location.pathname.startsWith(path + '/') || location.pathname === path;
+  const isActive = (path, exact) => {
+    if (exact) return location.pathname === path;
+    return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
   return (
     <aside className={`doctor-sidebar ${collapsed ? 'collapsed' : ''}`}>
-      {/* Logo Header */}
+
+      {/* ── Logo Header ── */}
       <div className="sidebar-header">
+        {/* Circular logo — centred */}
         <div className="clinic-logo">
-          <img 
-            src={logo} 
-            alt="EyeCare Clinic Logo" 
+          <img
+            src={logo}
+            alt="EyeCare Clinic Logo"
             className="clinic-logo-img"
-            onError={(e) => {
-              e.target.src = 'https://via.placeholder.com/190x193?text=LOGO';
-            }}
+            onError={e => { e.target.src = 'https://via.placeholder.com/90x90?text=EC'; }}
           />
         </div>
+
+        {/* Doctor name + specialty */}
         <div className="doctor-profile-header">
           <h1>Dr. Mohab Khairy</h1>
           <p>{t('sidebar.ophthalmologist')}</p>
         </div>
       </div>
 
-      {/* Navigation Menu */}
+      {/* ── Navigation ── */}
       <nav className="sidebar-nav">
-        <Link 
-          to="/doctor" 
-          className={`nav-item ${isActive('/doctor') && location.pathname === '/doctor' ? 'active' : ''}`}
-        >
-          <div className="nav-icon">
-            <span className="material-symbols-outlined">dashboard</span>
-          </div>
-          <span className="nav-label">{t('sidebar.dashboard')}</span>
-        </Link>
+        {NAV_ITEMS.map(({ to, icon, labelKey, exact }) => (
+          <Link
+            key={to}
+            to={to}
+            data-tooltip={t(labelKey)}
+            className={`nav-item ${isActive(to, exact) ? 'active' : ''}`}
+          >
+            <div className="nav-icon">
+              <span className="material-symbols-outlined">{icon}</span>
+            </div>
+            <span className="nav-label">{t(labelKey)}</span>
+          </Link>
+        ))}
 
-        <Link 
-          to="/doctor/patients" 
-          className={`nav-item ${isActive('/doctor/patients') ? 'active' : ''}`}
+        {/* Logout */}
+        <div
+          className="nav-item logout-button"
+          data-tooltip={t('sidebar.logout')}
+          onClick={handleLogout}
         >
-          <div className="nav-icon">
-            <span className="material-symbols-outlined">group</span>
-          </div>
-          <span className="nav-label">{t('sidebar.patients')}</span>
-        </Link>
-
-        <Link 
-          to="/doctor/appointments" 
-          className={`nav-item ${isActive('/doctor/appointments') ? 'active' : ''}`}
-        >
-          <div className="nav-icon">
-            <span className="material-symbols-outlined">calendar_month</span>
-          </div>
-          <span className="nav-label">{t('sidebar.appointments')}</span>
-        </Link>
-
-        <Link 
-          to="/doctor/finance" 
-          className={`nav-item ${isActive('/doctor/finance') ? 'active' : ''}`}
-        >
-          <div className="nav-icon">
-            <span className="material-symbols-outlined">payments</span>
-          </div>
-          <span className="nav-label">{t('sidebar.finance')}</span>
-        </Link>
-
-        <Link 
-          to="/doctor/clinic-system" 
-          className={`nav-item ${isActive('/doctor/clinic-system') ? 'active' : ''}`}
-        >
-          <div className="nav-icon">
-            <span className="material-symbols-outlined">medical_services</span>
-          </div>
-          <span className="nav-label">{t('sidebar.clinicSystem')}</span>
-        </Link>
-
-        <Link 
-          to="/doctor/settings" 
-          className={`nav-item ${isActive('/doctor/settings') ? 'active' : ''}`}
-        >
-          <div className="nav-icon">
-            <span className="material-symbols-outlined">settings</span>
-          </div>
-          <span className="nav-label">{t('sidebar.settings')}</span>
-        </Link>
-
-        {/* Logout Button */}
-        <div className="nav-item logout-button" onClick={handleLogout}>
           <div className="nav-icon">
             <span className="material-symbols-outlined">logout</span>
           </div>
@@ -113,16 +82,14 @@ const Sidebar = ({ collapsed }) => {
         </div>
       </nav>
 
-      {/* User Profile Section */}
+      {/* ── User Profile Footer ── */}
       <div className="user-profile">
         <div className="user-avatar">
-          <img 
-            src="/src/images/doctor.jpg" 
-            alt="Doctor Profile" 
+          <img
+            src="/src/images/doctor.jpg"
+            alt="Doctor Profile"
             className="user-avatar-img"
-            onError={(e) => {
-              e.target.src = 'https://via.placeholder.com/55x55?text=Dr';
-            }}
+            onError={e => { e.target.src = 'https://via.placeholder.com/40x40?text=Dr'; }}
           />
         </div>
         <div className="user-info">
@@ -130,6 +97,7 @@ const Sidebar = ({ collapsed }) => {
           <p>{t('sidebar.ophthalmologist')}</p>
         </div>
       </div>
+
     </aside>
   );
 };

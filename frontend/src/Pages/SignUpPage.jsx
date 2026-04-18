@@ -1,6 +1,7 @@
 // src/Pages/SignUpPage.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { authApi } from "../services/api";
 
 const GLOW_CSS = `
   @keyframes borderPulseSU {
@@ -82,12 +83,12 @@ export default function SignUpPage() {
     if (!formData.fullName || !formData.email || !formData.password) { setError("Please fill in all required fields."); return; }
     setLoading(true); setError("");
     try {
-      const res  = await fetch("http://localhost:5201/api/Auth/register", {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ username:formData.fullName, email:formData.email, passwordHash:formData.password, role:"Patient" }),
+      const data = await authApi.register({
+        username: formData.fullName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        passwordHash: formData.password,
+        role: "Patient",
       });
-      const data = await res.json();
-      if (!res.ok) { setError(data.message || "Registration failed."); setLoading(false); return; }
       localStorage.setItem("userRole","Patient");
       localStorage.setItem("userName",formData.fullName);
       localStorage.setItem("userEmail",formData.email);
@@ -99,7 +100,12 @@ export default function SignUpPage() {
       alert("Account created successfully! Please login with your credentials.");
       navigate("/login");
     } catch (err) {
-      setError("Failed to connect to server. Please try again.");
+      const message = err?.response?.data?.message || err?.message || "Registration failed.";
+      if (err?.code === "ECONNABORTED" || message.toLowerCase().includes("network")) {
+        setError("Failed to connect to server. Please try again.");
+      } else {
+        setError(message);
+      }
       setLoading(false);
     }
   };

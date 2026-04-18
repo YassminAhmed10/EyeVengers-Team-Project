@@ -92,7 +92,7 @@ namespace EyeClinicAPI.Controllers.EMRcontrol
             {
                 MedicalRecordId = request.MedicalRecordId,
                 Name = request.Name,
-                Date = request.Date,
+                Date = request.Date ?? DateTime.Now,
                 Eye = request.Eye,
                 Surgeon = request.Surgeon,
                 Diagnosis = request.Diagnosis,

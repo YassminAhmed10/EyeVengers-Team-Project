@@ -41,11 +41,10 @@ const OnlineRequestsPage = () => {
         try {
             setConfirmingId(appointmentId);
             const response = await fetch(
-                `http://localhost:5201/api/Appointments/${appointmentId}`,
+                `http://localhost:5201/api/Appointments/confirm/${appointmentId}`,
                 {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: 1, confirmedBy: 'receptionist' })
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' }
                 }
             );
 
@@ -122,8 +121,6 @@ const OnlineRequestsPage = () => {
     return (
         <div className="online-requests-page">
             <div className="requests-header">
-                <h1><FaCalendarAlt /> Pending Appointment Requests</h1>
-                <p>Review and confirm all pending appointment requests from patients</p>
             </div>
 
             <div className="requests-controls">

@@ -211,8 +211,6 @@ function ClinicPage() {
       <div className="clinic-operations-container" style={{ marginLeft: 0 }}>
         <div className="operations-header">
           <div className="header-content">
-            <h1>Clinic System</h1>
-
             <nav className="operations-nav">
               {navigationItems.map((item) => (
                 <button

@@ -1,74 +1,40 @@
-/* متغيرات الوضع الداكن للـ Receptionist Sidebar - تم التحديث */
-:root {
-  --receptionist-sidebar-bg: #cae8ff;
-  --receptionist-sidebar-brand-bg: #cae8ff;
-  --receptionist-sidebar-text: #1e3a5f;
-  --receptionist-sidebar-hover: #a8d5ff;
-  --receptionist-sidebar-border: #a8d5ff;
-  --receptionist-primary-bg: #f8fafc;
-  --receptionist-card-bg: #ffffff;
-  --receptionist-text-primary: #1e293b;
-  --receptionist-text-secondary: #64748b;
-  --receptionist-border-color: #e2e8f0;
-  --receptionist-hover-bg: #f1f5f9;
-  --receptionist-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-[data-theme="dark"] {
-  --receptionist-sidebar-bg: #1a3f5f;
-  --receptionist-sidebar-brand-bg: #1a3f5f;
-  --receptionist-sidebar-text: #e2e8f0;
-  --receptionist-sidebar-hover: #2d5575;
-  --receptionist-sidebar-border: #2d5575;
-  --receptionist-primary-bg: #0f172a;
-  --receptionist-card-bg: #1e293b;
-  --receptionist-text-primary: #f1f5f9;
-  --receptionist-text-secondary: #527db9;
-  --receptionist-border-color: #434344;
-  --receptionist-hover-bg: #194481;
-  --receptionist-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-}
+/* ═══════════════════════════════════════
+   Receptionist Sidebar — Same theme as Doctor
+═══════════════════════════════════════ */
 
 * {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
-/* ============================================
-   RECEPTIONIST SIDEBAR - REDESIGNED
-   ============================================ */
-
+/* ══ Sidebar Shell ══ */
 .receptionist-sidebar {
   position: fixed;
   top: 20px;
   left: 20px;
   width: 280px;
-  height: calc(100vh - 40px);
-  background: var(--receptionist-sidebar-bg);
+  height: calc(100% - 40px);
+  background: #0F4C8A;
   z-index: 1000;
   font-family: 'Manrope', sans-serif;
-  transition: all .3s ease;
+  transition: all 0.3s ease;
   overflow-x: hidden;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(30, 58, 95, 0.2) transparent;
+  scrollbar-width: none;
   border-right: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
   border-radius: 24px;
   display: flex;
   flex-direction: column;
   padding: 0;
-  transform: translateX(0);
 }
+
+.receptionist-sidebar::-webkit-scrollbar { display: none; }
 
 .receptionist-sidebar.collapsed {
   width: 80px;
-  left: 20px;
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
-
+/* ══ Responsive ══ */
 @media screen and (max-width: 768px) {
   .receptionist-sidebar {
     position: fixed;
@@ -80,17 +46,17 @@
     left: 0;
     height: 100vh;
   }
-  
+
   .receptionist-sidebar:not(.collapsed) {
     transform: translateX(0);
     width: 280px;
   }
-  
+
   .receptionist-sidebar.collapsed {
     transform: translateX(-100%);
     width: 280px;
   }
-  
+
   .sidebar-overlay {
     display: block;
     position: fixed;
@@ -105,7 +71,7 @@
     visibility: hidden;
     transition: all 0.3s ease;
   }
-  
+
   .sidebar-overlay.active {
     opacity: 1;
     visibility: visible;
@@ -116,85 +82,114 @@
   .receptionist-sidebar {
     width: 240px;
   }
-  
+
   .receptionist-sidebar:not(.collapsed) {
     width: 240px;
   }
 }
 
-.receptionist-sidebar::-webkit-scrollbar {
-  display: none;
-}
-
-/* ============================================
-   SIDEBAR HEADER
-   ============================================ */
-
-.sidebar-header {
-  min-height: 180px;
+/* ══ Header ══ */
+.receptionist-sidebar .sidebar-header {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  color: #fcfcfc;
   position: sticky;
   top: 0;
-  left: 0;
-  background: var(--receptionist-sidebar-bg);
+  background: #0F4C8A !important;
   z-index: 500;
-  padding: 32px 24px;
+  padding: 28px 24px 20px;
   box-sizing: border-box;
-  gap: 16px;
-  border-bottom: none;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
   text-align: center;
-  box-shadow: none;
+  border-radius: 24px 24px 0 0;
+  color: #ffffff;
+  min-height: 160px;
 }
 
-.clinic-logo {
-  width: 100%;
-  max-width: 150px;
-  height: auto;
-  object-fit: contain;
-  display: block;
+/* ══ Logo — circular ══ */
+.receptionist-sidebar .clinic-logo {
+  width: 90px;
+  height: 90px;
+  min-width: 90px;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.15);
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 0 5px rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 0 auto;
-  border: none;
-  background: transparent;
-  border-radius: 0;
-  box-shadow: none;
-  transition: all 0.3s ease;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease,
+              width 0.3s ease, height 0.3s ease, min-width 0.3s ease;
+  padding: 0;
+  position: relative;
+  z-index: 10;
+  cursor: pointer;
+  flex-shrink: 0;
+  max-width: none;
   filter: none;
 }
 
-.receptionist-sidebar.collapsed .clinic-logo {
-  max-width: 50px;
+.receptionist-sidebar .clinic-logo:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 28px rgba(0,0,0,0.4), 0 0 0 5px rgba(255,255,255,0.14);
 }
 
-.clinic-logo-img {
+/* ══ Header when collapsed ══ */
+.receptionist-sidebar.collapsed .sidebar-header {
+  padding: 16px 0;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.receptionist-sidebar.collapsed .clinic-logo {
+  width: 50px;
+  height: 50px;
+  min-width: 50px;
+  max-width: 50px;
+  border-radius: 50% !important;
+  border-width: 2px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.receptionist-sidebar .clinic-logo-img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  border-radius: 0;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
+  display: block;
+  mix-blend-mode: multiply;
 }
 
-.doctor-profile-header {
+/* ══ Profile text ══ */
+.receptionist-sidebar .doctor-profile-header {
   text-align: center;
-  transition: all 0.3s ease;
+  display: none;
 }
 
-.doctor-profile-header h1 {
-  font-size: 1.5rem;
+.receptionist-sidebar .doctor-profile-header h1 {
+  font-size: 1.05rem;
   font-weight: 700;
-  color: #1e3a5f;
-  margin: 0;
-  margin-bottom: 4px;
+  margin: 0 0 3px;
+  color: #ffffff;
+  letter-spacing: -0.2px;
 }
 
-.doctor-profile-header p {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #1e3a5f;
-  opacity: 0.8;
+.receptionist-sidebar .doctor-profile-header p {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.55);
   margin: 0;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
 }
 
 .receptionist-sidebar.collapsed .doctor-profile-header {
@@ -203,145 +198,114 @@
   overflow: hidden;
 }
 
-[data-theme="dark"] .doctor-profile-header h1,
-[data-theme="dark"] .doctor-profile-header p {
-  color: #e2e8f0;
-}
-
-/* ============================================
-   NAVIGATION STYLES - UPDATED
-   ============================================ */
-
-.sidebar-nav {
+/* ══ Navigation ══ */
+.receptionist-sidebar .sidebar-nav {
   width: 100%;
-  margin-top: 20px;
   flex: 1;
-  padding: 20px 0;
+  padding: 16px 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
   overflow-y: auto;
 }
+
+.receptionist-sidebar .sidebar-nav::-webkit-scrollbar { display: none; }
 
 .receptionist-sidebar .sidebar-nav .nav-item {
   height: 56px;
   background: transparent;
-  margin: 0 16px;
+  margin: 0 14px;
   border-radius: 16px;
-  padding: 6px;
+  padding: 6px 18px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  color: #1e3a5f;
+  gap: 14px;
+  color: #ffffff !important;
   text-decoration: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   cursor: pointer;
-  width: calc(100% - 32px);
-  padding-left: 20px;
-  padding-right: 20px;
-  font-size: 16px;
+  width: calc(100% - 28px);
+  font-size: 15px;
   white-space: nowrap;
   overflow: hidden;
-  font-weight: 700;
+  font-weight: 600;
   border: none;
 }
 
 .receptionist-sidebar.collapsed .sidebar-nav .nav-item {
   justify-content: center;
-  padding-left: 0;
-  padding-right: 0;
-  background: transparent;
+  padding: 6px;
+  gap: 0;
+  margin: 0 auto;
+  width: 54px;
 }
 
 .receptionist-sidebar .sidebar-nav .nav-item:hover {
-  background: rgba(255, 255, 255, 0.7);
-  color: #0d47a1;
-  transform: translateX(6px) scale(1.02);
-  border: none;
-  box-shadow: none;
-}
-
-/* ========== ✅ ألوان الأزرار النشطة للـ Receptionist ========== */
-
-.receptionist-sidebar .sidebar-nav .nav-item.active {
-  position: relative;
-}
-
-/* زر 1 - Dashboard - وردي */
-.receptionist-sidebar .sidebar-nav .nav-item:nth-child(1).active {
-  background: #f853be;
+  background: rgba(255, 255, 255, 0.13);
   color: #ffffff;
+  transform: translateX(4px);
 }
 
-/* زر 2 - Appointments - أزرق */
-.receptionist-sidebar .sidebar-nav .nav-item:nth-child(2).active {
-  background: #3b82f6;
-  color: #ffffff;
+.receptionist-sidebar.collapsed .sidebar-nav .nav-item:hover {
+  transform: scale(1.08);
 }
 
-.nav-item.active {
-  box-shadow: none;
-}
+/* ══ Active colors per item ══ */
+.receptionist-sidebar .sidebar-nav .nav-item.active { position: relative; box-shadow: none; }
 
-.nav-item.active .nav-icon {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.3);
-}
+.receptionist-sidebar .sidebar-nav .nav-item:nth-child(1).active { background: #f853be; color: #fff; }
+.receptionist-sidebar .sidebar-nav .nav-item:nth-child(2).active { background: #3b82f6; color: #fff; }
+.receptionist-sidebar .sidebar-nav .nav-item:nth-child(3).active { background: #10b981; color: #fff; }
+.receptionist-sidebar .sidebar-nav .nav-item:nth-child(4).active { background: #f59e0b; color: #fff; }
 
-/* Keep icon colors even when active */
-.receptionist-sidebar .nav-item:nth-child(1).active .nav-icon {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.receptionist-sidebar .nav-item:nth-child(2).active .nav-icon {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.nav-item.active .nav-label {
-  color: #ffffff;
-  font-weight: 800;
-}
-
-/* ============================================
-   ICON STYLES
-   ============================================ */
-
-.nav-icon {
-  color: #1e3a5f;
-  font-size: 1.65rem;
-  width: 42px;
-  height: 42px;
-  text-align: center;
-  transition: all 0.3s ease;
+/* ══ Icon ══ */
+.receptionist-sidebar .nav-icon {
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.4);
   border-radius: 12px;
   padding: 8px;
+  transition: all 0.25s ease;
 }
 
-.nav-icon .material-symbols-outlined {
-  font-size: 1.85rem;
-  font-weight: 500;
-}
+.receptionist-sidebar .nav-icon .material-symbols-outlined { font-size: 1.75rem; font-weight: 500; }
 
 .receptionist-sidebar .sidebar-nav .nav-item:hover .nav-icon {
-  transform: scale(1.15) rotate(-8deg);
-  background: rgba(255, 255, 255, 0.5);
+  transform: scale(1.12) rotate(-6deg);
+  background: rgba(255,255,255,0.45) !important;
 }
 
-.nav-label {
-  font-size: 0.938rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  opacity: 1;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  color: #1e3a5f;
+/* Icon colors */
+.receptionist-sidebar .nav-item:nth-child(1) .nav-icon { color: #f853be; background: rgba(248,83,190,0.15); }
+.receptionist-sidebar .nav-item:nth-child(2) .nav-icon { color: #3b82f6; background: rgba(59,130,246,0.15); }
+.receptionist-sidebar .nav-item:nth-child(3) .nav-icon { color: #10b981; background: rgba(16,185,129,0.15); }
+.receptionist-sidebar .nav-item:nth-child(4) .nav-icon { color: #f59e0b; background: rgba(245,158,11,0.15); }
+
+/* Active icon override */
+.receptionist-sidebar .nav-item.active .nav-icon,
+.receptionist-sidebar .nav-item:nth-child(1).active .nav-icon,
+.receptionist-sidebar .nav-item:nth-child(2).active .nav-icon,
+.receptionist-sidebar .nav-item:nth-child(3).active .nav-icon,
+.receptionist-sidebar .nav-item:nth-child(4).active .nav-icon {
+  color: #ffffff;
+  background: rgba(255,255,255,0.28);
 }
+
+/* ══ Label ══ */
+.receptionist-sidebar .nav-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #ffffff !important;
+  white-space: nowrap;
+  transition: all 0.25s ease;
+}
+
+.receptionist-sidebar .nav-item.active .nav-label { color: #ffffff; font-weight: 800; }
 
 .receptionist-sidebar.collapsed .nav-label {
   opacity: 0;
@@ -350,81 +314,122 @@
   display: none;
 }
 
-/* Light Mode - Different Icon Colors for Receptionist */
-.receptionist-sidebar .nav-item:nth-child(1) .nav-icon {
-  color: #f853be;
-  background: rgba(248, 83, 190, 0.15);
-}
-
-.receptionist-sidebar .nav-item:nth-child(2) .nav-icon {
-  color: #3b82f6;
-  background: rgba(59, 130, 246, 0.15);
-}
-
-/* ============================================
-   LOGOUT BUTTON
-   ============================================ */
-
-.logout-button {
+/* ══ Logout ══ */
+.receptionist-sidebar .logout-button {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 16px 24px;
+  padding: 15px 22px;
   color: white !important;
   background: #ef4444 !important;
   text-decoration: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s ease;
   border-radius: 16px;
-  margin: 16px;
+  margin: 12px 14px 20px;
   margin-top: auto !important;
-  margin-bottom: 20px;
   cursor: pointer;
   border: none;
-  width: calc(100% - 32px);
-  height: auto;
-  font-size: 16px;
+  width: calc(100% - 28px);
+  font-size: 15px;
   white-space: nowrap;
   overflow: hidden;
   font-weight: 800;
-  box-shadow: none;
 }
+
+.receptionist-sidebar .logout-button:hover {
+  background: #dc2626 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239,68,68,0.4);
+}
+
+.receptionist-sidebar .logout-button .nav-icon { color: #fff; background: rgba(255,255,255,0.2); }
+.receptionist-sidebar .logout-button .nav-label { color: #fff; font-weight: 700; }
 
 .receptionist-sidebar.collapsed .logout-button {
   justify-content: center;
   padding: 16px;
-  width: calc(100% - 32px);
+  width: calc(100% - 28px);
 }
 
 .receptionist-sidebar.collapsed .logout-button .nav-label {
   display: none;
 }
 
-.logout-button:hover {
-  background: #dc2626 !important;
-  color: white !important;
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: none;
+/* ══════════════════════════════════════════
+   DARK MODE
+══════════════════════════════════════════ */
+
+[data-theme="dark"] .receptionist-sidebar {
+  background: #040912 !important;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.8),
+              inset 0 1px 0 rgba(255,255,255,0.03);
 }
 
-.logout-button:hover .nav-icon {
+[data-theme="dark"] .receptionist-sidebar .sidebar-header {
+  background: #040912 !important;
+  border-bottom-color: rgba(255,255,255,0.05);
+}
+
+[data-theme="dark"] .receptionist-sidebar .clinic-logo {
+  border-color: rgba(100,160,255,0.35);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6),
+              0 0 0 5px rgba(59,130,246,0.12),
+              0 0 20px rgba(59,130,246,0.15);
+}
+
+[data-theme="dark"] .receptionist-sidebar .sidebar-nav .nav-item {
+  color: rgba(180, 210, 255, 0.75);
+}
+
+[data-theme="dark"] .receptionist-sidebar .sidebar-nav .nav-item:hover {
+  background: rgba(59, 130, 246, 0.12);
   color: #ffffff;
 }
 
-.logout-button .nav-icon {
-  color: #ffffff;
-  font-size: 1.25rem;
-  transition: all 0.2s ease;
-  background: rgba(255, 255, 255, 0.2);
+[data-theme="dark"] .receptionist-sidebar .doctor-profile-header h1,
+[data-theme="dark"] .receptionist-sidebar .doctor-profile-header p {
+  color: #e2e8f0;
 }
 
-.logout-button .nav-label {
-  color: inherit;
-  font-weight: 500;
-  font-size: 0.938rem;
+/* Dark mode icon colors */
+[data-theme="dark"] .receptionist-sidebar .nav-item:nth-child(1) .nav-icon { color: #ff6ed4; background: rgba(248,83,190,0.18); }
+[data-theme="dark"] .receptionist-sidebar .nav-item:nth-child(2) .nav-icon { color: #60a5fa; background: rgba(59,130,246,0.18); }
+
+[data-theme="dark"] .receptionist-sidebar .nav-item.active .nav-icon,
+[data-theme="dark"] .receptionist-sidebar .nav-item:nth-child(1).active .nav-icon,
+[data-theme="dark"] .receptionist-sidebar .nav-item:nth-child(2).active .nav-icon {
+  background: rgba(255,255,255,0.25);
+  color: #ffffff;
 }
+
+[data-theme="dark"] .receptionist-sidebar .nav-label { color: rgba(180,210,255,0.75); }
+[data-theme="dark"] .receptionist-sidebar .nav-item.active .nav-label { color: #ffffff; }
+
+[data-theme="dark"] .receptionist-sidebar .logout-button { background: #b91c1c !important; }
+[data-theme="dark"] .receptionist-sidebar .logout-button:hover {
+  background: #991b1b !important;
+  box-shadow: 0 6px 20px rgba(239,68,68,0.35);
+}
+
+/* ══ Responsive ══ */
+@media (max-width: 1024px) { .receptionist-sidebar { width: 260px; } }
+
+@media (max-width: 480px) {
+  .receptionist-sidebar .sidebar-header { padding: 1.25rem 1rem; }
+  .receptionist-sidebar .clinic-logo { width: 64px; height: 64px; min-width: 64px; }
+}
+
+/* Focus ring */
+.receptionist-sidebar .sidebar-nav .nav-item:focus-visible,
+.receptionist-sidebar .logout-button:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
+
+/* Scrollbar */
+.receptionist-sidebar .sidebar-nav::-webkit-scrollbar { width: 3px; }
+.receptionist-sidebar .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+.receptionist-sidebar .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
 
 /* ============================================
-   RECEPTIONIST HEADER - NEW DESIGN
+   RECEPTIONIST HEADER
    ============================================ */
 
 .receptionist-header {
@@ -454,13 +459,12 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* Responsive Design */
 @media screen and (max-width: 768px) {
   .receptionist-header {
     padding: 0 12px;
     gap: 8px;
   }
-  
+
   .receptionist-header .header-title {
     font-size: 18px;
   }
@@ -471,7 +475,7 @@
     height: 60px;
     padding: 0 8px;
   }
-  
+
   .receptionist-header .header-title {
     font-size: 16px;
     margin-left: 8px;

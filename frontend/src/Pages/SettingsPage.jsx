@@ -190,8 +190,6 @@ function SettingsPage() {
       <div className="settings-page" style={{ marginLeft: 0 }}>
         <div className="settings-header">
           <div>
-            <h2 className="settings-title">{getPageTitle()}</h2>
-            <p className="settings-subtitle">{getPageSubtitle()}</p>
           </div>
           <button className="btn-save" onClick={handleSave}>
             <span className="material-symbols-outlined">save</span>

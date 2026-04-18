@@ -1,390 +1,216 @@
-import React from "react";
-import { Box, TextField, Grid, Typography, Chip, Stack } from "@mui/material";
+﻿import React, { useState } from "react";
+import { Box, TextField, Grid, Typography, Paper, Collapse, IconButton, Divider } from "@mui/material";
+import { Person, Phone, Email, Home, EventNote, Badge, LocalHospital, Emergency, ExpandMore, ExpandLess, Wc, Shield, ContactEmergency } from "@mui/icons-material";
+
+const fieldSx = {
+    fontFamily: "'Segoe UI', sans-serif",
+    fontSize: '16px',
+    borderRadius: 2,
+};
+const labelSx = { sx: { fontFamily: "'Segoe UI', sans-serif", fontWeight: 600, fontSize: '12px' } };
+
+const SectionLabel = ({ icon, label }) => (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5, mt: 0.5 }}>
+        {icon}
+        <Typography sx={{ fontWeight: 700, fontSize: '13px', color: '#1e3a5f', textTransform: 'uppercase', letterSpacing: 1 }}>
+            {label}
+        </Typography>
+        <Divider sx={{ flex: 1, borderColor: '#cae8ff' }} />
+    </Box>
+);
 
 const PatientInfo = ({ patient, readOnly }) => {
-    // Format gender display
+    const [open, setOpen] = useState(true);
+
     const formatGender = (gender) => {
-        if (typeof gender === 'number') {
-            return gender === 0 ? "Male" : gender === 1 ? "Female" : "Other";
-        }
+        if (typeof gender === 'number') return gender === 0 ? "Male" : gender === 1 ? "Female" : "Other";
         return gender || "Not specified";
     };
 
-    // Format date for display
-    const formatDate = (dateString) => {
-        if (!dateString) return "";
-        try {
-            const date = new Date(dateString);
-            return date.toLocaleDateString();
-        } catch {
-            return dateString;
-        }
-    };
-
     return (
-        <Box
-            className="patient-info-section"
-            sx={{
-                p: 3,
-                border: "2px solid #cae8ff",
-                borderRadius: "12px",
-                background: "linear-gradient(135deg, #f8faff 0%, #ffffff 100%)",
-                mb: 3,
-            }}
-        >
-            <Typography
-                variant="h6"
-                gutterBottom
+        <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid #e0e0e0' }}>
+            <Box
+                onClick={() => setOpen(!open)}
                 sx={{
-                    fontWeight: 700,
-                    color: "#1e3a5f",
-                    mb: 3,
-                    display: "flex",
-                    alignItems: "center"
+                    p: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    bgcolor: '#f5f9ff',
+                    borderBottom: open ? '1px solid #e0e0e0' : 'none',
+                    '&:hover': { bgcolor: '#e8f0fe' }
                 }}
             >
-                <span
-                    className="material-symbols-outlined"
-                    style={{
-                        fontSize: "1.5rem",
-                        marginRight: "12px",
-                        color: "#29b6f6"
-                    }}
-                >
-                    person
-                </span>
-                Patient Information
-            </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Person sx={{ color: '#1e3a5f' }} />
+                    <Typography variant="h6" sx={{ color: '#1e3a5f', fontWeight: 600, fontFamily: "'Segoe UI', sans-serif" }}>
+                        Patient Information
+                    </Typography>
+                </Box>
+                <IconButton size="small">
+                    {open ? <ExpandLess /> : <ExpandMore />}
+                </IconButton>
+            </Box>
 
-            <Grid container spacing={2}>
-                {/* Basic Info Row */}
-                <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                        fullWidth
-                        size="small"
-                        label="Patient ID"
-                        variant="outlined"
-                        value={patient?.patientID || patient?.patientId || ""}
-                        InputProps={{
-                            readOnly,
-                            sx: {
-                                fontWeight: 600,
-                                color: "#1e3a5f",
-                                fontFamily: "monospace"
-                            }
-                        }}
-                        sx={{
-                            '& .MuiInputLabel-root': { fontSize: '0.875rem' },
-                            '& .MuiOutlinedInput-root': { borderRadius: '8px' }
-                        }}
-                    />
-                </Grid>
+            <Collapse in={open}>
+                <Box sx={{ p: 2 }}>
+                    <Grid container spacing={2}>
 
-                <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                        fullWidth
-                        size="small"
-                        label="Patient Name"
-                        variant="outlined"
-                        value={patient?.name || ""}
-                        InputProps={{
-                            readOnly,
-                            sx: { fontWeight: 500 }
-                        }}
-                        sx={{
-                            '& .MuiInputLabel-root': { fontSize: '0.875rem' },
-                            '& .MuiOutlinedInput-root': { borderRadius: '8px' }
-                        }}
-                    />
-                </Grid>
+                        {/* Column 1 — Basic Info */}
+                        <Grid size={{ xs: 12, md: 3 }}>
+                            <SectionLabel icon={<Person sx={{ fontSize: 16, color: '#1e3a5f' }} />} label="Basic Info" />
+                            <Grid container spacing={1}>
+                                <Grid size={{ xs: 6 }}>
+                                    <TextField fullWidth label="Patient ID" size="small"
+                                        value={patient?.patientID || patient?.patientId || ""}
+                                        InputProps={{ readOnly, startAdornment: <Badge sx={{ mr: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: { ...fieldSx, fontWeight: 700, color: '#1e3a5f', fontFamily: 'monospace' } }}
+                                        InputLabelProps={labelSx}
+                                    />
+                                </Grid>
+                                <Grid size={{ xs: 6 }}>
+                                    <TextField fullWidth label="Full Name" size="small"
+                                        value={patient?.name || ""}
+                                        InputProps={{ readOnly, startAdornment: <Person sx={{ mr: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: { ...fieldSx, fontWeight: 600 } }}
+                                        InputLabelProps={labelSx}
+                                    />
+                                </Grid>
+                                <Grid size={{ xs: 6 }}>
+                                    <TextField fullWidth label="Age" size="small"
+                                        value={patient?.age || ""}
+                                        InputProps={{ readOnly, startAdornment: <EventNote sx={{ mr: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: fieldSx }}
+                                        InputLabelProps={labelSx}
+                                    />
+                                </Grid>
+                                <Grid size={{ xs: 6 }}>
+                                    <TextField fullWidth label="Gender" size="small"
+                                        value={formatGender(patient?.gender)}
+                                        InputProps={{ readOnly, startAdornment: <Wc sx={{ mr: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: fieldSx }}
+                                        InputLabelProps={labelSx}
+                                    />
+                                </Grid>
+                                {patient?.birthDate && (
+                                    <Grid size={{ xs: 6 }}>
+                                        <TextField fullWidth label="Date of Birth" type="date" size="small"
+                                            value={patient.birthDate.split('T')[0]}
+                                            InputLabelProps={{ shrink: true, ...labelSx }}
+                                            InputProps={{ readOnly, startAdornment: <EventNote sx={{ mr: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: fieldSx }}
+                                        />
+                                    </Grid>
+                                )}
+                                {patient?.nationalId && (
+                                    <Grid size={{ xs: 6 }}>
+                                        <TextField fullWidth label="National ID" size="small"
+                                            value={patient.nationalId}
+                                            InputProps={{ readOnly, startAdornment: <Badge sx={{ mr: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: fieldSx }}
+                                            InputLabelProps={labelSx}
+                                        />
+                                    </Grid>
+                                )}
+                            </Grid>
+                        </Grid>
 
-                <Grid item xs={12} sm={6} md={2}>
-                    <TextField
-                        fullWidth
-                        size="small"
-                        label="Age"
-                        variant="outlined"
-                        value={patient?.age || ""}
-                        InputProps={{
-                            readOnly,
-                            sx: { fontWeight: 500 }
-                        }}
-                        sx={{
-                            '& .MuiInputLabel-root': { fontSize: '0.875rem' },
-                            '& .MuiOutlinedInput-root': { borderRadius: '8px' }
-                        }}
-                    />
-                </Grid>
+                        {/* Column 2 — Contact */}
+                        <Grid size={{ xs: 12, md: 3 }}>
+                            <SectionLabel icon={<Phone sx={{ fontSize: 16, color: '#1e3a5f' }} />} label="Contact" />
+                            <Grid container spacing={1}>
+                                <Grid size={{ xs: 6 }}>
+                                    <TextField fullWidth label="Phone Number" size="small"
+                                        value={patient?.contactNumber || ""}
+                                        InputProps={{ readOnly, startAdornment: <Phone sx={{ mr: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: fieldSx }}
+                                        InputLabelProps={labelSx}
+                                    />
+                                </Grid>
+                                <Grid size={{ xs: 6 }}>
+                                    <TextField fullWidth label="Email" size="small"
+                                        value={patient?.email || ""}
+                                        InputProps={{ readOnly, startAdornment: <Email sx={{ mr: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: fieldSx }}
+                                        InputLabelProps={labelSx}
+                                    />
+                                </Grid>
+                                <Grid size={{ xs: 12 }}>
+                                    <TextField fullWidth label="Address" multiline rows={2}
+                                        value={patient?.address || ""}
+                                        InputProps={{ readOnly, startAdornment: <Home sx={{ mr: 1, alignSelf: 'flex-start', mt: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: fieldSx }}
+                                        InputLabelProps={labelSx}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Grid>
 
-                <Grid item xs={12} sm={6} md={2}>
-                    <TextField
-                        fullWidth
-                        size="small"
-                        label="Gender"
-                        variant="outlined"
-                        value={formatGender(patient?.gender)}
-                        InputProps={{
-                            readOnly,
-                            sx: { fontWeight: 500 }
-                        }}
-                        sx={{
-                            '& .MuiInputLabel-root': { fontSize: '0.875rem' },
-                            '& .MuiOutlinedInput-root': { borderRadius: '8px' }
-                        }}
-                    />
-                </Grid>
+                        {/* Column 3 — Insurance */}
+                        <Grid size={{ xs: 12, md: 3 }}>
+                            <SectionLabel icon={<Shield sx={{ fontSize: 16, color: '#1e3a5f' }} />} label="Insurance" />
+                            <Grid container spacing={1}>
+                                <Grid size={{ xs: 12 }}>
+                                    <TextField fullWidth label="Insurance Company" size="small"
+                                        value={patient?.insuranceCompany || ""}
+                                        InputProps={{ readOnly, startAdornment: <LocalHospital sx={{ mr: 1, color: '#2e7d32', fontSize: 16 }} />, sx: { ...fieldSx, color: patient?.insuranceCompany ? '#2e7d32' : 'inherit' } }}
+                                        InputLabelProps={labelSx}
+                                    />
+                                </Grid>
+                                {patient?.insuranceId && (
+                                    <Grid size={{ xs: 6 }}>
+                                        <TextField fullWidth label="Insurance ID" size="small"
+                                            value={patient.insuranceId}
+                                            InputProps={{ readOnly, startAdornment: <Badge sx={{ mr: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: fieldSx }}
+                                            InputLabelProps={labelSx}
+                                        />
+                                    </Grid>
+                                )}
+                                {patient?.policyNumber && (
+                                    <Grid size={{ xs: 6 }}>
+                                        <TextField fullWidth label="Policy Number" size="small"
+                                            value={patient.policyNumber}
+                                            InputProps={{ readOnly, startAdornment: <Badge sx={{ mr: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: fieldSx }}
+                                            InputLabelProps={labelSx}
+                                        />
+                                    </Grid>
+                                )}
+                                {patient?.coverage && (
+                                    <Grid size={{ xs: 12 }}>
+                                        <TextField fullWidth label="Coverage" size="small"
+                                            value={`${patient.coverage}%`}
+                                            InputProps={{ readOnly, startAdornment: <LocalHospital sx={{ mr: 1, color: '#1976d2', fontSize: 16 }} />, sx: { ...fieldSx, color: '#1976d2' } }}
+                                            InputLabelProps={labelSx}
+                                        />
+                                    </Grid>
+                                )}
+                            </Grid>
 
-                <Grid item xs={12} sm={6} md={2}>
-                    <TextField
-                        fullWidth
-                        size="small"
-                        label="Visit Date"
-                        type="date"
-                        variant="outlined"
-                        value={patient?.visitDate ? patient.visitDate.split('T')[0] : ""}
-                        InputLabelProps={{ shrink: true }}
-                        InputProps={{
-                            readOnly,
-                            sx: { fontWeight: 500 }
-                        }}
-                        sx={{
-                            '& .MuiInputLabel-root': { fontSize: '0.875rem' },
-                            '& .MuiOutlinedInput-root': { borderRadius: '8px' }
-                        }}
-                    />
-                </Grid>
+                        </Grid>
 
-                {/* Contact & Insurance Row */}
-                <Grid item xs={12} sm={6} md={4}>
-                    <TextField
-                        fullWidth
-                        size="small"
-                        label="Contact Number"
-                        variant="outlined"
-                        value={patient?.contactNumber || ""}
-                        InputProps={{
-                            readOnly,
-                            sx: { fontWeight: 500 }
-                        }}
-                        sx={{
-                            '& .MuiInputLabel-root': { fontSize: '0.875rem' },
-                            '& .MuiOutlinedInput-root': { borderRadius: '8px' }
-                        }}
-                    />
-                </Grid>
+                        {/* Column 4 — Emergency Contact */}
+                        {(patient?.emergencyContactName || patient?.emergencyContactPhone) && (
+                            <Grid size={{ xs: 12, md: 3 }}>
+                                <SectionLabel icon={<ContactEmergency sx={{ fontSize: 16, color: '#d32f2f' }} />} label="Emergency Contact" />
+                                <Grid container spacing={1}>
+                                    {patient?.emergencyContactName && (
+                                        <Grid size={{ xs: 12 }}>
+                                            <TextField fullWidth label="Emergency Contact Name" size="small"
+                                                value={patient.emergencyContactName}
+                                                InputProps={{ readOnly, startAdornment: <Emergency sx={{ mr: 1, color: '#d32f2f', fontSize: 16 }} />, sx: fieldSx }}
+                                                InputLabelProps={labelSx}
+                                            />
+                                        </Grid>
+                                    )}
+                                    {patient?.emergencyContactPhone && (
+                                        <Grid size={{ xs: 12 }}>
+                                            <TextField fullWidth label="Emergency Phone" size="small"
+                                                value={patient.emergencyContactPhone}
+                                                InputProps={{ readOnly, startAdornment: <Phone sx={{ mr: 1, color: '#d32f2f', fontSize: 16 }} />, sx: { ...fieldSx, color: '#d32f2f' } }}
+                                                InputLabelProps={labelSx}
+                                            />
+                                        </Grid>
+                                    )}
+                                </Grid>
+                            </Grid>
+                        )}
 
-                <Grid item xs={12} sm={6} md={4}>
-                    <TextField
-                        fullWidth
-                        size="small"
-                        label="Email"
-                        variant="outlined"
-                        value={patient?.email || ""}
-                        InputProps={{
-                            readOnly,
-                            sx: { fontWeight: 500 }
-                        }}
-                        sx={{
-                            '& .MuiInputLabel-root': { fontSize: '0.875rem' },
-                            '& .MuiOutlinedInput-root': { borderRadius: '8px' }
-                        }}
-                    />
-                </Grid>
-
-                <Grid item xs={12} sm={6} md={4}>
-                    <TextField
-                        fullWidth
-                        size="small"
-                        label="Insurance Company"
-                        variant="outlined"
-                        value={patient?.insuranceCompany || ""}
-                        InputProps={{
-                            readOnly,
-                            sx: {
-                                fontWeight: 500,
-                                color: patient?.insuranceCompany ? "#2e7d32" : "inherit"
-                            }
-                        }}
-                        sx={{
-                            '& .MuiInputLabel-root': { fontSize: '0.875rem' },
-                            '& .MuiOutlinedInput-root': { borderRadius: '8px' }
-                        }}
-                    />
-                </Grid>
-
-                {/* Insurance Details Row */}
-                {patient?.insuranceId && (
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField
-                            fullWidth
-                            size="small"
-                            label="Insurance ID"
-                            variant="outlined"
-                            value={patient.insuranceId}
-                            InputProps={{
-                                readOnly,
-                                sx: { fontWeight: 500 }
-                            }}
-                            sx={{
-                                '& .MuiInputLabel-root': { fontSize: '0.875rem' },
-                                '& .MuiOutlinedInput-root': { borderRadius: '8px' }
-                            }}
-                        />
                     </Grid>
-                )}
-
-                {patient?.policyNumber && (
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField
-                            fullWidth
-                            size="small"
-                            label="Policy Number"
-                            variant="outlined"
-                            value={patient.policyNumber}
-                            InputProps={{
-                                readOnly,
-                                sx: { fontWeight: 500 }
-                            }}
-                            sx={{
-                                '& .MuiInputLabel-root': { fontSize: '0.875rem' },
-                                '& .MuiOutlinedInput-root': { borderRadius: '8px' }
-                            }}
-                        />
-                    </Grid>
-                )}
-
-                {patient?.coverage && (
-                    <Grid item xs={12} sm={6} md={2}>
-                        <TextField
-                            fullWidth
-                            size="small"
-                            label="Coverage"
-                            variant="outlined"
-                            value={`${patient.coverage}%`}
-                            InputProps={{
-                                readOnly,
-                                sx: {
-                                    fontWeight: 500,
-                                    color: "#1976d2"
-                                }
-                            }}
-                            sx={{
-                                '& .MuiInputLabel-root': { fontSize: '0.875rem' },
-                                '& .MuiOutlinedInput-root': { borderRadius: '8px' }
-                            }}
-                        />
-                    </Grid>
-                )}
-
-                {/* Address Row */}
-                <Grid item xs={12}>
-                    <TextField
-                        fullWidth
-                        size="small"
-                        label="Address"
-                        variant="outlined"
-                        multiline
-                        rows={2}
-                        value={patient?.address || ""}
-                        InputProps={{
-                            readOnly,
-                            sx: { fontWeight: 500 }
-                        }}
-                        sx={{
-                            '& .MuiInputLabel-root': { fontSize: '0.875rem' },
-                            '& .MuiOutlinedInput-root': { borderRadius: '8px' }
-                        }}
-                    />
-                </Grid>
-
-                {/* Additional Info */}
-                {patient?.birthDate && (
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField
-                            fullWidth
-                            size="small"
-                            label="Date of Birth"
-                            type="date"
-                            variant="outlined"
-                            value={patient.birthDate.split('T')[0]}
-                            InputLabelProps={{ shrink: true }}
-                            InputProps={{
-                                readOnly,
-                                sx: { fontWeight: 500 }
-                            }}
-                            sx={{
-                                '& .MuiInputLabel-root': { fontSize: '0.875rem' },
-                                '& .MuiOutlinedInput-root': { borderRadius: '8px' }
-                            }}
-                        />
-                    </Grid>
-                )}
-
-                {patient?.nationalId && (
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField
-                            fullWidth
-                            size="small"
-                            label="National ID"
-                            variant="outlined"
-                            value={patient.nationalId}
-                            InputProps={{
-                                readOnly,
-                                sx: { fontWeight: 500 }
-                            }}
-                            sx={{
-                                '& .MuiInputLabel-root': { fontSize: '0.875rem' },
-                                '& .MuiOutlinedInput-root': { borderRadius: '8px' }
-                            }}
-                        />
-                    </Grid>
-                )}
-
-                {/* Emergency Contacts */}
-                {patient?.emergencyContactName && (
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField
-                            fullWidth
-                            size="small"
-                            label="Emergency Contact"
-                            variant="outlined"
-                            value={patient.emergencyContactName}
-                            InputProps={{
-                                readOnly,
-                                sx: { fontWeight: 500 }
-                            }}
-                            sx={{
-                                '& .MuiInputLabel-root': { fontSize: '0.875rem' },
-                                '& .MuiOutlinedInput-root': { borderRadius: '8px' }
-                            }}
-                        />
-                    </Grid>
-                )}
-
-                {patient?.emergencyContactPhone && (
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField
-                            fullWidth
-                            size="small"
-                            label="Emergency Phone"
-                            variant="outlined"
-                            value={patient.emergencyContactPhone}
-                            InputProps={{
-                                readOnly,
-                                sx: {
-                                    fontWeight: 500,
-                                    color: "#d32f2f"
-                                }
-                            }}
-                            sx={{
-                                '& .MuiInputLabel-root': { fontSize: '0.875rem' },
-                                '& .MuiOutlinedInput-root': { borderRadius: '8px' }
-                            }}
-                        />
-                    </Grid>
-                )}
-            </Grid>
-        </Box>
+                </Box>
+            </Collapse>
+        </Paper>
     );
 };
 

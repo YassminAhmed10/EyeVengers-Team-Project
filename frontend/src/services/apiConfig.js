@@ -9,10 +9,16 @@ export const endpoints = {
     create: `${API_BASE_URL}/Appointments`,
     update: (id) => `${API_BASE_URL}/Appointments/${id}`,
     patch: (id) => `${API_BASE_URL}/Appointments/${id}`,
+    confirm: (id) => `${API_BASE_URL}/Appointments/confirm/${id}`,
   },
   doctors: {
     list: `${API_BASE_URL}/Doctors`,
     detail: (id) => `${API_BASE_URL}/Doctors/${id}`,
+  },
+  patients: {
+    list: `${API_BASE_URL}/Patient`,
+    search: (query) => `${API_BASE_URL}/Appointments/patients/search?query=${encodeURIComponent(query)}`,
+    detail: (id) => `${API_BASE_URL}/Patient/${id}`,
   }
 };
 
@@ -72,6 +78,11 @@ export const appointmentsAPI = {
   update: (id, appointmentData) => fetchData(endpoints.appointments.update(id), {
     method: 'PUT',
     body: JSON.stringify(appointmentData)
+  }),
+
+  // Confirm online appointment (sets status to Upcoming)
+  confirm: (id) => fetchData(endpoints.appointments.confirm(id), {
+    method: 'PUT'
   })
 };
 
@@ -81,4 +92,15 @@ export const doctorsAPI = {
 
   // Get doctor by ID
   getById: (id) => fetchData(endpoints.doctors.detail(id))
+};
+
+export const patientsAPI = {
+  // Get all patients
+  getAll: () => fetchData(endpoints.patients.list),
+
+  // Search patients by name, phone, email, or national ID
+  search: (query) => fetchData(endpoints.patients.search(query)),
+
+  // Get patient by ID
+  getById: (id) => fetchData(endpoints.patients.detail(id))
 };

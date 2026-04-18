@@ -5,7 +5,7 @@ function PatientTable({ patients }) {
   const navigate = useNavigate();
 
   const handleViewRecord = (patient) => {
-    navigate(`/doctor/view-medical-record/${encodeURIComponent(patient.name)}`);
+    navigate(`/doctor/view-medical-record/${encodeURIComponent(patient.id || patient.name)}`);
   };
 
   return (

@@ -7,7 +7,7 @@ import './Appointments.css';
 import './OnlineRequests.css';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { appointmentsAPI } from '../services/apiConfig';
+import { appointmentsAPI, patientsAPI } from '../services/apiConfig';
 
 import {
     FaUser,
@@ -73,7 +73,10 @@ const AppointmentBooking = () => {
     const { t } = useLanguage();
     const location = useLocation();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('book');  // Default to Book Appointment
+    const [activeTab, setActiveTab] = useState(() => {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('tab') || 'book';
+    });
     const [currentStep, setCurrentStep] = useState(1);
     const [selectedTime, setSelectedTime] = useState('');
     const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
@@ -88,10 +91,12 @@ const AppointmentBooking = () => {
     const [sortDirection, setSortDirection] = useState('desc');
     const [isPatientSearching, setIsPatientSearching] = useState(false);
     const [isPatientFound, setIsPatientFound] = useState(false); // Track if patient was found
+    const [isExistingPatient, setIsExistingPatient] = useState(false); // True when selected from DB
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [selectedOnlineRequest, setSelectedOnlineRequest] = useState(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [isOnlineRequestModalOpen, setIsOnlineRequestModalOpen] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
     const searchTimeoutRef = useRef(null);
 
     // Online Requests state
@@ -306,6 +311,7 @@ const AppointmentBooking = () => {
 
     // Appointment data from API
     const [existingPatients, setExistingPatients] = useState([]);
+    const [patientSuggestions, setPatientSuggestions] = useState([]);
     const [existingAppointments, setExistingAppointments] = useState([]);
     const [onlineRequests, setOnlineRequests] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -500,17 +506,9 @@ const AppointmentBooking = () => {
         return filtered;
     }, [existingAppointments, appointmentSearchQuery, filterDate, filterStatus, sortField, sortDirection]);
 
-    // Filtered patients for search
-    const filteredPatients = useMemo(() => {
-        if (!patientSearchQuery) return [];
-        const query = patientSearchQuery.toLowerCase();
-        return existingPatients.filter(patient =>
-            patient.patientName.toLowerCase().includes(query) ||
-            patient.patientId.toLowerCase().includes(query) ||
-            patient.phone.includes(query) ||
-            patient.nationalId.includes(query)
-        );
-    }, [existingPatients, patientSearchQuery]);
+    // Patient suggestions come from live API search (patientSuggestions state)
+    // Keep filteredPatients as alias for backward compatibility
+    const filteredPatients = patientSuggestions;
 
     // Calculate total appointments for current day
     const totalAppointmentsToday = useMemo(() => {
@@ -558,14 +556,14 @@ const AppointmentBooking = () => {
         return stats;
     }, [existingAppointments, totalAppointmentsToday]);
 
-    // Reason for visit options
+    // Reason for visit options with icons
     const reasonOptions = [
-        'Routine Checkup',
-        'Follow-up',
-        'Eye Problem',
-        'Surgery Consultation',
-        'Contact Lenses',
-        'Glasses Prescription'
+        { label: 'Routine Checkup',       icon: <FaStethoscope /> },
+        { label: 'Follow-up',             icon: <FaHistory /> },
+        { label: 'Eye Problem',           icon: <FaEye /> },
+        { label: 'Surgery Consultation',  icon: <FaSyringe /> },
+        { label: 'Contact Lenses',        icon: <FaUserMd /> },
+        { label: 'Glasses Prescription',  icon: <FaFileMedical /> },
     ];
 
     // Month names
@@ -722,14 +720,16 @@ const AppointmentBooking = () => {
         return getTimeSlotsForDate(formData.appointmentDate);
     }, [formData.appointmentDate, availabilityVersion]);
 
-    // Check for tab parameter from navigation state
+    // Check for tab parameter from URL search params or navigation state
     useEffect(() => {
-        if (location.state?.tab) {
+        const params = new URLSearchParams(location.search);
+        const tabParam = params.get('tab');
+        if (tabParam) {
+            setActiveTab(tabParam);
+        } else if (location.state?.tab) {
             setActiveTab(location.state.tab);
-            // Clear the state so it doesn't persist on refresh
-            navigate(location.pathname, { replace: true, state: {} });
         }
-    }, [location.state, location.pathname, navigate]);
+    }, [location.search, location.state]);
 
     // Listen for changes to doctor availability in Settings
     useEffect(() => {
@@ -1105,68 +1105,143 @@ const AppointmentBooking = () => {
         }
     };
 
-    // Handle patient search and autofill
-    const handlePatientSearch = async () => {
-        if (!patientSearchQuery) return;
-        setIsPatientSearching(true);
-        setIsPatientFound(false); // Reset found state
+    // Handle live patient search input (debounced)
+    const handlePatientSearchInput = (e) => {
+        const val = e.target.value;
+        setPatientSearchQuery(val);
 
-        try {
-            // Search in database via API
-            const allAppointments = await appointmentsAPI.getAll();
-            
-            // Find patient by ID or phone number
-            const foundPatientAppointment = allAppointments.find(apt =>
-                apt.patientId?.toString().toLowerCase() === patientSearchQuery.toLowerCase() ||
-                apt.phone === patientSearchQuery ||
-                apt.patientName?.toLowerCase().includes(patientSearchQuery.toLowerCase())
+        clearTimeout(searchTimeoutRef.current);
+
+        if (!val || val.trim().length < 1) {
+            setPatientSuggestions([]);
+            setIsPatientSearching(false);
+            return;
+        }
+
+        searchTimeoutRef.current = setTimeout(() => {
+            const q = val.trim().toLowerCase();
+
+            // Search through already-loaded appointments (no extra API call needed)
+            const matched = existingAppointments.filter(apt =>
+                (apt.patientName && apt.patientName.toLowerCase().includes(q)) ||
+                (apt.patientId && apt.patientId.toLowerCase().startsWith(q)) ||
+                (apt.phone && apt.phone.startsWith(q)) ||
+                (apt.nationalId && apt.nationalId.startsWith(q))
             );
 
-            if (foundPatientAppointment) {
-                setIsPatientFound(true); // Mark patient as found
-                
-                // Auto-fill all patient information from database
-                setFormData(prev => ({
-                    ...prev,
-                    patientName: foundPatientAppointment.patientName || '',
-                    patientId: foundPatientAppointment.patientId || '',
-                    phone: foundPatientAppointment.phone || '',
-                    email: foundPatientAppointment.email || '',
-                    dateOfBirth: foundPatientAppointment.patientBirthDate || '',
-                    age: foundPatientAppointment.age?.toString() || '',
-                    gender: foundPatientAppointment.patientGender === 0 ? 'male' : 'female',
-                    nationalId: foundPatientAppointment.nationalId || '',
-                    address: foundPatientAppointment.address || '',
-                    eyeAllergies: foundPatientAppointment.eyeAllergies ? 
-                        foundPatientAppointment.eyeAllergies.split(',').map(item => item.trim()) : [],
-                    otherAllergies: foundPatientAppointment.otherAllergies || '',
-                    chronicDiseases: foundPatientAppointment.chronicDiseases ? 
-                        foundPatientAppointment.chronicDiseases.split(',').map(item => item.trim()) : [],
-                    currentMedications: foundPatientAppointment.currentMedications || '',
-                    eyeSurgeries: foundPatientAppointment.eyeSurgeries ? 
-                        foundPatientAppointment.eyeSurgeries.split(',').map(item => item.trim()) : [],
-                    otherEyeSurgeries: foundPatientAppointment.otherEyeSurgeries || '',
-                    familyEyeDiseases: foundPatientAppointment.familyEyeDiseases ? 
-                        foundPatientAppointment.familyEyeDiseases.split(',').map(item => item.trim()) : [],
-                    otherFamilyEyeDiseases: foundPatientAppointment.otherFamilyEyeDiseases || '',
-                    visionSymptoms: foundPatientAppointment.visionSymptoms ? 
-                        foundPatientAppointment.visionSymptoms.split(',').map(item => item.trim()) : []
-                }));
-
-                // Show success message
-                alert(`✅ Patient ${foundPatientAppointment.patientName} found!\nAll information has been auto-filled from database.`);
-            } else {
-                setIsPatientFound(false); // Patient not found
-                alert('❌ Patient not found in database.\nPlease enter new patient information.');
+            // Deduplicate by patientId — keep the most recent appointment per patient
+            const seen = new Map();
+            for (const apt of matched) {
+                const pid = apt.patientId?.toString();
+                if (!pid) continue;
+                const existing = seen.get(pid);
+                if (!existing || new Date(apt.appointmentDate) > new Date(existing.appointmentDate)) {
+                    seen.set(pid, apt);
+                }
             }
-        } catch (error) {
-            console.error('Error searching patient:', error);
-            alert('❌ Error searching patient. Please try again.');
-            setIsPatientFound(false);
-        } finally {
-            setIsPatientSearching(false);
-        }
+
+            const results = Array.from(seen.values()).slice(0, 10);
+            setPatientSuggestions(results);
+        }, 200);
     };
+
+    // Select a patient from the suggestions dropdown and auto-fill all fields
+    const selectPatient = (patient) => {
+        // Format date of birth to YYYY-MM-DD for date input
+        let dob = '';
+        const rawDob = patient.patientBirthDate || patient.dateOfBirth || '';
+        if (rawDob) {
+            const d = new Date(rawDob);
+            if (!isNaN(d.getTime())) {
+                dob = d.toISOString().split('T')[0];
+            }
+        }
+
+        // Calculate age from birth date (use stored age as fallback)
+        let ageStr = patient.age?.toString() || '';
+        if (dob && !ageStr) {
+            const today = new Date();
+            const birth = new Date(dob);
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--;
+            ageStr = age > 0 ? age.toString() : '';
+        }
+
+        // patientGender: 0 = Male, 1 = Female (same as PatientGender enum in backend)
+        const genderRaw = patient.patientGender ?? patient.gender;
+        const gender = genderRaw === 0 || genderRaw === '0' ? 'Male'
+            : genderRaw === 1 || genderRaw === '1' ? 'Female'
+            : typeof genderRaw === 'string' && genderRaw ? genderRaw
+            : '';
+
+        // Match insurance provider id
+        const companyRaw = patient.insuranceCompany || '';
+        const matchedProvider = insuranceProviders.find(
+            p => p.id === companyRaw ||
+                 p.name.toLowerCase().includes(companyRaw.toLowerCase())
+        );
+        const insuranceProviderValue = matchedProvider ? matchedProvider.id : '';
+        const hasInsurance = !!companyRaw && companyRaw.toLowerCase() !== 'none';
+
+        // Format insurance expiry date
+        let insuranceExpiry = '';
+        if (patient.insuranceExpiryDate) {
+            const d = new Date(patient.insuranceExpiryDate);
+            if (!isNaN(d.getTime())) insuranceExpiry = d.toISOString().split('T')[0];
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            patientName: patient.patientName || `${patient.firstName || ''} ${patient.lastName || ''}`.trim(),
+            patientId: patient.patientId || prev.patientId,
+            phone: patient.phone || '',
+            email: patient.email || '',
+            dateOfBirth: dob,
+            age: ageStr,
+            gender,
+            nationalId: patient.nationalId || '',
+            address: patient.address || '',
+            // Medical History
+            eyeAllergies: patient.eyeAllergies
+                ? patient.eyeAllergies.split(',').map(s => s.trim()).filter(Boolean)
+                : [],
+            otherAllergies: patient.otherAllergies || '',
+            chronicDiseases: patient.chronicDiseases
+                ? patient.chronicDiseases.split(',').map(s => s.trim()).filter(Boolean)
+                : [],
+            currentMedications: patient.currentMedications || '',
+            eyeSurgeries: patient.eyeSurgeries
+                ? patient.eyeSurgeries.split(',').map(s => s.trim()).filter(Boolean)
+                : [],
+            otherEyeSurgeries: patient.otherEyeSurgeries || '',
+            familyEyeDiseases: patient.familyEyeDiseases
+                ? patient.familyEyeDiseases.split(',').map(s => s.trim()).filter(Boolean)
+                : [],
+            otherFamilyEyeDiseases: patient.otherFamilyDiseases || '',
+            visionSymptoms: patient.visionSymptoms
+                ? patient.visionSymptoms.split(',').map(s => s.trim()).filter(Boolean)
+                : [],
+            // Insurance
+            noInsurance: !hasInsurance,
+            insuranceProvider: insuranceProviderValue,
+            insuranceId: patient.insuranceId || '',
+            policyNumber: patient.policyNumber || '',
+            coveragePercentage: patient.coverage || '',
+            coverageType: patient.coverageType || '',
+            insuranceExpiryDate: insuranceExpiry,
+            insuranceContact: patient.insuranceContact || '',
+        }));
+
+        setPatientSearchQuery(patient.patientName || `${patient.firstName || ''} ${patient.lastName || ''}`.trim());
+        setPatientSuggestions([]);
+        setIsPatientFound(true);
+        setIsExistingPatient(true);
+    };
+
+    // Keep handlePatientSearch as no-op for any lingering references
+    const handlePatientSearch = async () => {};
+
 
     // Clear search timeout on unmount
     useEffect(() => {
@@ -1179,7 +1254,9 @@ const AppointmentBooking = () => {
 
     const clearPatientSearch = () => {
         setPatientSearchQuery('');
-        setIsPatientFound(false); // Reset found state
+        setPatientSuggestions([]);
+        setIsPatientFound(false);
+        setIsExistingPatient(false);
         // Reset form to initial state except for auto-generated ID
         setFormData({
             patientName: '',
@@ -1280,8 +1357,8 @@ const AppointmentBooking = () => {
         switch (action) {
             case 'confirm':
                 try {
-                    // Update the appointment status from Upcoming (0) to Confirmed (1)
-                    await appointmentsAPI.patch(requestId, { status: 1 });
+                    // Use the dedicated confirm endpoint (sets status to Upcoming)
+                    await appointmentsAPI.confirm(requestId);
                     
                     alert(`Appointment confirmed for ${request.patientName}`);
                     
@@ -1559,7 +1636,12 @@ const AppointmentBooking = () => {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
+
+        // BLOCK booking unless user is on the final Payment step
+        if (currentStep !== 5) {
+            return;
+        }
 
         // Validation
         if (!formData.patientName || !formData.phone || !formData.appointmentDate || !formData.appointmentTime || !formData.reasonForVisit) {
@@ -1636,22 +1718,6 @@ const AppointmentBooking = () => {
             
             console.log('Appointment saved successfully:', savedAppointment);
 
-            // Success notification with payment details
-            const totalAmount = formData.finalPrice || 500;
-            const amountPaid = parseFloat(paymentData.amountPaid) || 0;
-            const remainingBalance = totalAmount - amountPaid;
-            
-            let paymentStatusMessage = '';
-            if (remainingBalance === 0) {
-                paymentStatusMessage = '✓ Fully Paid';
-            } else if (amountPaid > 0) {
-                paymentStatusMessage = `⚠ Partial Payment - Balance: ${remainingBalance.toFixed(2)} EGP`;
-            } else {
-                paymentStatusMessage = '⚠ Pending Payment';
-            }
-
-            alert(`Appointment booked successfully!\n\nAppointment ID: ${savedAppointment.appointmentId}\nPatient: ${savedAppointment.patientName}\nDate: ${savedAppointment.appointmentDate}\nTime: ${savedAppointment.appointmentTime}\n\nPayment Details:\nTotal: ${totalAmount} EGP\nPaid: ${amountPaid.toFixed(2)} EGP\nStatus: ${paymentStatusMessage}\n\n✓ Payment data saved to Finance system`);
-
             // Refresh appointments list
             const appointmentsResponse = await fetch('http://localhost:5201/api/Appointments');
             if (appointmentsResponse.ok) {
@@ -1711,9 +1777,10 @@ const AppointmentBooking = () => {
             setSelectedTime('');
             setPatientSearchQuery('');
             setIsPatientFound(false);
+            setIsExistingPatient(false);
 
-            // Switch to appointments tab to see the new appointment
-            setActiveTab('all');
+            // Show success modal instead of switching tabs
+            setShowSuccessModal(true);
 
         } catch (error) {
             console.error('Error saving appointment:', error);
@@ -2138,59 +2205,62 @@ const AppointmentBooking = () => {
                         <input
                             type="text"
                             value={patientSearchQuery}
-                            onChange={(e) => setPatientSearchQuery(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handlePatientSearch()}
+                            onChange={handlePatientSearchInput}
+                            onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
                             placeholder={t('appointments.searchPlaceholder')}
                             className="search-input"
+                            autoComplete="off"
                         />
                         {patientSearchQuery && (
-                            <button className="clear-search-btn" onClick={() => setPatientSearchQuery('')}>
+                            <button type="button" className="clear-search-btn" onClick={clearPatientSearch}>
                                 <FaTimes />
                             </button>
                         )}
                     </div>
-                    <button
-                        className="search-btn"
-                        onClick={handlePatientSearch}
-                        disabled={!patientSearchQuery || isPatientSearching}
-                    >
-                        {isPatientSearching ? t('common.loading') : t('appointments.searchPatient')}
-                    </button>
                 </div>
 
-                {/* Quick Search Results */}
-                {filteredPatients.length > 0 && patientSearchQuery && (
+                {/* Live Search Suggestions Dropdown */}
+                {patientSuggestions.length > 0 && patientSearchQuery && (
                     <div className="quick-search-results">
                         <div className="quick-search-header">
-                            <span>Quick Search Results ({filteredPatients.length})</span>
+                            <span>Suggestions ({patientSuggestions.length})</span>
                         </div>
-                        {filteredPatients.map(patient => (
+                        {patientSuggestions.map(patient => (
                             <div
                                 key={patient.id}
                                 className="quick-search-result"
-                                onClick={() => {
-                                    setPatientSearchQuery(patient.patientId);
-                                    handlePatientSearch();
-                                }}
+                                onClick={() => selectPatient(patient)}
                             >
                                 <div className="patient-result-info">
                                     <FaUser className="patient-icon" />
                                     <div className="patient-details">
-                                        <strong>{patient.patientName}</strong>
-                                        <span>ID: {patient.patientId} | Phone: {patient.phone}</span>
+                                        <strong>{patient.patientName || `${patient.firstName || ''} ${patient.lastName || ''}`.trim()}</strong>
+                                        <span>
+                                            {patient.phone || ''}
+                                            {patient.patientId ? ` | ID: ${patient.patientId}` : ''}
+                                            {patient.nationalId ? ` | NID: ${patient.nationalId}` : ''}
+                                        </span>
                                     </div>
                                 </div>
-                                <button className="select-patient-btn">Select</button>
+                                <button type="button" className="select-patient-btn" onClick={(e) => { e.stopPropagation(); selectPatient(patient); }}>Select</button>
                             </div>
                         ))}
+                    </div>
+                )}
+
+                {/* No results feedback */}
+                {patientSearchQuery.length >= 1 && patientSuggestions.length === 0 && !isPatientFound && (
+                    <div className="no-patients-notice">
+                        <FaSearch className="notice-icon" />
+                        <span>No patients found for "<strong>{patientSearchQuery}</strong>". Fill in details below for a new patient.</span>
                     </div>
                 )}
 
                 {isPatientFound && formData.patientName && (
                     <div className="patient-found-notice">
                         <FaCheck className="check-icon" />
-                        <span>Patient <strong>{formData.patientName}</strong> (ID: {formData.patientId}) found and auto-filled.</span>
-                        <button className="clear-patient-btn" onClick={clearPatientSearch}>
+                        <span>Patient <strong>{formData.patientName}</strong> found and auto-filled.</span>
+                        <button type="button" className="clear-patient-btn" onClick={clearPatientSearch}>
                             <FaTimes /> Clear
                         </button>
                     </div>
@@ -2385,13 +2455,13 @@ const AppointmentBooking = () => {
                 <div className="calendar-section">
                     <div className="calendar-header">
                         <div className="calendar-navigation">
-                            <button className="nav-btn prev-month" onClick={handlePrevMonth}>
+                            <button type="button" className="nav-btn prev-month" onClick={handlePrevMonth}>
                                 <FaChevronLeft />
                             </button>
                             <h4 className="calendar-month-title">
                                 {monthNames[currentMonth]} {currentYear}
                             </h4>
-                            <button className="nav-btn next-month" onClick={handleNextMonth}>
+                            <button type="button" className="nav-btn next-month" onClick={handleNextMonth}>
                                 <FaChevronRight />
                             </button>
                         </div>
@@ -2527,7 +2597,7 @@ const AppointmentBooking = () => {
                         {timeSlots.map((time, index) => {
                             // Check if this time slot is already booked for the selected date
                             const isBooked = formData.appointmentDate && existingAppointments.some(apt => {
-                                const aptDate = new Date(apt.appointmentDate).toISOString().split('T')[0];
+                                const aptDate = apt.appointmentDate?.split('T')[0]; // Safe: no UTC conversion
                                 const selectedDate = formData.appointmentDate;
                                 const aptTime = apt.appointmentTime?.substring(0, 5); // Get HH:MM from TimeSpan
                                 
@@ -2560,28 +2630,24 @@ const AppointmentBooking = () => {
 
                     <div className="appointment-details-form">
                         <div className="form-group full-width">
-                            <label htmlFor="reasonForVisit" className="form-label">
+                            <label className="form-label">
                                 <span className="label-text">Reason for Visit</span>
                                 <span className="required-star">*</span>
                             </label>
-                            <div className="input-container select-container">
-                                <FaStethoscope className="input-icon" />
-                                <select
-                                    id="reasonForVisit"
-                                    name="reasonForVisit"
-                                    value={formData.reasonForVisit}
-                                    onChange={handleInputChange}
-                                    className="form-select"
-                                    required
-                                >
-                                    <option value="">Select reason for visit</option>
-                                    {reasonOptions.map((reason, index) => (
-                                        <option key={index} value={reason}>{reason}</option>
-                                    ))}
-                                </select>
-                                <span className="select-arrow">?</span>
+                            <div className="reason-icons-grid">
+                                {reasonOptions.map((reason, index) => (
+                                    <button
+                                        key={index}
+                                        type="button"
+                                        className={`reason-icon-btn ${formData.reasonForVisit === reason.label ? 'selected' : ''}`}
+                                        onClick={() => handleInputChange({ target: { name: 'reasonForVisit', value: reason.label } })}
+                                        title={reason.label}
+                                    >
+                                        <span className="reason-btn-icon">{reason.icon}</span>
+                                        <span className="reason-btn-label">{reason.label}</span>
+                                    </button>
+                                ))}
                             </div>
-                            <div className="input-hint">Please select the primary reason for your appointment</div>
                         </div>
                     </div>
                 </div>
@@ -2596,15 +2662,32 @@ const AppointmentBooking = () => {
                 <p className="section-subtitle">Complete patient's eye & medical background information</p>
             </div>
 
-            <div className="medical-history-notice">
-                <FaInfoCircle className="notice-icon" />
-                <div className="notice-content">
-                    <strong>Important:</strong> Accurate medical history helps in proper diagnosis and treatment planning.
+            {isExistingPatient ? (
+                <div className="medical-record-exists">
+                    <div className="medical-record-exists-icon">
+                        <FaFileMedical />
+                    </div>
+                    <h3>Medical Record Already on File</h3>
+                    <p>
+                        <strong>{formData.patientName}</strong> is an existing patient at our clinic.
+                        Their medical history is already recorded in our system
+                        and will be carried over from their last visit.
+                    </p>
+                    <span className="medical-record-exists-badge">
+                        <FaCheck /> Record Found
+                    </span>
                 </div>
-            </div>
+            ) : (
+                <>
+                    <div className="medical-history-notice">
+                        <FaInfoCircle className="notice-icon" />
+                        <div className="notice-content">
+                            <strong>Important:</strong> Accurate medical history helps in proper diagnosis and treatment planning.
+                        </div>
+                    </div>
 
-            {/* 3x2 Grid Layout */}
-            <div className="medical-grid-3x2">
+                    {/* 3x2 Grid Layout */}
+                    <div className="medical-grid-3x2">
                 {/* Row 1 */}
                 <div className="medical-grid-item">
                     <div className="medical-section-header">
@@ -2776,7 +2859,9 @@ const AppointmentBooking = () => {
                         Current symptoms being experienced
                     </div>
                 </div>
-            </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 
@@ -2790,6 +2875,21 @@ const AppointmentBooking = () => {
                     <h3><FaShieldAlt className="section-icon" /> {t('appointments.insuranceInfo')}</h3>
                     <p className="section-subtitle">Provide insurance details to apply discounts</p>
                 </div>
+
+                {isExistingPatient && (
+                    <div className="existing-patient-notice">
+                        <FaCheck className="notice-icon" />
+                        <div className="notice-content">
+                            <strong>Insurance Pre-filled from Last Appointment</strong>
+                            <span>
+                                {formData.noInsurance
+                                    ? 'Patient had no insurance on last visit — set to Self Pay.'
+                                    : `Provider: ${insuranceProviders.find(p => p.id === formData.insuranceProvider)?.name || formData.insuranceProvider || '—'}${formData.policyNumber ? ` · Policy: ${formData.policyNumber}` : ''}`
+                                }
+                            </span>
+                        </div>
+                    </div>
+                )}
 
                 <div className="insurance-notice">
                     <FaInfoCircle className="notice-icon" />
@@ -3112,7 +3212,7 @@ const AppointmentBooking = () => {
                             <FaFilePdf className="receipt-icon" />
                             <h4>Payment Receipt Preview</h4>
                         </div>
-                        <button onClick={handlePrintReceipt} className="print-receipt-btn">
+                        <button type="button" onClick={handlePrintReceipt} className="print-receipt-btn">
                             <FaPrint /> Print Receipt
                         </button>
                     </div>
@@ -3414,9 +3514,9 @@ const AppointmentBooking = () => {
                                                     border: `2px solid ${statusConfig.color}`
                                                 }}
                                             >
-                                                <option value="Upcoming">? {t('appointments.upcoming')}</option>
-                                                <option value="Completed">? {t('appointments.completed')}</option>
-                                                <option value="Cancelled">? {t('appointments.cancelled')}</option>
+                                                <option value="Upcoming">{t('appointments.upcoming')}</option>
+                                                <option value="Completed">{t('appointments.completed')}</option>
+                                                <option value="Cancelled">{t('appointments.cancelled')}</option>
                                             </select>
                                         </td>
                                         <td className="col-actions">
@@ -4046,7 +4146,7 @@ const AppointmentBooking = () => {
                     <div className="right-form">
                         <div className="form-card">
                             {/* Removed duplicate header - only using section headers */}
-                            <form onSubmit={handleSubmit}>
+                            <form onSubmit={(e) => e.preventDefault()}>
                                 <div className="form-content">
                                     {renderFormContent()}
                                 </div>
@@ -4076,7 +4176,7 @@ const AppointmentBooking = () => {
                                                 <FaArrowRight className="nav-icon" />
                                             </button>
                                         ) : (
-                                            <button type="submit" className="nav-btn submit-btn">
+                                            <button type="button" className="nav-btn submit-btn" onClick={handleSubmit}>
                                                 <FaCheck className="nav-icon" />
                                                 <span className="nav-text">{t('appointments.submit')}</span>
                                             </button>
@@ -4113,45 +4213,17 @@ const AppointmentBooking = () => {
         <>
             <div className="appointment-booking-container">
                 <div className="medical-dashboard">
-                    {/* Top Navigation Tabs */}
-                    <div className="top-nav-tabs">
-                        <button
-                            className={`tab-btn ${activeTab === 'book' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('book')}
-                        >
-                            <FaUserPlus className="tab-icon" />
-                            <span className="tab-text">Book Appointment</span>
-                        </button>
-                        <button
-                            className={`tab-btn ${activeTab === 'all' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('all')}
-                        >
-                            <FaCalendarCheck className="tab-icon" />
-                            <span className="tab-text">Appointment Details</span>
-                        </button>
-                        <button
-                            className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('requests')}
-                        >
-                            <FaFileMedical className="tab-icon" />
-                            <span className="tab-text">Online Requests</span>
-                        </button>
-                    </div>
 
                     <div className="main-container">
                         {activeTab === 'book' ? (
-                            <>
-                                {/* Left Side Stepper (only for Book Appointment) */}
-                                <div className="left-stepper">
-                                    <div className="stepper-header">
-                                        <h3 className="stepper-title">Appointment Booking</h3>
-                                    </div>
-
-                                    <div className="stepper-vertical">
+                            <div className="book-layout">
+                                {/* Top Horizontal Stepper */}
+                                <div className="top-stepper">
+                                    <div className="stepper-horizontal">
                                         {stepLabels.map((step, index) => (
-                                            <div key={step.id} className="stepper-step">
+                                            <div key={step.id} className="stepper-step-h">
                                                 <button
-                                                    className={`step-btn ${currentStep === step.id ? 'active' : ''} ${currentStep > step.id ? 'completed' : ''}`}
+                                                    className={`step-btn-h ${currentStep === step.id ? 'active' : ''} ${currentStep > step.id ? 'completed' : ''}`}
                                                     onClick={() => handleStepChange(step.id)}
                                                 >
                                                     <div className="step-number-container">
@@ -4159,42 +4231,24 @@ const AppointmentBooking = () => {
                                                             {currentStep > step.id ? <FaCheck /> : step.id}
                                                         </span>
                                                     </div>
-                                                    <div className="step-content">
+                                                    <div className="step-text">
                                                         <span className="step-icon">{step.icon}</span>
-                                                        <div className="step-text">
-                                                            <span className="step-label">{step.label}</span>
-                                                            <span className="step-description">{step.description}</span>
-                                                        </div>
+                                                        <span className="step-label">{step.label}</span>
                                                     </div>
                                                 </button>
                                                 {index < stepLabels.length - 1 && (
-                                                    <div className={`step-connector ${currentStep > step.id ? 'active' : ''}`}></div>
+                                                    <div className={`step-connector-h ${currentStep > step.id ? 'active' : ''}`}></div>
                                                 )}
                                             </div>
                                         ))}
                                     </div>
-
-                                    <div className="stepper-progress">
-                                        <div className="progress-bar">
-                                            <div
-                                                className="progress-fill"
-                                                style={{ width: `${(currentStep - 1) * 25}%` }}
-                                            ></div>
-                                        </div>
-                                        <div className="progress-text">
-                                            Progress: {Math.round(((currentStep - 1) / 4) * 100)}%
-                                        </div>
-                                    </div>
-
-                                    <div className="stepper-notes">
-                                        <FaInfoCircle className="notes-icon" />
-                                        <p>Please ensure all information is accurate before submitting.</p>
-                                    </div>
                                 </div>
 
-                                {/* Right Side Form */}
-                                {renderActiveTabContent()}
-                            </>
+                                {/* Form below stepper */}
+                                <div className="stepper-form-content">
+                                    {renderActiveTabContent()}
+                                </div>
+                            </div>
                         ) : (
                             // Full width for other tabs
                             <div className="full-width-container">
@@ -4204,6 +4258,44 @@ const AppointmentBooking = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Success Modal */}
+            {showSuccessModal && (
+                <div className="success-modal-overlay" onClick={() => setShowSuccessModal(false)}>
+                    <div className="success-modal-card" onClick={e => e.stopPropagation()}>
+                        <div className="success-modal-header">
+                            <div className="success-modal-icon-wrap">
+                                <FaCheckCircle className="success-modal-check" />
+                            </div>
+                            <h3 className="success-modal-title">Appointment Booked!</h3>
+                            <p className="success-modal-subtitle">
+                                The appointment has been successfully saved.
+                            </p>
+                        </div>
+                        <div className="success-modal-actions">
+                            <button
+                                className="success-modal-btn primary"
+                                onClick={() => { setShowSuccessModal(false); setActiveTab('all'); }}
+                            >
+                                <FaCalendarCheck /> View All Appointments
+                            </button>
+                            <button
+                                className="success-modal-btn secondary"
+                                onClick={() => setShowSuccessModal(false)}
+                            >
+                                <FaUserPlus /> Book Another
+                            </button>
+                        </div>
+                        <button
+                            className="success-modal-close"
+                            onClick={() => setShowSuccessModal(false)}
+                            aria-label="Close"
+                        >
+                            <FaTimes />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* View Appointment Modal */}
             <ViewAppointmentModal />

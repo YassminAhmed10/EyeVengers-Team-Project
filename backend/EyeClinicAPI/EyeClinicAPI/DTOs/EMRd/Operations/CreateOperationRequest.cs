@@ -4,7 +4,7 @@ namespace EyeClinicAPI.DTOs.EMRd.Operations
     {
         public int MedicalRecordId { get; set; }
         public string Name { get; set; } = "";
-        public DateTime Date { get; set; }
+        public DateTime? Date { get; set; }
         public string Eye { get; set; } = "";
         public string Surgeon { get; set; } = "";
         public string Diagnosis { get; set; } = "";

@@ -1,0 +1,21 @@
+﻿// Models/Doctors.cs أو Models/Doctor.cs
+using System;
+using System.Collections.Generic;
+
+namespace EyeClinicAPI.Models
+{
+    public class Doctor
+    {
+        public int Id { get; set; }  // المهم أن تكون Id وليس DoctorId
+        public string Name { get; set; }
+        public string Specialty { get; set; }
+        public string Email { get; set; }
+        public string Phone { get; set; }
+        public string LicenseNumber { get; set; }
+        public DateTime CreatedAt { get; set; }
+
+        // Navigation properties
+        public ICollection<Appointment> Appointments { get; set; }
+        public ICollection<DoctorSchedule> Schedules { get; set; }
+    }
+}

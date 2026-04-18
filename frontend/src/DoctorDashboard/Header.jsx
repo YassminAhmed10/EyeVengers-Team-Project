@@ -39,16 +39,42 @@ const Header = ({ toggleDarkMode, darkMode, toggleSidebar }) => {
         
         // Check if there are new appointments
         if (lastAppointmentCount > 0 && data.length > lastAppointmentCount) {
-          const newAppointments = data.slice(0, data.length - lastAppointmentCount);
+          // Get the newest appointments (they are at the end of the array or sorted by id)
+          const sortedByDate = [...data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          const newAppointments = sortedByDate.slice(0, data.length - lastAppointmentCount);
           
           // Add notifications for new appointments
           newAppointments.forEach(appointment => {
+            // Format the appointment time for display
+            let timeDisplay = '';
+            if (appointment.appointmentTime) {
+              const timeParts = appointment.appointmentTime.split(':');
+              if (timeParts.length >= 2) {
+                const hours = parseInt(timeParts[0]);
+                const minutes = timeParts[1];
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const displayHour = hours % 12 || 12;
+                timeDisplay = `${displayHour}:${minutes} ${ampm}`;
+              } else {
+                timeDisplay = appointment.appointmentTime;
+              }
+            }
+
+            // Format the appointment date
+            let dateDisplay = '';
+            if (appointment.appointmentDate) {
+              const dateObj = new Date(appointment.appointmentDate);
+              dateDisplay = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }
+
+            const patientName = appointment.patientName || 'Unknown Patient';
+
             const newNotification = {
               id: Date.now() + Math.random(),
-              title: t('header.newPatientAdded'),
-              message: `${appointment.patientName} ${t('header.hasBeenAdded')}.`,
-              type: "patient",
-              time: t('header.justNow'),
+              title: `New Appointment Booked`,
+              message: `${patientName} — ${dateDisplay} at ${timeDisplay}`,
+              type: "appointment",
+              time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
               unread: true,
             };
             

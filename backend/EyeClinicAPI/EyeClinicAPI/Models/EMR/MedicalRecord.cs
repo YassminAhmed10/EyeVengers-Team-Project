@@ -10,11 +10,11 @@ namespace EyeClinicAPI.Models.EMR
         [Key]
         public int Id { get; set; }
 
-        [Required]
-        public int PatientId { get; set; }
+        // ✅ مش Required تاني — لأن ممكن نستخدم PatientIdentifier بدله
+        public int? PatientId { get; set; }
 
         [StringLength(100)]
-        public string? PatientIdentifier { get; set; }  // هذا الحقل مهم لربط مع appointments
+        public string? PatientIdentifier { get; set; }
 
         public DateTime VisitDate { get; set; }
 
@@ -22,7 +22,6 @@ namespace EyeClinicAPI.Models.EMR
 
         public DateTime? UpdatedAt { get; set; }
 
-        // Constructor to initialize collections
         public MedicalRecord()
         {
             Complaints = new List<PatientComplaint>();
@@ -35,7 +34,6 @@ namespace EyeClinicAPI.Models.EMR
             Diagnoses = new List<Diagnosis>();
         }
 
-        // Navigation properties
         public virtual ICollection<PatientComplaint> Complaints { get; set; }
         public virtual ICollection<MedicalHistory> Histories { get; set; }
         public virtual ICollection<Investigation> Investigations { get; set; }

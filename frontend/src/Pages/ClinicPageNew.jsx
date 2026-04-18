@@ -453,8 +453,6 @@ const ClinicPageNew = () => {
     return (
         <div className="clinic-page-new">
             <div className="clinic-header">
-                <h1>Clinic System Management</h1>
-                <p>Manage equipment, supplies, and clinic operations</p>
             </div>
 
             {/* System Reports Cards - Top */}

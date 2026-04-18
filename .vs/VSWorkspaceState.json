@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\backend",
+    "\\backend\\EyeClinicAPI",
+    "\\backend\\EyeClinicAPI\\EyeClinicAPI",
+    "\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models",
+    "\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR"
+  ],
+  "SelectedNode": "\\backend\\EyeClinicAPI\\EyeClinicAPI\\Models\\EMR\\Operation.cs",
+  "PreviewInSolutionExplorer": false
+}

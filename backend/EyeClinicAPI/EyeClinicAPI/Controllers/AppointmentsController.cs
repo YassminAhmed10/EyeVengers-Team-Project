@@ -1,3 +1,4 @@
+#nullable enable
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EyeClinicAPI.Data;
@@ -128,9 +129,7 @@ namespace EyeClinicAPI.Controllers
                 .OrderByDescending(a => a.AppointmentDate)
                 .ToListAsync();
 
-            if (!appointments.Any())
-                return NotFound();
-
+            // Return empty list instead of 404 to keep frontend polling clean.
             return Ok(appointments);
         }
 
@@ -162,7 +161,7 @@ namespace EyeClinicAPI.Controllers
                 .Where(a => a.AppointmentDate >= startDate && a.AppointmentDate < endDate)
                 .ToListAsync();
 
-            var totalOnlineConfirmed = appointmentsOnDate.Count(a => a.AppointmentType.ToLower() == "online" && a.Status == AppointmentStatus.Upcoming);
+            var totalOnlineConfirmed = appointmentsOnDate.Count(a => a.AppointmentType.ToLower() == "online");
             var totalOffline = appointmentsOnDate.Count(a => a.AppointmentType.ToLower() != "online");
             var totalAppointments = appointmentsOnDate.Count;
             var pendingRequests = appointmentsOnDate.Count(a => a.AppointmentType.ToLower() == "online" && a.Status != AppointmentStatus.Upcoming && a.Status != AppointmentStatus.Completed);
@@ -179,6 +178,55 @@ namespace EyeClinicAPI.Controllers
                 cancelledAppointments = appointmentsOnDate.Count(a => a.Status == AppointmentStatus.Cancelled),
                 surgeryAppointments = appointmentsOnDate.Count(a => a.IsSurgery)
             });
+        }
+
+        // Search patients by name, ID, phone, or national ID (deduped by patientId)
+        [HttpGet("patients/search")]
+        public async Task<ActionResult<IEnumerable<object>>> SearchPatients([FromQuery] string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return Ok(new List<object>());
+
+            var q = query.ToLower().Trim();
+
+            var appointments = await _context.Appointments
+                .Where(a =>
+                    a.PatientName.ToLower().Contains(q) ||
+                    a.PatientId.ToLower().StartsWith(q) ||
+                    (a.Phone != null && a.Phone.StartsWith(q)) ||
+                    (a.NationalId != null && a.NationalId.StartsWith(q)))
+                .OrderByDescending(a => a.AppointmentDate)
+                .ToListAsync();
+
+            // Deduplicate: keep the latest appointment per patientId
+            var unique = appointments
+                .GroupBy(a => a.PatientId)
+                .Select(g => g.First())
+                .Take(10)
+                .Select(a => new
+                {
+                    patientId   = a.PatientId,
+                    patientName = a.PatientName,
+                    phone       = a.Phone,
+                    email       = a.Email,
+                    patientBirthDate = a.PatientBirthDate,
+                    age         = a.Age,
+                    patientGender = (int)a.PatientGender,
+                    nationalId  = a.NationalId,
+                    address     = a.Address,
+                    eyeAllergies         = a.EyeAllergies,
+                    otherAllergies       = a.OtherAllergies,
+                    chronicDiseases      = a.ChronicDiseases,
+                    currentMedications   = a.CurrentMedications,
+                    eyeSurgeries         = a.EyeSurgeries,
+                    otherEyeSurgeries    = a.OtherEyeSurgeries,
+                    familyEyeDiseases    = a.FamilyEyeDiseases,
+                    otherFamilyDiseases  = a.OtherFamilyDiseases,
+                    visionSymptoms       = a.VisionSymptoms
+                })
+                .ToList();
+
+            return Ok(unique);
         }
 
         // ===================== POST (FIXED) =====================

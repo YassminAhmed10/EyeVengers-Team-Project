@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
-import { useMedicalRecord } from '../hooks/useMedicalRecord';
+// EyeExaminationForm.jsx
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Box, TextField, Grid, Typography, MenuItem, Alert, Paper,
-    FormControl, InputLabel, Select, Button
+    FormControl, InputLabel, Select, Button, Collapse, IconButton
 } from "@mui/material";
-import './EMRComponents.css';
+import { ExpandMore, ExpandLess, Visibility } from "@mui/icons-material";
+import { saveEyeExamination } from '../services/emrService';
 
 const pupilOptions = ["Brisk", "Sluggish", "Non-reactive", "Other"];
 const alignmentOptions = ["Orthophoria", "Esotropia", "Exotropia", "Other"];
 const movementsOptions = ["Normal", "Restricted", "Other"];
 
-const EyeExaminationForm = ({ patientId, existingData = [] }) => {
+const EyeExaminationForm = ({ patientId, medicalRecordId, existingData = [], onSaved }) => {
     const [formData, setFormData] = useState(() => {
         if (existingData.length > 0) {
             const latestExam = existingData[0];
@@ -47,8 +48,31 @@ const EyeExaminationForm = ({ patientId, existingData = [] }) => {
 
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+    const [showPrevious, setShowPrevious] = useState(false);
 
-    const { saveEyeExamination } = useMedicalRecord(patientId);
+    const existingDataRef = useRef(existingData);
+    useEffect(() => {
+        if (existingData !== existingDataRef.current) {
+            existingDataRef.current = existingData;
+            if (existingData.length > 0) {
+                const e = existingData[0];
+                setFormData({
+                    rightEye: e.rightEye || e.RightEye || "",
+                    leftEye: e.leftEye || e.LeftEye || "",
+                    eyePressure: e.eyePressure || e.EyePressure || "",
+                    pupilReaction: e.pupilReaction || e.PupilReaction || "",
+                    pupilReactionOther: e.pupilReactionOther || e.PupilReactionOther || "",
+                    eyeAlignment: e.eyeAlignment || e.EyeAlignment || "",
+                    eyeAlignmentOther: e.eyeAlignmentOther || e.EyeAlignmentOther || "",
+                    eyeMovements: e.eyeMovements || e.EyeMovements || "",
+                    eyeMovementsOther: e.eyeMovementsOther || e.EyeMovementsOther || "",
+                    anteriorSegment: e.anteriorSegment || e.AnteriorSegment || "",
+                    fundusObservation: e.fundusObservation || e.FundusObservation || "",
+                    otherNotes: e.otherNotes || e.OtherNotes || ""
+                });
+            }
+        }
+    }, [existingData]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -57,32 +81,22 @@ const EyeExaminationForm = ({ patientId, existingData = [] }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        if (!medicalRecordId) {
+            setMessage({ type: 'error', text: 'Please create a medical record first.' });
+            return;
+        }
         try {
             setLoading(true);
             setMessage({ type: '', text: '' });
-
-            const result = await saveEyeExamination({
+            await saveEyeExamination(medicalRecordId, {
                 ...formData,
                 isArchived: false
             });
-
-            setMessage({
-                type: 'success',
-                text: 'Eye examination saved successfully!'
-            });
-
-            // Reload after 1.5 seconds
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-
+            setMessage({ type: 'success', text: 'Eye examination saved successfully!' });
+            onSaved?.();
         } catch (error) {
             console.error('Error saving eye examination:', error);
-            setMessage({
-                type: 'error',
-                text: error.message || 'Failed to save eye examination'
-            });
+            setMessage({ type: 'error', text: error.message || 'Failed to save eye examination' });
         } finally {
             setLoading(false);
         }
@@ -106,58 +120,63 @@ const EyeExaminationForm = ({ patientId, existingData = [] }) => {
     };
 
     return (
-        <Box className="eye-examination-container">
+        <Box>
             {message.text && (
-                <Alert severity={message.type} sx={{ mb: 2 }}>
-                    {message.text}
-                </Alert>
+                <Alert severity={message.type} sx={{ mb: 2 }}>{message.text}</Alert>
             )}
 
             {existingData.length > 0 && (
-                <Paper sx={{ p: 2, mb: 3, bgcolor: '#f5f5f5' }}>
-                    <Typography variant="h6" gutterBottom>
-                        Previous Eye Examinations ({existingData.length})
-                    </Typography>
-                    {existingData.map((exam, index) => (
-                        <Box key={exam.id || index} sx={{ mb: 2, p: 1, borderBottom: '1px solid #ddd' }}>
-                            <Typography variant="body2" color="text.secondary">
-                                {new Date(exam.createdAt).toLocaleDateString()}
-                            </Typography>
-                            <Grid container spacing={1}>
-                                <Grid item xs={6}>
-                                    <Typography variant="body2">
-                                        <strong>Right Eye:</strong> {exam.rightEye || 'N/A'}
-                                    </Typography>
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <Typography variant="body2">
-                                        <strong>Left Eye:</strong> {exam.leftEye || 'N/A'}
-                                    </Typography>
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <Typography variant="body2">
-                                        <strong>Pressure:</strong> {exam.eyePressure || 'N/A'}
-                                    </Typography>
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <Typography variant="body2">
-                                        <strong>Pupil Reaction:</strong> {exam.pupilReaction || 'N/A'}
-                                    </Typography>
-                                </Grid>
-                            </Grid>
+                <Paper sx={{ mb: 3, bgcolor: '#f5f5f5', overflow: 'hidden' }}>
+                    <Box
+                        onClick={() => setShowPrevious(p => !p)}
+                        sx={{
+                            p: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            cursor: 'pointer',
+                            userSelect: 'none',
+                            '&:hover': { bgcolor: '#eeeeee' }
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Visibility color="primary" />
+                            <Typography variant="h6">Previous Eye Examinations ({existingData.length})</Typography>
                         </Box>
-                    ))}
+                        <IconButton size="small">{showPrevious ? <ExpandLess /> : <ExpandMore />}</IconButton>
+                    </Box>
+                    <Collapse in={showPrevious}>
+                        <Box sx={{ p: 2, pt: 0 }}>
+                            {existingData.map((exam, index) => (
+                                <Box key={exam.id || index} sx={{ mb: 2, p: 1.5, borderBottom: '1px solid #ddd' }}>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                        {new Date(exam.createdAt).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                    </Typography>
+                                    <Grid container spacing={1}>
+                                        <Grid size={{ xs: 6 }}>
+                                            <Typography variant="body2"><strong>Right Eye:</strong> {exam.rightEye || 'N/A'}</Typography>
+                                        </Grid>
+                                        <Grid size={{ xs: 6 }}>
+                                            <Typography variant="body2"><strong>Left Eye:</strong> {exam.leftEye || 'N/A'}</Typography>
+                                        </Grid>
+                                        <Grid size={{ xs: 6 }}>
+                                            <Typography variant="body2"><strong>Pressure:</strong> {exam.eyePressure || 'N/A'}</Typography>
+                                        </Grid>
+                                        <Grid size={{ xs: 6 }}>
+                                            <Typography variant="body2"><strong>Pupil Reaction:</strong> {exam.pupilReaction || 'N/A'}</Typography>
+                                        </Grid>
+                                    </Grid>
+                                </Box>
+                            ))}
+                        </Box>
+                    </Collapse>
                 </Paper>
             )}
 
             <form onSubmit={handleSubmit}>
-                <Box sx={{ p: 2, border: "1px solid #ddd", borderRadius: 2 }}>
-                    <Typography variant="h6" gutterBottom>
-                        Eye Examination Results
-                    </Typography>
-
+                <Box>
                     <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
                                 size="small"
@@ -167,9 +186,10 @@ const EyeExaminationForm = ({ patientId, existingData = [] }) => {
                                 value={formData.rightEye}
                                 onChange={handleChange}
                                 disabled={loading}
+                                InputProps={{ sx: { borderRadius: 2 } }}
                             />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
                                 size="small"
@@ -179,9 +199,10 @@ const EyeExaminationForm = ({ patientId, existingData = [] }) => {
                                 value={formData.leftEye}
                                 onChange={handleChange}
                                 disabled={loading}
+                                InputProps={{ sx: { borderRadius: 2 } }}
                             />
                         </Grid>
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                             <TextField
                                 fullWidth
                                 size="small"
@@ -191,9 +212,10 @@ const EyeExaminationForm = ({ patientId, existingData = [] }) => {
                                 value={formData.eyePressure}
                                 onChange={handleChange}
                                 disabled={loading}
+                                InputProps={{ sx: { borderRadius: 2 } }}
                             />
                         </Grid>
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                             <FormControl fullWidth size="small">
                                 <InputLabel>Pupil Reaction</InputLabel>
                                 <Select
@@ -202,6 +224,7 @@ const EyeExaminationForm = ({ patientId, existingData = [] }) => {
                                     onChange={handleChange}
                                     label="Pupil Reaction"
                                     disabled={loading}
+                                    sx={{ borderRadius: 2 }}
                                 >
                                     <MenuItem value=""><em>Select</em></MenuItem>
                                     {pupilOptions.map((opt) => (
@@ -219,10 +242,11 @@ const EyeExaminationForm = ({ patientId, existingData = [] }) => {
                                     onChange={handleChange}
                                     sx={{ mt: 1 }}
                                     disabled={loading}
+                                    InputProps={{ sx: { borderRadius: 2 } }}
                                 />
                             )}
                         </Grid>
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                             <FormControl fullWidth size="small">
                                 <InputLabel>Eye Alignment</InputLabel>
                                 <Select
@@ -231,6 +255,7 @@ const EyeExaminationForm = ({ patientId, existingData = [] }) => {
                                     onChange={handleChange}
                                     label="Eye Alignment"
                                     disabled={loading}
+                                    sx={{ borderRadius: 2 }}
                                 >
                                     <MenuItem value=""><em>Select</em></MenuItem>
                                     {alignmentOptions.map((opt) => (
@@ -248,10 +273,11 @@ const EyeExaminationForm = ({ patientId, existingData = [] }) => {
                                     onChange={handleChange}
                                     sx={{ mt: 1 }}
                                     disabled={loading}
+                                    InputProps={{ sx: { borderRadius: 2 } }}
                                 />
                             )}
                         </Grid>
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                             <FormControl fullWidth size="small">
                                 <InputLabel>Eye Movements</InputLabel>
                                 <Select
@@ -260,6 +286,7 @@ const EyeExaminationForm = ({ patientId, existingData = [] }) => {
                                     onChange={handleChange}
                                     label="Eye Movements"
                                     disabled={loading}
+                                    sx={{ borderRadius: 2 }}
                                 >
                                     <MenuItem value=""><em>Select</em></MenuItem>
                                     {movementsOptions.map((opt) => (
@@ -277,6 +304,7 @@ const EyeExaminationForm = ({ patientId, existingData = [] }) => {
                                     onChange={handleChange}
                                     sx={{ mt: 1 }}
                                     disabled={loading}
+                                    InputProps={{ sx: { borderRadius: 2 } }}
                                 />
                             )}
                         </Grid>
@@ -294,6 +322,7 @@ const EyeExaminationForm = ({ patientId, existingData = [] }) => {
                             value={formData.anteriorSegment}
                             onChange={handleChange}
                             disabled={loading}
+                            InputProps={{ sx: { borderRadius: 2 } }}
                         />
 
                         <TextField
@@ -307,6 +336,7 @@ const EyeExaminationForm = ({ patientId, existingData = [] }) => {
                             value={formData.fundusObservation}
                             onChange={handleChange}
                             disabled={loading}
+                            InputProps={{ sx: { borderRadius: 2 } }}
                         />
                     </Box>
 
@@ -322,15 +352,17 @@ const EyeExaminationForm = ({ patientId, existingData = [] }) => {
                             value={formData.otherNotes}
                             onChange={handleChange}
                             disabled={loading}
+                            InputProps={{ sx: { borderRadius: 2 } }}
                         />
                     </Box>
 
-                    <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                    <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 2 }}>
                         <Button
                             type="button"
                             variant="outlined"
                             onClick={handleClear}
                             disabled={loading}
+                            sx={{ borderColor: '#1e3a5f', color: '#1e3a5f', borderRadius: 3, textTransform: 'none' }}
                         >
                             Clear Form
                         </Button>
@@ -338,6 +370,7 @@ const EyeExaminationForm = ({ patientId, existingData = [] }) => {
                             type="submit"
                             variant="contained"
                             disabled={loading}
+                            sx={{ backgroundColor: '#1e3a5f', '&:hover': { backgroundColor: '#16324d' }, borderRadius: 3, textTransform: 'none' }}
                         >
                             {loading ? 'Saving...' : 'Save Examination'}
                         </Button>

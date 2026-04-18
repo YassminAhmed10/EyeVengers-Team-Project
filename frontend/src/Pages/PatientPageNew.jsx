@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-    FaUser, FaSearch, FaPlus, FaPhone, FaEnvelope, 
-    FaCalendarAlt, FaIdCard, FaEdit, FaTrash, FaEye,
-    FaFilter, FaUserMd, FaMale, FaFemale, FaNotesMedical
+    FaUser, FaSearch,
+    FaIdCard, FaFilter, FaNotesMedical,
+    FaUserInjured, FaShieldAlt, FaMars, FaVenus
 } from 'react-icons/fa';
+import { appointmentsAPI } from '../services/apiConfig';
 import './PatientPageNew.css';
 
 const PatientPageNew = () => {
@@ -12,24 +13,8 @@ const PatientPageNew = () => {
     const [patients, setPatients] = useState([]);
     const [filteredPatients, setFilteredPatients] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    const [genderFilter, setGenderFilter] = useState('all');
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [selectedPatient, setSelectedPatient] = useState(null);
-    const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
-        dateOfBirth: '',
-        gender: 'Male',
-        phone: '',
-        email: '',
-        address: '',
-        nationalId: '',
-        insuranceCompany: '',
-        insuranceId: '',
-        emergencyContactName: '',
-        emergencyContactPhone: ''
-    });
 
     useEffect(() => {
         fetchPatients();
@@ -37,43 +22,54 @@ const PatientPageNew = () => {
 
     useEffect(() => {
         filterPatients();
-    }, [searchTerm, genderFilter, patients]);
+    }, [searchTerm, patients]);
 
     const fetchPatients = async () => {
         try {
             setLoading(true);
-            // Fetch all patients directly from Patient API
-            const patientsResponse = await fetch('https://localhost:7071/api/Patient');
-            const patientsData = await patientsResponse.json();
-            
-            console.log('========== PATIENTS PAGE DEBUG ==========');
-            console.log('All patients from API:', patientsData);
-            console.log('Number of patients:', patientsData.length);
-            
-            // Transform the data to match our component format
-            const transformedPatients = patientsData.map(patient => ({
-                id: patient.id,
-                firstName: patient.firstName,
-                lastName: patient.lastName,
-                dateOfBirth: patient.dateOfBirth,
-                gender: patient.gender,
-                phone: patient.phone,
-                email: patient.email,
-                address: patient.address,
-                nationalId: patient.nationalId,
-                insuranceCompany: patient.insuranceCompany || '',
-                insuranceId: patient.insuranceId || '',
-                emergencyContactName: patient.emergencyContactName || '',
-                emergencyContactPhone: patient.emergencyContactPhone || '',
-                createdAt: patient.createdAt
-            }));
-            
-            console.log('Transformed patients:', transformedPatients);
-            
-            setPatients(transformedPatients);
-            setFilteredPatients(transformedPatients);
-        } catch (error) {
-            console.error('Error fetching patients:', error);
+            setError('');
+
+            // Fetch all appointments and keep only Completed (status = 1)
+            const allAppointments = await appointmentsAPI.getAll();
+            const completed = allAppointments.filter(a => a.status === 1 || a.status === '1');
+
+            // Deduplicate by patientId — keep the latest completed appointment per patient
+            const patientMap = new Map();
+            for (const apt of completed) {
+                const pid = apt.patientId?.toString();
+                if (!pid) continue;
+                const existing = patientMap.get(pid);
+                if (!existing || new Date(apt.appointmentDate) > new Date(existing.appointmentDate)) {
+                    patientMap.set(pid, apt);
+                }
+            }
+
+            const transformed = Array.from(patientMap.values()).map(apt => {
+                const gender = apt.patientGender === 0 || apt.patientGender === '0' ? 'Male'
+                    : apt.patientGender === 1 || apt.patientGender === '1' ? 'Female'
+                    : typeof apt.patientGender === 'string' ? apt.patientGender : '';
+                return {
+                    id: apt.patientId,
+                    name: apt.patientName || `Patient ${apt.patientId}`,
+                    age: apt.age,
+                    dateOfBirth: apt.patientBirthDate || null,
+                    gender,
+                    phone: apt.phone || '',
+                    email: apt.email || '',
+                    address: apt.address || '',
+                    nationalId: apt.nationalId || '',
+                    insuranceCompany: apt.insuranceCompany || '',
+                    lastVisit: apt.appointmentDate,
+                    lastReason: apt.reasonForVisit || '',
+                    completedCount: completed.filter(a => a.patientId?.toString() === apt.patientId?.toString()).length,
+                };
+            }).sort((a, b) => Number(a.id) - Number(b.id));
+
+            setPatients(transformed);
+            setFilteredPatients(transformed);
+        } catch (err) {
+            console.error('Error fetching patients:', err);
+            setError('Failed to load patients. Make sure the backend is running.');
         } finally {
             setLoading(false);
         }
@@ -81,149 +77,31 @@ const PatientPageNew = () => {
 
     const filterPatients = () => {
         let filtered = patients;
-
-        // Search filter
         if (searchTerm) {
-            filtered = filtered.filter(patient =>
-                `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                patient.phone?.includes(searchTerm) ||
-                patient.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                patient.nationalId?.includes(searchTerm)
+            filtered = filtered.filter(p =>
+                p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                p.phone?.includes(searchTerm) ||
+                p.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                p.nationalId?.includes(searchTerm)
             );
         }
-
-        // Gender filter
-        if (genderFilter !== 'all') {
-            filtered = filtered.filter(patient => patient.gender === genderFilter);
-        }
-
         setFilteredPatients(filtered);
     };
 
-    const handleAddPatient = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch('https://localhost:7071/api/Patient', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...formData,
-                    createdAt: new Date().toISOString()
-                })
-            });
-
-            if (response.ok) {
-                await fetchPatients();
-                setShowAddModal(false);
-                resetForm();
-                alert('Patient added successfully!');
-            }
-        } catch (error) {
-            console.error('Error adding patient:', error);
-            alert('Failed to add patient');
-        }
-    };
-
-    const handleUpdatePatient = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch(`https://localhost:7071/api/Patient/${selectedPatient.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...formData,
-                    id: selectedPatient.id,
-                    createdAt: selectedPatient.createdAt
-                })
-            });
-
-            if (response.ok) {
-                await fetchPatients();
-                setShowAddModal(false);
-                setSelectedPatient(null);
-                resetForm();
-                alert('Patient updated successfully!');
-            }
-        } catch (error) {
-            console.error('Error updating patient:', error);
-            alert('Failed to update patient');
-        }
-    };
-
-    const handleDeletePatient = async (patientId) => {
-        if (!window.confirm('Are you sure you want to delete this patient?')) return;
-
-        try {
-            const response = await fetch(`https://localhost:7071/api/Patient/${patientId}`, {
-                method: 'DELETE'
-            });
-
-            if (response.ok) {
-                await fetchPatients();
-                alert('Patient deleted successfully!');
-            }
-        } catch (error) {
-            console.error('Error deleting patient:', error);
-            alert('Failed to delete patient');
-        }
-    };
-
-    const handleEditPatient = (patient) => {
-        setSelectedPatient(patient);
-        setFormData({
-            firstName: patient.firstName,
-            lastName: patient.lastName,
-            dateOfBirth: patient.dateOfBirth.split('T')[0],
-            gender: patient.gender,
-            phone: patient.phone || '',
-            email: patient.email || '',
-            address: patient.address || '',
-            nationalId: patient.nationalId || '',
-            insuranceCompany: patient.insuranceCompany || '',
-            insuranceId: patient.insuranceId || '',
-            emergencyContactName: patient.emergencyContactName || '',
-            emergencyContactPhone: patient.emergencyContactPhone || ''
-        });
-        setShowAddModal(true);
-    };
-
-    const resetForm = () => {
-        setFormData({
-            firstName: '',
-            lastName: '',
-            dateOfBirth: '',
-            gender: 'Male',
-            phone: '',
-            email: '',
-            address: '',
-            nationalId: '',
-            insuranceCompany: '',
-            insuranceId: '',
-            emergencyContactName: '',
-            emergencyContactPhone: ''
-        });
-    };
-
-    const handleInputChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
-
     const calculateAge = (dob) => {
+        if (!dob) return '—';
         const birthDate = new Date(dob);
+        if (isNaN(birthDate)) return '—';
         const today = new Date();
         let age = today.getFullYear() - birthDate.getFullYear();
-        const monthDiff = today.getMonth() - birthDate.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
         return age;
     };
 
-    const handleViewRecord = (patientId) => {
-        navigate(`/doctor/view-medical-record/${patientId}`);
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '—';
+        return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
     };
 
     if (loading) {
@@ -239,35 +117,48 @@ const PatientPageNew = () => {
         <div className="patient-page-new">
             {/* Header */}
             <div className="patient-header">
-                <div className="header-content">
-                    <h1><FaUser /> Patients Management</h1>
-                    <p>View all patients with completed appointments</p>
-                </div>
+                <button className="btn-refresh" onClick={fetchPatients} title="Refresh">↻ Refresh</button>
             </div>
+
+            {error && (
+                <div style={{ background: '#ffebee', color: '#c62828', padding: '12px 16px', borderRadius: 8, marginBottom: 16 }}>
+                    {error}
+                </div>
+            )}
 
             {/* Stats Cards */}
             <div className="stats-cards">
                 <div className="stat-card total">
-                    <div className="stat-icon">
-                        <FaUser />
-                    </div>
+                    <div className="stat-icon"><FaUserInjured /></div>
                     <div className="stat-info">
                         <h3>Total Patients</h3>
                         <p className="stat-number">{patients.length}</p>
                     </div>
                 </div>
                 <div className="stat-card insured">
-                    <div className="stat-icon">
-                        <FaIdCard />
-                    </div>
+                    <div className="stat-icon"><FaShieldAlt /></div>
                     <div className="stat-info">
-                        <h3>Insured Patients</h3>
+                        <h3>Insured</h3>
                         <p className="stat-number">{patients.filter(p => p.insuranceCompany).length}</p>
+                    </div>
+                </div>
+                <div className="stat-card male">
+                    <div className="stat-icon"><FaMars /></div>
+                    <div className="stat-info">
+                        <h3>Male</h3>
+                        <p className="stat-number">{patients.filter(p => p.gender === 'Male').length}</p>
+                    </div>
+                </div>
+                <div className="stat-card female">
+                    <div className="stat-icon"><FaVenus /></div>
+                    <div className="stat-info">
+                        <h3>Female</h3>
+                        <p className="stat-number">{patients.filter(p => p.gender === 'Female').length}</p>
                     </div>
                 </div>
             </div>
 
-            {/* Filters and Search */}
+            {/* Search */}
             <div className="filters-section">
                 <div className="search-box">
                     <FaSearch />
@@ -277,14 +168,6 @@ const PatientPageNew = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                </div>
-                <div className="gender-filter">
-                    <FaFilter />
-                    <select value={genderFilter} onChange={(e) => setGenderFilter(e.target.value)}>
-                        <option value="all">All Genders</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                    </select>
                 </div>
             </div>
 
@@ -298,9 +181,11 @@ const PatientPageNew = () => {
                             <th>Age</th>
                             <th>Gender</th>
                             <th>Phone</th>
-                            <th>Email</th>
                             <th>National ID</th>
                             <th>Insurance</th>
+                            <th>Last Visit</th>
+                            <th>Reason for Visit</th>
+                            <th>Visits</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -311,25 +196,33 @@ const PatientPageNew = () => {
                                     <td>#{patient.id}</td>
                                     <td className="patient-name">
                                         <div className="name-avatar">
-                                            <div className={`avatar ${patient.gender.toLowerCase()}`}>
-                                                {patient.firstName[0]}{patient.lastName[0]}
+                                            <div className={`avatar ${patient.gender?.toLowerCase()}`}>
+                                                {patient.name?.charAt(0) || '?'}
                                             </div>
-                                            <span>{patient.firstName} {patient.lastName}</span>
+                                            <span>{patient.name}</span>
                                         </div>
                                     </td>
-                                    <td>{calculateAge(patient.dateOfBirth)} years</td>
+                                    <td>{patient.age || calculateAge(patient.dateOfBirth)} yrs</td>
                                     <td>
-                                        <span className={`gender-badge ${patient.gender.toLowerCase()}`}>
-                                            {patient.gender}
+                                        <span className={`gender-badge ${patient.gender?.toLowerCase()}`}>
+                                            {patient.gender || '—'}
                                         </span>
                                     </td>
-                                    <td>{patient.phone || 'N/A'}</td>
-                                    <td>{patient.email || 'N/A'}</td>
-                                    <td>{patient.nationalId || 'N/A'}</td>
+                                    <td>{patient.phone || '—'}</td>
+                                    <td>{patient.nationalId || '—'}</td>
                                     <td>{patient.insuranceCompany || 'Uninsured'}</td>
+                                    <td>{formatDate(patient.lastVisit)}</td>
+                                    <td style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={patient.lastReason}>
+                                        {patient.lastReason || '—'}
+                                    </td>
+                                    <td style={{ textAlign: 'center' }}>
+                                        <span style={{ background: '#e3f2fd', color: '#1565c0', borderRadius: 12, padding: '2px 10px', fontWeight: 600, fontSize: 13 }}>
+                                            {patient.completedCount}
+                                        </span>
+                                    </td>
                                     <td className="actions">
-                                        <button 
-                                            className="action-btn emr" 
+                                        <button
+                                            className="action-btn emr"
                                             onClick={() => navigate(`/doctor/view-medical-record/${patient.id}`)}
                                             title="View EMR"
                                         >
@@ -340,8 +233,8 @@ const PatientPageNew = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="9" className="no-data">
-                                    No patients found matching your search criteria
+                                <td colSpan="11" className="no-data">
+                                    {error ? 'Error loading data.' : 'No patients with completed appointments found.'}
                                 </td>
                             </tr>
                         )}

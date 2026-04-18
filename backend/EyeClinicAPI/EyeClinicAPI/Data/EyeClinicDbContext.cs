@@ -170,7 +170,7 @@ public partial class EyeClinicDbContext : DbContext
         {
             entity.HasIndex(e => e.MedicalRecordId, "IX_Investigations_MedicalRecordId");
 
-            entity.HasOne(d => d.MedicalRecord).WithMany().HasForeignKey(d => d.MedicalRecordId);
+            entity.HasOne(d => d.MedicalRecord).WithMany(p => p.Investigations).HasForeignKey(d => d.MedicalRecordId);
         });
 
         modelBuilder.Entity<MedicalHistory>(entity =>
@@ -179,7 +179,7 @@ public partial class EyeClinicDbContext : DbContext
 
             entity.HasIndex(e => e.MedicalRecordId, "IX_MedicalHistories_MedicalRecordId");
 
-            entity.HasOne(d => d.MedicalRecord).WithMany().HasForeignKey(d => d.MedicalRecordId);
+            entity.HasOne(d => d.MedicalRecord).WithMany(p => p.Histories).HasForeignKey(d => d.MedicalRecordId);
         });
 
         modelBuilder.Entity<MedicalRecord>(entity =>
@@ -269,17 +269,15 @@ public partial class EyeClinicDbContext : DbContext
 
             entity.HasIndex(e => e.MedicalRecordId, "IX_PatientComplaints_MedicalRecordId");
 
-            entity.HasOne(d => d.MedicalRecord).WithMany().HasForeignKey(d => d.MedicalRecordId);
+            entity.HasOne(d => d.MedicalRecord).WithMany(p => p.Complaints).HasForeignKey(d => d.MedicalRecordId);
         });
 
         modelBuilder.Entity<Prescription>(entity =>
         {
             entity.HasIndex(e => e.MedicalRecordId, "IX_Prescriptions_MedicalRecordId");
 
-            entity.HasOne(d => d.MedicalRecord).WithMany().HasForeignKey(d => d.MedicalRecordId);
+            entity.HasOne(d => d.MedicalRecord).WithMany(p => p.Prescriptions).HasForeignKey(d => d.MedicalRecordId);
         });
-
-        OnModelCreatingPartial(modelBuilder);
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

@@ -1,0 +1,20 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace EyeClinicAPI.Models
+{
+    public class Doctor
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Specialty { get; set; }
+        public string Email { get; set; }
+        public string Phone { get; set; }
+        public string LicenseNumber { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // Navigation properties
+        public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+        public virtual ICollection<DoctorSchedule> Schedules { get; set; } = new List<DoctorSchedule>();
+    }
+}

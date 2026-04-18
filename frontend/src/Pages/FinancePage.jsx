@@ -159,7 +159,6 @@ const FinancePage = () => {
       <div className="finance-main-content" style={{ marginLeft: 0 }}>
         <header className="finance-header">
           <div>
-            <h1 className="finance-title">Finance Overview</h1>
             <div className="date-selector">
               {['today', 'thisMonth', 'custom'].map(range => (
                 <button

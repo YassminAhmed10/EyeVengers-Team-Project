@@ -2,8 +2,13 @@ namespace EyeClinicAPI.DTOs.EMRd.MedicalRecord
 {
     public class MedicalRecordDto
     {
+        public int Id { get; set; }
         public int PatientId { get; set; }
-        public DateTime VisitDate { get; set; }  // ADD THIS LINE
+        public string PatientIdentifier { get; set; } = "";
+        public DateTime VisitDate { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public MedicalRecordPatientDto? PatientInfo { get; set; }
         public List<MedicalRecordComplaintDto> Complaints { get; set; } = new();
         public List<MedicalRecordHistoryDto> Histories { get; set; } = new();
         public List<MedicalRecordInvestigationDto> Investigations { get; set; } = new();

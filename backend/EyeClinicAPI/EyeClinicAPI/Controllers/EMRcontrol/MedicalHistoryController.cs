@@ -29,6 +29,11 @@ namespace EyeClinicAPI.Controllers.EMRcontrol
                     PreviousEye = h.PreviousEye,
                     FamilyHistory = h.FamilyHistory,
                     Allergies = h.Allergies,
+                    EyeSurgeries = h.EyeSurgeries ?? "",
+                    VisionSymptoms = h.VisionSymptoms ?? "",
+                    ChronicDiseases = h.ChronicDiseases ?? "",
+                    CurrentMedications = h.CurrentMedications ?? "",
+                    FamilyEyeDiseases = h.FamilyEyeDiseases ?? "",
                     CreatedAt = h.CreatedAt,
                     UpdatedAt = h.UpdatedAt,
                     IsArchived = h.IsArchived
@@ -52,6 +57,11 @@ namespace EyeClinicAPI.Controllers.EMRcontrol
                 PreviousEye = h.PreviousEye ?? "",
                 FamilyHistory = h.FamilyHistory ?? "",
                 Allergies = h.Allergies ?? "",
+                EyeSurgeries = h.EyeSurgeries ?? "",
+                VisionSymptoms = h.VisionSymptoms ?? "",
+                ChronicDiseases = h.ChronicDiseases ?? "",
+                CurrentMedications = h.CurrentMedications ?? "",
+                FamilyEyeDiseases = h.FamilyEyeDiseases ?? "",
                 CreatedAt = h.CreatedAt,
                 UpdatedAt = h.UpdatedAt,
                 IsArchived = h.IsArchived
@@ -72,6 +82,11 @@ namespace EyeClinicAPI.Controllers.EMRcontrol
                 PreviousEye = request.PreviousEye,
                 FamilyHistory = request.FamilyHistory,
                 Allergies = request.Allergies,
+                EyeSurgeries = request.EyeSurgeries,
+                VisionSymptoms = request.VisionSymptoms,
+                ChronicDiseases = request.ChronicDiseases,
+                CurrentMedications = request.CurrentMedications,
+                FamilyEyeDiseases = request.FamilyEyeDiseases,
                 CreatedAt = DateTime.Now
             };
 
@@ -85,6 +100,11 @@ namespace EyeClinicAPI.Controllers.EMRcontrol
                 PreviousEye = history.PreviousEye,
                 FamilyHistory = history.FamilyHistory,
                 Allergies = history.Allergies,
+                EyeSurgeries = history.EyeSurgeries ?? "",
+                VisionSymptoms = history.VisionSymptoms ?? "",
+                ChronicDiseases = history.ChronicDiseases ?? "",
+                CurrentMedications = history.CurrentMedications ?? "",
+                FamilyEyeDiseases = history.FamilyEyeDiseases ?? "",
                 CreatedAt = history.CreatedAt,
                 UpdatedAt = history.UpdatedAt,
                 IsArchived = history.IsArchived
@@ -103,6 +123,11 @@ namespace EyeClinicAPI.Controllers.EMRcontrol
             existing.PreviousEye = request.PreviousEye;
             existing.FamilyHistory = request.FamilyHistory;
             existing.Allergies = request.Allergies;
+            existing.EyeSurgeries = request.EyeSurgeries;
+            existing.VisionSymptoms = request.VisionSymptoms;
+            existing.ChronicDiseases = request.ChronicDiseases;
+            existing.CurrentMedications = request.CurrentMedications;
+            existing.FamilyEyeDiseases = request.FamilyEyeDiseases;
             existing.UpdatedAt = DateTime.Now;
 
             _context.Entry(existing).State = EntityState.Modified;

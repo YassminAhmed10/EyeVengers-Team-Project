@@ -49,32 +49,40 @@ const StatsCards = ({ selectedDate, appointments = [] }) => {
           <div className="stat-icon-wrapper">
             <span className="material-symbols-outlined">group</span>
           </div>
-          <div className="stat-number">{stats.totalPatients}</div>
-          <div className="stat-label">{t('dashboard.totalPatients')}</div>
+          <div className="stat-info">
+            <div className="stat-number">{stats.totalPatients}</div>
+            <div className="stat-label">{t('dashboard.totalPatients')}</div>
+          </div>
         </div>
 
         <div className="stat-card stat-card-purple">
           <div className="stat-icon-wrapper">
             <span className="material-symbols-outlined">medical_services</span>
           </div>
-          <div className="stat-number">{stats.consultations}</div>
-          <div className="stat-label">{t('dashboard.consultation')}</div>
+          <div className="stat-info">
+            <div className="stat-number">{stats.consultations}</div>
+            <div className="stat-label">{t('dashboard.consultation')}</div>
+          </div>
         </div>
 
         <div className="stat-card stat-card-pink">
           <div className="stat-icon-wrapper">
             <span className="material-symbols-outlined">surgical</span>
           </div>
-          <div className="stat-number">{stats.surgeries}</div>
-          <div className="stat-label">{t('dashboard.surgery')}</div>
+          <div className="stat-info">
+            <div className="stat-number">{stats.surgeries}</div>
+            <div className="stat-label">{t('dashboard.surgery')}</div>
+          </div>
         </div>
 
         <div className="stat-card stat-card-blue">
           <div className="stat-icon-wrapper">
             <span className="material-symbols-outlined">calendar_today</span>
           </div>
-          <div className="stat-number">{stats.upcomingPatients}</div>
-          <div className="stat-label">{t('dashboard.upcomingPatients')}</div>
+          <div className="stat-info">
+            <div className="stat-number">{stats.upcomingPatients}</div>
+            <div className="stat-label">{t('dashboard.upcomingPatients')}</div>
+          </div>
         </div>
       </div>
     </div>

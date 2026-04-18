@@ -1,31 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    FaCalendarAlt, FaHistory, FaSignOutAlt, FaEye, FaStethoscope,
+    FaCalendarAlt, FaHistory, FaEye, FaStethoscope,
     FaSyringe, FaHeartbeat, FaMicroscope, FaGlasses, FaArrowRight,
-    FaUser, FaFileAlt, FaBell, FaTimes, FaCheck, FaPhoneAlt,
-    FaMapMarkerAlt, FaEnvelope, FaChevronDown, FaShieldAlt,
-    FaClock, FaAward, FaUsers, FaGlobe
+    FaCheck, FaPhoneAlt,
+    FaMapMarkerAlt, FaEnvelope,
+    FaClock
 } from 'react-icons/fa';
-import { MdVisibility } from 'react-icons/md';
+import PatientLayout from '../components/PatientLayout';
 import './PatientHomepage.css';
 
 const PatientHomepage = () => {
     const navigate = useNavigate();
-    const [userName, setUserName]             = useState('Guest');
-    const [userEmail, setUserEmail]           = useState('');
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [notifications, setNotifications]   = useState([]);
-    const [showNotif, setShowNotif]           = useState(false);
-    const [scrolled, setScrolled]             = useState(false);
-    const [lang, setLang]                     = useState('en');
-    const dropdownRef = useRef(null);
-    const notifRef    = useRef(null);
+    const [userName, setUserName] = useState('Guest');
+    const [lang, setLang] = useState('en');
 
     const T = {
         en: {
-            home:'Home', svc:'Services', about:'About', contact:'Contact',
-            langLbl:'عربي',
             heroTitle:'Welcome Back,',
             heroSub:'Your vision is our priority. Book your next appointment with Dr. Mohab Khairy — trusted ophthalmologist with over 15 years of expertise.',
             bookNow:'Book Appointment', myApts:'My Appointments',
@@ -36,8 +27,6 @@ const PatientHomepage = () => {
             aboutDesc:'A leading ophthalmologist with over 15 years of dedicated experience diagnosing and treating a wide range of eye conditions, committed to compassionate personalised care.',
             aboutPts:['Cataract & LASIK Surgery Expert','Retinal Disease Specialist','Advanced Glaucoma Management','Pediatric Eye Care'],
             bookConsult:'Book a Consultation',
-            myProfile:'My Profile', aptHist:'Appointment History', medRec:'Medical Records', signOut:'Sign Out',
-            notifTitle:'Notifications', clearAll:'Clear all', noNotif:'No new notifications',
             svcList:[
                 {title:'Eye Exams',desc:'Full evaluations with advanced diagnostic equipment by experienced specialists.'},
                 {title:'Cataract Surgery',desc:'State-of-the-art procedures to restore clear vision with minimal recovery time.'},
@@ -48,8 +37,6 @@ const PatientHomepage = () => {
             ],
         },
         ar: {
-            home:'الرئيسية', svc:'الخدمات', about:'عن الدكتور', contact:'تواصل',
-            langLbl:'EN',
             heroTitle:'أهلاً بعودتك،',
             heroSub:'رؤيتك هي أولويتنا. احجز موعدك مع الدكتور مهاب خيري، طبيب عيون متميز بخبرة تتجاوز 15 عاماً.',
             bookNow:'احجز موعد', myApts:'مواعيدي',
@@ -60,8 +47,6 @@ const PatientHomepage = () => {
             aboutDesc:'طبيب عيون رائد بخبرة تزيد على 15 عاماً في تشخيص وعلاج أمراض العيون، يسعى دائماً لتقديم رعاية شخصية وإنسانية.',
             aboutPts:['خبير جراحة الساد والليزك','متخصص في أمراض الشبكية','علاج الجلوكوما المتقدم','رعاية عيون الأطفال'],
             bookConsult:'احجز استشارة',
-            myProfile:'ملفي', aptHist:'سجل المواعيد', medRec:'السجلات الطبية', signOut:'تسجيل الخروج',
-            notifTitle:'الإشعارات', clearAll:'مسح الكل', noNotif:'لا توجد إشعارات',
             svcList:[
                 {title:'فحص العيون',desc:'تقييم كامل بأحدث الأجهزة التشخيصية وعلى يد متخصصين ذوي خبرة.'},
                 {title:'جراحة الساد',desc:'إجراءات جراحية متطورة لاستعادة وضوح الرؤية مع فترة تعافٍ قصيرة.'},
@@ -74,142 +59,16 @@ const PatientHomepage = () => {
     }[lang];
 
     const svcIcons = [<FaEye/>,<FaSyringe/>,<FaGlasses/>,<FaStethoscope/>,<FaHeartbeat/>,<FaMicroscope/>];
-    const isAr = lang === 'ar';
 
     useEffect(() => {
         const u = localStorage.getItem('userName');
-        const e = localStorage.getItem('userEmail');
+        const savedLang = localStorage.getItem('language');
         if (u) setUserName(u);
-        if (e) setUserEmail(e);
-        fetchNotif();
-        const iv = setInterval(fetchNotif, 30000);
-        const onScroll = () => setScrolled(window.scrollY > 10);
-        const onOut = (e) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setIsDropdownOpen(false);
-            if (notifRef.current    && !notifRef.current.contains(e.target))    setShowNotif(false);
-        };
-        window.addEventListener('scroll', onScroll);
-        document.addEventListener('mousedown', onOut);
-        return () => { clearInterval(iv); window.removeEventListener('scroll', onScroll); document.removeEventListener('mousedown', onOut); };
+        if (savedLang) setLang(savedLang);
     }, []);
 
-    const fetchNotif = async () => {
-        try {
-            const pid = localStorage.getItem('patientId') || 'P-000001';
-            const res = await fetch(`http://localhost:5201/api/Appointments/ByPatient/${pid}`);
-            if (!res.ok) { setNotifications([]); return; }
-            const data = await res.json();
-            setNotifications(data
-                .filter(a => a.status === 0 && ((new Date() - new Date(a.updatedAt)) / 3600000) < 24)
-                .map(a => ({ id: a.appointmentId, message: `Appointment on ${new Date(a.appointmentDate).toLocaleDateString()} confirmed!`, date: a.updatedAt || a.createdAt }))
-            );
-        } catch { setNotifications([]); }
-    };
-
-    const logout = () => {
-        ['token','userName','userEmail','patientId'].forEach(k => localStorage.removeItem(k));
-        navigate('/login');
-    };
-    const initials = () => userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
-
     return (
-        <div className="ph" dir={isAr ? 'rtl' : 'ltr'}>
-
-            {/* ══════════════════════════════════
-                NAVBAR — Floating pill style
-            ══════════════════════════════════ */}
-            <header className={`ph-header${scrolled ? ' scrolled' : ''}`}>
-                <div className="ph-header-inner">
-
-                    {/* Brand */}
-                    <a className="ph-brand" href="/patient">
-                        <div className="ph-logo-ring">
-                            <img src="/src/images/logo.png" alt="logo" />
-                        </div>
-                        <span className="ph-brand-text">Dr. Mohab Khairy</span>
-                    </a>
-
-                    {/* Center nav pills */}
-                    <nav className="ph-nav-pills">
-                        <a href="/patient"  className="ph-pill ph-pill-active">{T.home}</a>
-                        <a href="#services" className="ph-pill">{T.svc}</a>
-                        <a href="#about"    className="ph-pill">{T.about}</a>
-                        <a href="#contact"  className="ph-pill">{T.contact}</a>
-                    </nav>
-
-                    {/* Right actions */}
-                    <div className="ph-actions">
-
-                        {/* Lang */}
-                        <button className="ph-lang-toggle" onClick={() => setLang(isAr?'en':'ar')}>
-                            <FaGlobe />
-                            <span>{T.langLbl}</span>
-                        </button>
-
-                        {/* Bell */}
-                        <div className="ph-notif-wrap" ref={notifRef}>
-                            <button className="ph-action-btn" onClick={() => setShowNotif(p=>!p)}>
-                                <FaBell />
-                                {notifications.length > 0 && <span className="ph-notif-dot">{notifications.length}</span>}
-                            </button>
-                            {showNotif && (
-                                <div className="ph-flyout">
-                                    <div className="ph-flyout-head">
-                                        <span>{T.notifTitle}</span>
-                                        <button onClick={() => setNotifications([])}>{T.clearAll}</button>
-                                    </div>
-                                    {notifications.length === 0
-                                        ? <div className="ph-flyout-empty"><FaBell /><p>{T.noNotif}</p></div>
-                                        : notifications.map(n => (
-                                            <div key={n.id} className="ph-flyout-row">
-                                                <FaCheck className="ph-chk"/>
-                                                <div><p>{n.message}</p><span>{new Date(n.date).toLocaleString()}</span></div>
-                                                <button onClick={() => setNotifications(p=>p.filter(x=>x.id!==n.id))}><FaTimes/></button>
-                                            </div>
-                                        ))
-                                    }
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Profile */}
-                        <div className="ph-profile-wrap" ref={dropdownRef}>
-                            <button className="ph-profile-pill" onClick={() => setIsDropdownOpen(p=>!p)}>
-                                <div className="ph-avatar">{initials()}</div>
-                                <span>{userName}</span>
-                                <FaChevronDown className={`ph-caret${isDropdownOpen?' open':''}`}/>
-                            </button>
-                            {isDropdownOpen && (
-                                <div className="ph-flyout ph-profile-flyout">
-                                    <div className="ph-flyout-head ph-flyout-user">
-                                        <strong>{userName}</strong>
-                                        <span>{userEmail || 'patient@clinic.com'}</span>
-                                    </div>
-                                    <div className="ph-flyout-menu">
-                                        {[
-                                            {ico:<FaUser/>,    lbl:T.myProfile, path:'/patient/profile'},
-                                            {ico:<FaHistory/>, lbl:T.aptHist,   path:'/patient/appointments'},
-                                            {ico:<FaFileAlt/>, lbl:T.medRec,    path:'/patient/medical-record'},
-                                        ].map(item=>(
-                                            <button key={item.path} className="ph-flyout-item" onClick={()=>{setIsDropdownOpen(false);navigate(item.path);}}>
-                                                {item.ico}{item.lbl}
-                                            </button>
-                                        ))}
-                                        <div className="ph-sep"/>
-                                        <button className="ph-flyout-item ph-logout" onClick={logout}>
-                                            <FaSignOutAlt/>{T.signOut}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            {/* ══════════════════════════════════
-                HERO — full viewport with homep.png
-            ══════════════════════════════════ */}
+        <PatientLayout isHomePage>
             <section className="ph-hero" style={{backgroundImage:'url(/src/images/eye.png)'}}>
                 <div className="ph-hero-overlay"/>
                 <div className="ph-hero-inner">
@@ -318,7 +177,7 @@ const PatientHomepage = () => {
                     <p>© {new Date().getFullYear()} Dr. Mohab Khairy Eye Clinic. All rights reserved.</p>
                 </div>
             </footer>
-        </div>
+        </PatientLayout>
     );
 };
 

@@ -7,8 +7,10 @@ namespace EyeClinicAPI.DTOs.EMRd.MedicalRecord
     {
         public int Id { get; set; }
         public string PastMedicalHistory { get; set; } = string.Empty;
+        public string PreviousEye { get; set; } = string.Empty;
         public string FamilyHistory { get; set; } = string.Empty;
         public string Allergies { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 }

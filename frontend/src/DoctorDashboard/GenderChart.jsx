@@ -1,109 +1,109 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import './GenderChart.css';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend
+} from 'recharts';
+import { User, Users, Baby } from 'lucide-react';
 
-const GenderChart = ({ selectedDate, appointments }) => {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+const SEGMENTS = [
+  { key: 'children', label: 'Children',  range: '2–17',  color: '#42a5f5', icon: Baby },
+  { key: 'adults',   label: 'Adults',    range: '18–40', color: '#1565c0', icon: User },
+  { key: 'elderly',  label: 'Elderly',   range: '41+',   color: '#0288d1', icon: Users },
+];
 
-  useEffect(() => {
-    const fetchAgeGroupData = async () => {
-      try {
-        setLoading(true);
-        
-        // Use filtered appointments if available
-        let patientsData = appointments;
-        
-        // If no appointments passed, fetch from API
-        if (!patientsData || patientsData.length === 0) {
-          const response = await fetch('http://localhost:5201/api/Dashboard/AgeGroups');
-          const ageGroups = await response.json();
-          
-          setData([
-            { name: 'Children (2-17)', value: ageGroups.children || 0 },
-            { name: 'Adults (18-40)', value: ageGroups.adults || 0 },
-            { name: 'Elderly (41+)', value: ageGroups.elderly || 0 }
-          ]);
-        } else {
-          // Calculate age groups from appointments
-          let children = 0, adults = 0, elderly = 0;
-          
-          patientsData.forEach(appt => {
-            const age = appt.age || 0;
-            if (age >= 2 && age <= 17) children++;
-            else if (age >= 18 && age <= 40) adults++;
-            else if (age > 40) elderly++;
-          });
-          
-          setData([
-            { name: 'Children (2-17)', value: children },
-            { name: 'Adults (18-40)', value: adults },
-            { name: 'Elderly (41+)', value: elderly }
-          ]);
-        }
-      } catch (error) {
-        console.error('Error fetching age group data:', error);
-        setData([
-          { name: 'Children (2-17)', value: 0 },
-          { name: 'Adults (18-40)', value: 0 },
-          { name: 'Elderly (41+)', value: 0 }
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAgeGroupData();
-  }, [selectedDate, appointments]);
-
-  const COLORS = ['#66bb6a', '#42a5f5', '#ef5350'];
-
-  if (loading) {
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const d = payload[0];
     return (
-      <div className="gender-chart-card">
-        <div className="gender-chart-header">
-          <h3 className="gender-chart-title">Age Groups</h3>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
-          <p>Loading...</p>
-        </div>
+      <div style={{
+        background: '#fff', border: '1px solid #dbeafe',
+        borderRadius: 8, padding: '8px 12px',
+        boxShadow: '0 2px 12px rgba(21,101,192,0.12)', fontSize: 13
+      }}>
+        <p style={{ color: '#1e3a5f', fontWeight: 600 }}>{d.name}</p>
+        <p style={{ color: d.payload.color }}>{d.value} patient{d.value !== 1 ? 's' : ''}</p>
       </div>
     );
   }
+  return null;
+};
+
+const GenderChart = ({ selectedDate, appointments }) => {
+  // Always derive from today's appointments prop
+  const { data, total } = useMemo(() => {
+    let children = 0, adults = 0, elderly = 0;
+    if (appointments && appointments.length > 0) {
+      appointments.forEach(appt => {
+        const age = appt.age || 0;
+        if (age >= 2 && age <= 17)       children++;
+        else if (age >= 18 && age <= 40) adults++;
+        else if (age > 40)               elderly++;
+      });
+    }
+    const d = [
+      { name: 'Children (2–17)',  value: children, color: '#42a5f5' },
+      { name: 'Adults (18–40)',   value: adults,   color: '#1565c0' },
+      { name: 'Elderly (41+)',    value: elderly,  color: '#0288d1' },
+    ];
+    return { data: d, total: children + adults + elderly };
+  }, [appointments, selectedDate]);
 
   return (
     <div className="gender-chart-card">
       <div className="gender-chart-header">
         <h3 className="gender-chart-title">Patient Age Groups</h3>
+        <span className="chart-badge">{total} today</span>
       </div>
-      <ResponsiveContainer width="100%" height={300}>
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={70}
-            outerRadius={100}
-            fill="#8884d8"
-            paddingAngle={5}
-            dataKey="value"
-            label={({ value }) => value > 0 ? value : ''}
-          >
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-            ))}
-          </Pie>
-          <Tooltip 
-            formatter={(value, name) => [value, name]}
-          />
-          <Legend 
-            verticalAlign="bottom" 
-            height={36}
-            formatter={(value) => value}
-          />
-        </PieChart>
-      </ResponsiveContainer>
+
+      <div className="age-chart-body">
+        {/* Donut */}
+        <ResponsiveContainer width="55%" height={220}>
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%" cy="50%"
+              innerRadius={58} outerRadius={85}
+              paddingAngle={4}
+              dataKey="value"
+              startAngle={90} endAngle={-270}
+            >
+              {data.map((entry, i) => (
+                <Cell key={i} fill={entry.color} stroke="none" />
+              ))}
+            </Pie>
+            <Tooltip content={<CustomTooltip />} />
+          </PieChart>
+        </ResponsiveContainer>
+
+        {/* Legend rows */}
+        <div className="age-legend">
+          {SEGMENTS.map((seg, i) => {
+            const entry = data[i];
+            const pct = total > 0 ? Math.round((entry.value / total) * 100) : 0;
+            const Icon = seg.icon;
+            return (
+              <div key={seg.key} className="age-legend-row">
+                <div className="age-legend-icon" style={{ background: seg.color + '18', color: seg.color }}>
+                  <Icon size={14} />
+                </div>
+                <div className="age-legend-info">
+                  <span className="age-legend-label">{seg.label} <span className="age-legend-range">({seg.range})</span></span>
+                  <div className="age-legend-bar-track">
+                    <div
+                      className="age-legend-bar-fill"
+                      style={{ width: `${pct}%`, background: seg.color }}
+                    />
+                  </div>
+                </div>
+                <span className="age-legend-count" style={{ color: seg.color }}>{entry.value}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };
 
 export default GenderChart;
+

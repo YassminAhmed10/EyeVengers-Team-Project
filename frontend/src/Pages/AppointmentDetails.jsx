@@ -82,7 +82,6 @@ const AppointmentDetails = () => {
       <div className="appointment-details-card">
         {/* Header */}
         <div className="details-header">
-          <h1>Appointment Details</h1>
           <span className={`status-badge status-${getStatusColor(appointment.status)}`}>
             {getStatusText(appointment.status)}
           </span>

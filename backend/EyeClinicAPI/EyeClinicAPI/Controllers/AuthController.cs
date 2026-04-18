@@ -39,8 +39,20 @@ namespace EyeClinicAPI.Controllers
                     return Unauthorized(new { message = "Invalid email or password" });
                 }
 
-                // Verify password (simple comparison - in production use proper hashing)
-                if (user.PasswordHash != request.Password)
+                // Verify password with backward compatibility:
+                // - If DB value looks like BCrypt hash, verify with BCrypt.
+                // - Otherwise fallback to legacy plain-text comparison.
+                bool passwordValid;
+                if (!string.IsNullOrWhiteSpace(user.PasswordHash) && user.PasswordHash.StartsWith("$2"))
+                {
+                    passwordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+                }
+                else
+                {
+                    passwordValid = user.PasswordHash == request.Password;
+                }
+
+                if (!passwordValid)
                 {
                     _logger.LogWarning("Login failed: Invalid password for email {Email}", request.Email);
                     return Unauthorized(new { message = "Invalid email or password" });
@@ -72,22 +84,37 @@ namespace EyeClinicAPI.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] User newUser)
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(request.Email) ||
+                    string.IsNullOrWhiteSpace(request.Password) ||
+                    string.IsNullOrWhiteSpace(request.Username) ||
+                    string.IsNullOrWhiteSpace(request.Role))
+                {
+                    return BadRequest(new { message = "All fields are required" });
+                }
+
+                var normalizedEmail = request.Email.Trim();
+
                 // Check if user already exists
                 var existingUser = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Email == newUser.Email);
+                    .FirstOrDefaultAsync(u => u.Email == normalizedEmail);
 
                 if (existingUser != null)
                 {
                     return BadRequest(new { message = "User with this email already exists" });
                 }
 
-                // In production, hash the password properly
-                // For now, storing as-is (NOT RECOMMENDED FOR PRODUCTION)
-                newUser.CreatedAt = DateTime.UtcNow;
+                var newUser = new User
+                {
+                    Username = request.Username.Trim(),
+                    Email = normalizedEmail,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                    Role = request.Role.Trim(),
+                    CreatedAt = DateTime.UtcNow
+                };
 
                 _context.Users.Add(newUser);
                 await _context.SaveChangesAsync();
@@ -110,7 +137,7 @@ namespace EyeClinicAPI.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during registration for email: {Email}", newUser.Email);
+                _logger.LogError(ex, "Error during registration for email: {Email}", request.Email);
                 return StatusCode(500, new { message = "An error occurred during registration" });
             }
         }

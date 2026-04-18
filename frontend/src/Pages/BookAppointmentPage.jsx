@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     FaUser, FaCalendarAlt, FaPhone, FaEnvelope, FaHome, FaIdCard,
@@ -6,9 +6,10 @@ import {
     FaArrowRight, FaCheck, FaChevronLeft, FaChevronRight, FaShieldAlt,
     FaFileMedical, FaAllergies, FaHeartbeat, FaPills, FaSyringe, FaUserMd, FaEye,
     FaCheckCircle, FaCalendarDay, FaMoneyBillWave, FaInfoCircle, FaClipboard,
-    FaPercent, FaCalendarTimes, FaPhoneAlt, FaHistory, FaSignOutAlt, FaPlus
+    FaPercent, FaCalendarTimes, FaPhoneAlt, FaHistory, FaPlus
 } from 'react-icons/fa';
 import { appointmentsAPI, doctorsAPI } from '../services/apiConfig';
+import PatientLayout from '../components/PatientLayout';
 import './BookAppointment.css';
 
 const BookAppointmentPage = () => {
@@ -23,12 +24,6 @@ const BookAppointmentPage = () => {
     const [bookingSuccess, setBookingSuccess] = useState(false);
     const [bookingDetails, setBookingDetails] = useState(null);
     
-    // Header states
-    const [userName, setUserName] = useState('Guest');
-    const [userEmail, setUserEmail] = useState('');
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
-
     // Medical History options
     const eyeAllergyOptions = ['Dust', 'Pollen', 'Eye Drops', 'Contact Lenses', 'None'];
     const chronicDiseaseOptions = ['Diabetes', 'Hypertension', 'Thyroid Disorders', 'Heart Disease', 'Asthma', 'Arthritis', 'None'];
@@ -128,24 +123,6 @@ const BookAppointmentPage = () => {
     // Fetch doctors on component mount
     useEffect(() => {
         fetchDoctors();
-        
-        // Load user info
-        const storedUser = localStorage.getItem('userName');
-        const storedEmail = localStorage.getItem('userEmail');
-        if (storedUser) setUserName(storedUser);
-        if (storedEmail) setUserEmail(storedEmail);
-        
-        // Close dropdown when clicking outside
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsDropdownOpen(false);
-            }
-        };
-        
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
     }, []);
 
     // Auto-calculate age from date of birth
@@ -304,7 +281,14 @@ const BookAppointmentPage = () => {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
+
+        // Only allow booking from the final step (Payment Summary)
+        if (currentStep !== 5) {
+            nextStep();
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -479,6 +463,7 @@ const BookAppointmentPage = () => {
     );
 
     return (
+        <PatientLayout>
         <div className="book-appointment-page">
             {/* Success Confirmation Page */}
             {bookingSuccess ? (
@@ -560,64 +545,6 @@ const BookAppointmentPage = () => {
             ) : (
                 /* Original Booking Form */
                 <>
-                    {/* Header */}
-                    <header className="patient-header">
-                        <div className="header-container">
-                            <div className="header-logo">
-                                <img src="/src/images/logo.png" alt="Clinic Logo" className="logo-img" />
-                                <span className="clinic-name">Dr Mohab Khairy</span>
-                            </div>
-
-                            <nav className="header-nav">
-                                <a href="/patient" className="nav-link">Home</a>
-                                <a href="#services" className="nav-link">Services</a>
-                                <a href="#about" className="nav-link">About</a>
-                                <a href="#contact" className="nav-link">Contact</a>
-                            </nav>
-
-                            <div className="header-actions">
-                                <div className="user-profile-container" ref={dropdownRef}>
-                                    <button className="user-profile-btn" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-                                        <div className="user-avatar">
-                                            {userName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
-                                        </div>
-                                        <span className="user-name">{userName}</span>
-                                        <svg className="dropdown-arrow" width="12" height="8" viewBox="0 0 12 8" fill="none">
-                                            <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                                        </svg>
-                                    </button>
-
-                                    {isDropdownOpen && (
-                                        <div className="profile-dropdown">
-                                            <div className="dropdown-header">
-                                                <div className="dropdown-user-name">{userName}</div>
-                                                <div className="dropdown-user-email">{userEmail || 'patient@clinic.com'}</div>
-                                            </div>
-                                            <div className="dropdown-menu">
-                                                <button className="dropdown-item" onClick={() => navigate('/patient/profile')}>
-                                                    <FaUser />
-                                                    <span>My Profile</span>
-                                                </button>
-                                                <button className="dropdown-item" onClick={() => navigate('/patient/appointments')}>
-                                                    <FaHistory />
-                                                    <span>Appointment History</span>
-                                                </button>
-                                                <div className="dropdown-divider"></div>
-                                                <button className="dropdown-item logout-item" onClick={() => {
-                                                    localStorage.clear();
-                                                    navigate('/login');
-                                                }}>
-                                                    <FaSignOutAlt />
-                                                    <span>Sign Out</span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    </header>
-
                     {/* Main Content */}
                     <div className="appointment-content">
                         <div className="appointment-header">
@@ -1416,6 +1343,7 @@ const BookAppointmentPage = () => {
                 </>
             )}
         </div>
+        </PatientLayout>
     );
 };
 

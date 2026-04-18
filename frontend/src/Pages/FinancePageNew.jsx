@@ -450,8 +450,6 @@ const FinancePageNew = () => {
                     </select>
                 </div>
                 <div className="header-content-center">
-                    <h1><FaChartLine /> Financial Dashboard</h1>
-                    <p>Comprehensive financial overview and analytics</p>
                 </div>
                 <div className="header-actions-right">
                     <button className="export-btn" onClick={exportToExcel}>

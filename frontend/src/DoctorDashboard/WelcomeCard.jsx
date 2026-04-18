@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { Eye, Stethoscope } from 'lucide-react';
 import './WelcomeCard.css';
 
 const WelcomeCard = () => {
@@ -21,30 +22,32 @@ const WelcomeCard = () => {
     fetchAppointments();
   }, []);
 
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
   return (
     <div className="welcome-card-modern">
       <div className="welcome-content">
         <div className="welcome-text">
+          <p className="welcome-greeting-small">Good day, Doctor</p>
           <h1 className="welcome-greeting">{t('dashboard.welcomeDoctor')}</h1>
+          <p className="welcome-subtitle">{today} &nbsp;·&nbsp; Ophthalmology Department</p>
+          <div className="welcome-stats-row">
+            <span className="welcome-stat-pill">
+              <span className="pill-num">{appointmentCount}</span> Appointments today
+            </span>
+            <span className="welcome-stat-pill">
+              <Eye size={13} /> Eye Clinic
+            </span>
+          </div>
         </div>
         <div className="welcome-illustration">
           <div className="doctor-image-wrapper">
-            <img 
-              src="/assets/doctorWelcom1.png" 
+            <img
+              src="/assets/doctorWelcom1.png"
               alt="Dr. Mohab Khairy"
               className="doctor-photo"
-              onError={(e) => {
-                e.target.style.display = 'none';
-              }}
+              onError={(e) => { e.target.style.display = 'none'; }}
             />
-          </div>
-          <div className="floating-elements">
-            <div className="float-element circle-element purple" style={{top: '15%', left: '8%'}}></div>
-            <div className="float-element circle-element yellow" style={{top: '25%', right: '12%'}}></div>
-            <div className="float-element circle-element green" style={{bottom: '30%', left: '5%'}}></div>
-            <div className="float-element star-element" style={{top: '45%', left: '15%'}}>👁️</div>
-            <div className="float-element star-element" style={{top: '35%', right: '18%'}}>✨</div>
-            <div className="float-element star-element" style={{bottom: '20%', right: '8%'}}>👓</div>
           </div>
         </div>
       </div>

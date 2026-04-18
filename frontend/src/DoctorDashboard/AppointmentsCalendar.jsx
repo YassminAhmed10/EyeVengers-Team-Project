@@ -1,207 +1,192 @@
-import React, { useState } from 'react';
-import { appointmentsAPI } from '../services/apiConfig';
+import React, { useState, useEffect } from 'react';
 import './AppointmentsCalendar.css';
 
-const AppointmentsCalendar = ({ onDateSelect }) => {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(new Date().getDate());
-  const [appointments, setAppointments] = useState([]);
+const MONTH_NAMES = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December"
+];
+const WEEKDAYS = ["S","M","T","W","T","F","S"];
+const DAY_NAMES = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
 
-  // Generate time slots (every 30 minutes from 9:00 AM to 5:00 PM)
-  const generateTimeSlots = () => {
-    const slots = [];
-    for (let hour = 9; hour < 17; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        slots.push(timeString);
-      }
+// Parse appointment date without UTC shift
+const getAptDateStr = (dateVal) => {
+  if (!dateVal) return '';
+  return typeof dateVal === 'string' ? dateVal.split('T')[0] : dateVal.toLocaleDateString('en-CA');
+};
+
+// Generate slots from start/end time with 30-min intervals
+const generateSlots = (start = '09:00', end = '17:00') => {
+  const slots = [];
+  const [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  let total = sh * 60 + sm;
+  const endTotal = eh * 60 + em;
+  while (total < endTotal) {
+    slots.push(`${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`);
+    total += 30;
+  }
+  return slots;
+};
+
+// Read doctor settings from localStorage for a given YYYY-MM-DD
+const getSlotsForDate = (dateStr) => {
+  try {
+    // Per-date settings (from Available Time Slots calendar)
+    const perDate = JSON.parse(localStorage.getItem('doctorSelectedDates') || '{}');
+    const dateData = perDate[dateStr];
+    if (dateData) {
+      if (dateData.enabled === false) return []; // marked unavailable
+      if (dateData.startTime && dateData.endTime)
+        return generateSlots(dateData.startTime, dateData.endTime);
     }
-    return slots;
-  };
+    // Fall back to weekly schedule
+    const weekly = JSON.parse(localStorage.getItem('doctorAvailability') || '{}');
+    const dayName = DAY_NAMES[new Date(dateStr + 'T12:00:00').getDay()];
+    const dayConfig = weekly[dayName];
+    if (dayConfig) {
+      if (!dayConfig.enabled) return [];
+      return generateSlots(dayConfig.start || '09:00', dayConfig.end || '17:00');
+    }
+  } catch {}
+  return generateSlots('09:00', '17:00');
+};
 
-  const timeSlots = generateTimeSlots();
+const AppointmentsCalendar = ({ appointments = [], onDateSelect }) => {
+  const today = new Date();
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(today.getDate());
+  const [timeSlots, setTimeSlots] = useState([]);
 
-  // Fetch appointments for the current month
-  React.useEffect(() => {
-    const fetchAppointments = async () => {
-      try {
-        const data = await appointmentsAPI.getAll();
-        setAppointments(data);
-      } catch (error) {
-        console.error('Error fetching appointments:', error);
-        setAppointments([]);
-      }
-    };
-    
-    // Initial fetch
-    fetchAppointments();
-    
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchAppointments, 30000);
-    
-    // Cleanup interval on unmount
-    return () => clearInterval(interval);
-  }, [currentDate]);
+  // Build selected date string for localStorage lookup
+  const selectedDateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth()+1).padStart(2,'0')}-${String(selectedDate).padStart(2,'0')}`;
 
-  // Filter appointments for the selected day
-  const selectedDayAppointments = appointments.filter(appt => {
-    const apptDate = new Date(appt.appointmentDate);
-    return (
-      apptDate.getFullYear() === currentDate.getFullYear() &&
-      apptDate.getMonth() === currentDate.getMonth() &&
-      apptDate.getDate() === selectedDate
-    );
+  // Reload slots when date changes or when settings are updated
+  useEffect(() => {
+    setTimeSlots(getSlotsForDate(selectedDateStr));
+  }, [selectedDateStr]);
+
+  useEffect(() => {
+    const handler = () => setTimeSlots(getSlotsForDate(selectedDateStr));
+    window.addEventListener('availabilityUpdated', handler);
+    return () => window.removeEventListener('availabilityUpdated', handler);
+  }, [selectedDateStr]);
+
+  const selectedDayAppointments = appointments.filter(a => {
+    const aptStr = getAptDateStr(a.appointmentDate);
+    return aptStr === selectedDateStr;
   });
 
-  // Get booked time slots for the selected day (exclude Cancelled)
-  const bookedTimeSlots = selectedDayAppointments
-    .filter(appt => appt.status !== 2) // 2 = Cancelled
-    .map(appt => {
-      // Convert TimeSpan format "09:00:00" to "09:00"
-      const timeStr = appt.appointmentTime;
-      return typeof timeStr === 'string' ? timeStr.substring(0, 5) : timeStr;
-    });
-  
-  const monthNames = ["January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-  
-  const daysInMonth = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth() + 1,
-    0
-  ).getDate();
-  
-  const firstDayOfMonth = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth(),
-    1
-  ).getDay();
-  
+  const bookedSlots = selectedDayAppointments
+    .filter(a => a.status !== 2)
+    .map(a => (typeof a.appointmentTime === 'string' ? a.appointmentTime.substring(0,5) : a.appointmentTime));
+
+  const completedSlots = new Set(
+    selectedDayAppointments
+      .filter(a => a.status === 1)
+      .map(a => (typeof a.appointmentTime === 'string' ? a.appointmentTime.substring(0,5) : a.appointmentTime))
+  );
+
+  // build calendar grid
+  const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth()+1, 0).getDate();
+  const firstDay   = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+  const prevMonthDays = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0).getDate();
   const days = [];
-  
-  // Add empty cells for days before month starts
-  for (let i = 0; i < firstDayOfMonth; i++) {
-    const prevMonthDays = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      0
-    ).getDate();
-    days.push({
-      day: prevMonthDays - firstDayOfMonth + i + 1,
-      isCurrentMonth: false
-    });
-  }
-  
-  // Add days of current month
-  for (let i = 1; i <= daysInMonth; i++) {
-    days.push({
-      day: i,
-      isCurrentMonth: true
-    });
-  }
-  
-  // Add empty cells to complete the grid
-  const remainingCells = 35 - days.length;
-  for (let i = 1; i <= remainingCells; i++) {
-    days.push({
-      day: i,
-      isCurrentMonth: false
-    });
-  }
-  
-  const handleDateClick = (dayObj) => {
-    if (dayObj.isCurrentMonth) {
-      setSelectedDate(dayObj.day);
-      // Create a date object and pass it to parent
-      const selectedDateObj = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        dayObj.day
-      );
-      if (onDateSelect) {
-        onDateSelect(selectedDateObj);
-      }
-    }
+  for (let i = 0; i < firstDay; i++)
+    days.push({ day: prevMonthDays - firstDay + i + 1, current: false });
+  for (let i = 1; i <= daysInMonth; i++)
+    days.push({ day: i, current: true });
+  while (days.length < 42)
+    days.push({ day: days.length - daysInMonth - firstDay + 1, current: false });
+
+  // which days have appointments (timezone-safe)
+  const daysWithApts = new Set(
+    appointments
+      .filter(a => {
+        const s = getAptDateStr(a.appointmentDate);
+        return s.startsWith(`${currentDate.getFullYear()}-${String(currentDate.getMonth()+1).padStart(2,'0')}`);
+      })
+      .map(a => parseInt(getAptDateStr(a.appointmentDate).split('-')[2], 10))
+  );
+
+  const handleDayClick = (dayObj) => {
+    if (!dayObj.current) return;
+    setSelectedDate(dayObj.day);
+    if (onDateSelect)
+      onDateSelect(new Date(currentDate.getFullYear(), currentDate.getMonth(), dayObj.day));
   };
 
+  const isToday = (d) =>
+    d.current &&
+    d.day === today.getDate() &&
+    currentDate.getMonth() === today.getMonth() &&
+    currentDate.getFullYear() === today.getFullYear();
+
   return (
-    <div className="dashboard-calendar-wrapper">
-      <div className="appointments-calendar-card">
-        <h3 className="calendar-title">Your Appointments</h3>
-        <div className="doctor-calendar-header">
-          <button className="doctor-nav-btn" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}>
-            <span className="material-symbols-outlined">chevron_left</span>
+    <div className="cal-card">
+      {/* Header */}
+      <div className="cal-header">
+        <p className="cal-header-label">Appointment Calendar</p>
+        <div className="cal-nav-row">
+          <button className="cal-nav-btn"
+            onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth()-1, 1))}>
+            ‹
           </button>
-          <h4 className="doctor-calendar-month">
-            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-          </h4>
-          <button className="doctor-nav-btn" onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}>
-            <span className="material-symbols-outlined">chevron_right</span>
+          <span className="cal-month-title">
+            {MONTH_NAMES[currentDate.getMonth()]} {currentDate.getFullYear()}
+          </span>
+          <button className="cal-nav-btn"
+            onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth()+1, 1))}>
+            ›
           </button>
         </div>
-      <div className="doctor-calendar-grid">
-        <div className="doctor-calendar-weekdays">
-          <span>S</span>
-          <span>M</span>
-          <span>T</span>
-          <span>W</span>
-          <span>T</span>
-          <span>F</span>
-          <span>S</span>
-        </div>
-        <div className="doctor-calendar-days">
-          {days.map((dayObj, index) => (
-            <button
-              key={index}
-              className={`doctor-calendar-day ${
-                !dayObj.isCurrentMonth ? 'other-month' : ''
-              } ${
-                dayObj.day === selectedDate && dayObj.isCurrentMonth ? 'selected' : ''
-              }`}
-              onClick={() => handleDateClick(dayObj)}
-            >
-              {dayObj.day}
+      </div>
+
+      {/* Weekday labels */}
+      <div className="cal-weekdays">
+        {WEEKDAYS.map((d,i) => <div key={i} className="cal-weekday">{d}</div>)}
+      </div>
+
+      {/* Days */}
+      <div className="cal-days-grid">
+        {days.map((d, i) => {
+          const selected = d.current && d.day === selectedDate;
+          const todayDay = isToday(d);
+          const hasApt   = d.current && daysWithApts.has(d.day);
+          let cls = 'cal-day';
+          if (!d.current)  cls += ' cal-day--other';
+          else if (selected) cls += ' cal-day--selected';
+          else if (todayDay) cls += ' cal-day--today';
+          if (hasApt) cls += ' cal-day--has-apt';
+          return (
+            <button key={i} className={cls} onClick={() => handleDayClick(d)}>
+              {d.day}
             </button>
-          ))}
-        </div>
+          );
+        })}
       </div>
-      <div className="doctor-calendar-appointments">
-        <h4 className="doctor-time-slots-title">Available Time Slots</h4>
-        <div className="doctor-time-slots-grid">
-          {timeSlots.map((slot) => {
-            const isBooked = bookedTimeSlots.includes(slot);
-            const appointment = selectedDayAppointments.find(
-              appt => {
-                const timeStr = appt.appointmentTime;
-                const formattedTime = typeof timeStr === 'string' ? timeStr.substring(0, 5) : timeStr;
-                return formattedTime === slot && appt.status !== 2; // 2 = Cancelled
-              }
-            );
-            
-            return (
-              <div
-                key={slot}
-                className={`doctor-time-slot ${isBooked ? 'booked' : 'available'}`}
-              >
-                <div className="doctor-time-slot-time">
-                  <span className="material-symbols-outlined">schedule</span>
-                  {slot}
+
+      {/* Slots */}
+      <div className="cal-slots-body">
+          <p className="cal-slots-title">
+            {selectedDate} {MONTH_NAMES[currentDate.getMonth()]} — Available Slots
+          </p>
+          <div className="cal-slots-grid">
+            {timeSlots.map(slot => {
+              const done   = completedSlots.has(slot);
+              const booked = !done && bookedSlots.includes(slot);
+              const cls = done ? 'cal-slot--done' : booked ? 'cal-slot--booked' : 'cal-slot--free';
+              return (
+                <div key={slot} className={`cal-slot ${cls}`}>
+                  <span>{slot}</span>
+                  {done
+                    ? <span className="cal-slot-badge">✓ Done</span>
+                    : <span className="cal-slot-badge">{booked ? 'Booked' : 'Free'}</span>
+                  }
                 </div>
-                {isBooked && appointment ? (
-                  <div className="doctor-time-slot-patient">
-                    <span className="material-symbols-outlined">person</span>
-                    {appointment.patientName}
-                  </div>
-                ) : (
-                  <div className="doctor-time-slot-status">Available</div>
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
-    </div>
     </div>
   );
 };

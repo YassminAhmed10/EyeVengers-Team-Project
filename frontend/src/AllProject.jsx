@@ -13,12 +13,17 @@ import AppointmentDetails from "./Pages/AppointmentDetails";
 import ClinicPageNew from "./Pages/ClinicPageNew";
 import SettingsPage from "./Pages/SettingsPage";
 import EMRPage from "./Pages/EMRPage";
+import PatientEMRPage from "./Pages/PatientEMRPage";
 import PatientPageNew from "./Pages/PatientPageNew";
 import PatientHomepage from "./Pages/PatientHomepage";
 import PatientAppointments from "./Pages/PatientAppointments";
 import PatientProfilePage from "./Pages/PatientProfilePage";
+import PatientPharmacyPage from "./Pages/PatientPharmacyPage";
+import PatientGlassesStorePage from "./Pages/PatientGlassesStorePage";
 import FinancePageNew from "./Pages/FinancePageNew";
 import ContactPage from "./Pages/ContactPage";
+import RadiologyRedirectPage from "./Pages/RadiologyRedirectPage";
+import Rotating3DNav from "./components/Rotating3DNav/Rotating3DNav";
 
 function AllProject() {
   return (
@@ -55,12 +60,16 @@ function AllProject() {
 
         
         <Route path="/patient" element={<PatientHomepage />} />
+        <Route path="/patient/radiology-redirect" element={<RadiologyRedirectPage />} />
+        <Route path="/patient/pharmacy" element={<PatientPharmacyPage />} />
+        <Route path="/patient/glasses-store" element={<PatientGlassesStorePage />} />
         <Route path="/patient/appointments" element={<PatientAppointments />} />
-        <Route path="/patient/medical-record" element={<EMRPage />} />
+        <Route path="/patient/medical-record" element={<PatientEMRPage />} />
         <Route path="/patient/profile" element={<PatientProfilePage />} />
         <Route path="/contact" element={<ContactPage />} />
         
         
+        <Route path="/rotating-nav" element={<Rotating3DNav />} />
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Router>

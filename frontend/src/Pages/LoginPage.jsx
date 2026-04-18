@@ -1,6 +1,7 @@
 // src/Pages/LoginPage.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { authApi } from "../services/api";
 
 const GLOW_CSS = `
   @keyframes borderPulse {
@@ -86,17 +87,7 @@ export default function LoginPage() {
     if (!email || !password) { setError("Please enter both email and password.");      return; }
     setLoading(true); setError("");
     try {
-      const res = await fetch("http://localhost:5201/api/Auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({ message: "Invalid email or password" }));
-        setError(d.message || "Invalid email or password");
-        setLoading(false); return;
-      }
-      const data = await res.json();
+      const data = await authApi.login({ email: email.trim(), password });
       if (data.user.role !== role) {
         setError(`This account is registered as ${data.user.role}, not ${role}`);
         setLoading(false); return;
@@ -117,8 +108,12 @@ export default function LoginPage() {
       else if (data.user.role === "Receptionist") navigate("/receptionist");
       else if (data.user.role === "Patient")      navigate("/patient");
     } catch (err) {
-      setError(err.name === "TypeError" && err.message.includes("fetch")
-        ? "Unable to connect to server." : "An unexpected error occurred.");
+      const message = err?.response?.data?.message || err?.message || "An unexpected error occurred.";
+      if (err?.code === "ECONNABORTED" || message.toLowerCase().includes("network")) {
+        setError("Unable to connect to server.");
+      } else {
+        setError(message);
+      }
       setLoading(false);
     }
   };

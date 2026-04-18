@@ -37,6 +37,27 @@ namespace EyeClinicAPI.Controllers
             return patient;
         }
 
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<Patient>>> SearchPatients([FromQuery] string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return Ok(new List<Patient>());
+
+            var q = query.ToLower().Trim();
+            var patients = await _context.Patients
+                .Where(p =>
+                    p.FirstName.ToLower().StartsWith(q) ||
+                    p.LastName.ToLower().StartsWith(q) ||
+                    (p.FirstName + " " + p.LastName).ToLower().StartsWith(q) ||
+                    p.Phone.StartsWith(q) ||
+                    p.Email.ToLower().StartsWith(q) ||
+                    p.NationalId.StartsWith(q))
+                .Take(10)
+                .ToListAsync();
+
+            return Ok(patients);
+        }
+
         [HttpPost]
         public async Task<ActionResult<Patient>> PostPatient(Patient patient)
         {

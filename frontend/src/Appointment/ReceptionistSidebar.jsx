@@ -1,11 +1,14 @@
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import logo from "../images/logo.png";
 import './ReceptionistSidebar.css';
 
 const ReceptionistSidebar = ({ isCollapsed, onToggle }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const onAppointments = location.pathname.includes('/appointments');
+  const currentTab = onAppointments ? (searchParams.get('tab') || 'book') : null;
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
@@ -15,9 +18,8 @@ const ReceptionistSidebar = ({ isCollapsed, onToggle }) => {
     }
   };
 
-  const isActive = (path) => {
-    if (path === '/receptionist' && location.pathname === '/receptionist') return true;
-    return location.pathname.startsWith(path + '/') || location.pathname === path;
+  const goTo = (path) => {
+    navigate(path);
   };
 
   return (
@@ -50,25 +52,45 @@ const ReceptionistSidebar = ({ isCollapsed, onToggle }) => {
         </div>
 
         <nav className="sidebar-nav">
-          <Link 
-            to="/receptionist" 
-            className={`nav-item ${isActive('/receptionist') && location.pathname === '/receptionist' ? 'active' : ''}`}
+          <div 
+            className={`nav-item ${location.pathname === '/receptionist' && !onAppointments ? 'active' : ''}`}
+            onClick={() => goTo('/receptionist')}
           >
             <div className="nav-icon">
               <span className="material-symbols-outlined">dashboard</span>
             </div>
             <span className="nav-label">Dashboard</span>
-          </Link>
+          </div>
 
-          <Link 
-            to="/receptionist/appointments" 
-            className={`nav-item ${isActive('/receptionist/appointments') || isActive('/appointments') ? 'active' : ''}`}
+          <div 
+            className={`nav-item ${currentTab === 'book' ? 'active' : ''}`}
+            onClick={() => goTo('/receptionist/appointments?tab=book')}
           >
             <div className="nav-icon">
-              <span className="material-symbols-outlined">calendar_month</span>
+              <span className="material-symbols-outlined">edit_calendar</span>
             </div>
-            <span className="nav-label">Appointments</span>
-          </Link>
+            <span className="nav-label">Book Appointment</span>
+          </div>
+
+          <div 
+            className={`nav-item ${currentTab === 'all' ? 'active' : ''}`}
+            onClick={() => goTo('/receptionist/appointments?tab=all')}
+          >
+            <div className="nav-icon">
+              <span className="material-symbols-outlined">event_note</span>
+            </div>
+            <span className="nav-label">Appointment Details</span>
+          </div>
+
+          <div 
+            className={`nav-item ${currentTab === 'requests' ? 'active' : ''}`}
+            onClick={() => goTo('/receptionist/appointments?tab=requests')}
+          >
+            <div className="nav-icon">
+              <span className="material-symbols-outlined">pending_actions</span>
+            </div>
+            <span className="nav-label">Online Requests</span>
+          </div>
         </nav>
 
         <button 

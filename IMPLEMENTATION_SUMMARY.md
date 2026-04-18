@@ -219,7 +219,7 @@ const handleSubmit = async (appointmentData) => {
   
   if (response) {
     // Store patientId for future reference
-    localStorage.setItem('patientId', appointmentData.patientId);
+    localStorage.setItem('patientId', appointmentData.patientId); 
     
     // Show confirmation page with options:
     // - Book Another Appointment

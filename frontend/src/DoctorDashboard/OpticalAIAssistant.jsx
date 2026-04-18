@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Trash2 } from 'lucide-react';
 import './OpticalAIAssistant.css';
 
 const OpticalAIAssistant = () => {
@@ -112,7 +113,7 @@ const OpticalAIAssistant = () => {
             </div>
             <div className="header-actions">
               <button className="action-btn" onClick={clearChat} title="Clear Chat">
-                 🗑️
+                <Trash2 size={16} />
               </button>
               <button 
                 className="action-btn" 

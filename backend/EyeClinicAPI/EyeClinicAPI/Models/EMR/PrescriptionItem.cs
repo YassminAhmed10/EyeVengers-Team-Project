@@ -1,8 +1,10 @@
 ﻿#nullable enable
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EyeClinicAPI.Models.EMR
 {
+    [Table("PrescriptionItems")]
     public class PrescriptionItem
     {
         [Key]
