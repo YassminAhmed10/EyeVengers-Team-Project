@@ -1,0 +1,351 @@
+/* ProductsSlider.css */
+
+.ps-root {
+  position: relative;
+  width: 100%;
+}
+
+/* ── Nav Buttons ── */
+.ps-nav {
+  position: absolute;
+  top: 38%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: #323232;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.13);
+  transition: background 0.2s, color 0.2s, transform 0.2s, opacity 0.3s;
+}
+
+.ps-nav:hover {
+  background: #111;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.ps-nav--prev { left: -24px; }
+.ps-nav--next { right: -24px; }
+
+.ps-nav--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Track ── */
+.ps-track {
+  display: flex;
+  gap: 30px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 4px 24px;
+  scrollbar-width: none;
+}
+
+.ps-track::-webkit-scrollbar { display: none; }
+
+/* ══════════════════════════════════════════
+   ORIGINAL CARD (your existing design)
+══════════════════════════════════════════ */
+.ps-card {
+  flex: 0 0 340px;
+  scroll-snap-align: start;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Image Wrapper ── */
+.ps-card__img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.ps-card__img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 12px;
+  filter: drop-shadow(0 6px 18px rgba(15, 23, 42, 0.09));
+}
+
+.ps-card__img--2 {
+  opacity: 0;
+}
+
+/* ── Action icon buttons ── */
+.ps-card__actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 3;
+}
+
+.ps-card__icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  color: #1e40af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+
+.ps-card__icon-btn:hover {
+  background: #3b82f6;
+  color: #fff;
+  transform: scale(1.1);
+}
+
+/* ── CTA buttons at bottom of image ── */
+.ps-card__cta {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 7px;
+  padding: 0 12px;
+  z-index: 3;
+}
+
+.ps-card__btn {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 100px;
+  border: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+  transition: background 0.2s, transform 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+
+.ps-card__btn:active { transform: scale(0.95); }
+
+.ps-card__btn--try {
+  background: rgba(255, 255, 255, 0.88);
+  color: #2563eb;
+  border: 1.5px solid #bfdbfe;
+  backdrop-filter: blur(4px);
+}
+
+.ps-card__btn--try:hover { background: #dbeafe; }
+
+.ps-card__btn--cart {
+  background: #2563eb;
+  color: #fff;
+}
+
+.ps-card__btn--cart:hover { background: #1d4ed8; }
+
+/* ── Info ── */
+.ps-card__info {
+  padding: 12px 2px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ps-card__subtitle-top {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.ps-card__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ps-card__name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-family: 'Inter', sans-serif;
+}
+
+.ps-card__price {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #2563eb;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Swatches ── */
+.ps-card__swatches {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.ps-card__swatch {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: none;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  cursor: pointer;
+  transition: transform 0.2s, outline-color 0.2s;
+  padding: 0;
+}
+
+.ps-card__swatch:hover { transform: scale(1.2); }
+
+.ps-card__swatch--active {
+  outline-color: #3b82f6;
+  transform: scale(1.2);
+}
+
+/* ══════════════════════════════════════════
+   HTML-STYLE CARD (new 8 products)
+   Matches the glasses.com reference design
+══════════════════════════════════════════ */
+.ps-html-card {
+  flex: 0 0 260px;
+  scroll-snap-align: start;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  border-radius: 15px;
+  padding: 20px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+}
+
+.ps-html-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+}
+
+/* ── Image wrapper ── */
+.ps-html-card__img-wrap {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  overflow: visible;
+  margin-bottom: 20px;
+}
+
+.ps-html-card__img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ps-html-card__img--2 {
+  opacity: 0;
+}
+
+/* ── Info ── */
+.ps-html-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ps-html-card__model {
+  color: #666;
+  margin: 0 0 5px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.ps-html-card__brand {
+  color: #151515;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 5px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.ps-html-card__name {
+  color: #666;
+  margin: 0 0 10px;
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.ps-html-card__price-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.ps-html-card__old-price {
+  color: #999;
+  font-size: 1rem;
+  text-decoration: line-through;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.ps-html-card__price {
+  color: #151515;
+  font-size: 1.3rem;
+  font-weight: 700;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.ps-html-card__discount {
+  color: #fff;
+  background: #ff4444;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .ps-card { flex: 0 0 260px; }
+  .ps-html-card { flex: 0 0 220px; }
+  .ps-nav--prev { left: -14px; }
+  .ps-nav--next { right: -14px; }
+}

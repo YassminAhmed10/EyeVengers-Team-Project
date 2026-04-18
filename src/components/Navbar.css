@@ -1,0 +1,336 @@
+/* ═══════════════════════════════════════════
+   NAVBAR — dark scene → white on scroll
+═══════════════════════════════════════════ */
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.navbar .container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.navbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 80px;
+  transition: height 0.3s ease;
+}
+
+/* ═══════════════════════════════════════════
+   TRANSPARENT — matches the dark hero scene
+═══════════════════════════════════════════ */
+.navbar--transparent {
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 15, 30, 0.6) 0%,
+    rgba(10, 15, 30, 0.0) 100%
+  );
+  backdrop-filter: none;
+  border-bottom: none;
+  box-shadow: none;
+}
+
+.navbar--transparent .navbar__logo {
+  color: #ffffff;
+}
+
+.navbar--transparent .navbar__logo-text {
+  color: #ffffff;
+  text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+}
+
+.navbar--transparent .navbar__logo-home {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.navbar--transparent .navbar__logo:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.navbar--transparent .navbar__nav-link {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.navbar--transparent .navbar__nav-link:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.navbar--transparent .navbar__nav-link::after {
+  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+}
+
+.navbar--transparent .navbar__nav-link--active {
+  color: #60a5fa;
+}
+
+.navbar--transparent .navbar__icon-btn {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.navbar--transparent .navbar__icon-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.navbar--transparent .navbar__cart-count {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+
+.navbar--transparent .navbar__cart-dot {
+  background: #60a5fa;
+}
+
+/* ═══════════════════════════════════════════
+   SCROLLED — clean white
+═══════════════════════════════════════════ */
+.navbar--scrolled {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+}
+
+.navbar--scrolled .navbar__inner {
+  height: 68px;
+}
+
+.navbar--scrolled .navbar__logo {
+  color: #3b82f6;
+}
+
+.navbar--scrolled .navbar__logo-text {
+  color: #0f172a;
+  text-shadow: none;
+}
+
+.navbar--scrolled .navbar__logo-home {
+  color: #3b82f6;
+}
+
+.navbar--scrolled .navbar__logo:hover {
+  background: #eff6ff;
+}
+
+.navbar--scrolled .navbar__nav-link {
+  color: #475569;
+}
+
+.navbar--scrolled .navbar__nav-link:hover {
+  color: #3b82f6;
+  background: #eff6ff;
+}
+
+.navbar--scrolled .navbar__nav-link::after {
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
+.navbar--scrolled .navbar__nav-link--active {
+  color: #3b82f6;
+}
+
+.navbar--scrolled .navbar__icon-btn {
+  color: #475569;
+}
+
+.navbar--scrolled .navbar__icon-btn:hover {
+  color: #3b82f6;
+  background: #eff6ff;
+}
+
+.navbar--scrolled .navbar__cart-count {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+
+.navbar--scrolled .navbar__cart-dot {
+  background: #3b82f6;
+  border-color: white;
+}
+
+/* ── Logo ── */
+.navbar__left {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.navbar__logo {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.navbar__logo-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+}
+
+.navbar__logo-mark svg {
+  width: 22px;
+  height: 22px;
+}
+
+.navbar__logo-copy {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  gap: 2px;
+}
+
+.navbar__logo-text {
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  margin: 0;
+  transition: all 0.3s ease;
+}
+
+.navbar__logo-home {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+/* ── Nav Links ── */
+.navbar__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.navbar__nav-link {
+  position: relative;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.navbar__nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0px;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 20px;
+  height: 2px;
+  border-radius: 2px;
+  transition: transform 0.3s ease;
+  transform-origin: center;
+}
+
+.navbar__nav-link:hover::after,
+.navbar__nav-link--active::after {
+  transform: translateX(-50%) scaleX(1);
+}
+
+/* ── Actions ── */
+.navbar__right {
+  display: flex;
+  align-items: center;
+}
+
+.navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.navbar__icon-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.navbar__icon-btn .material-symbols-outlined {
+  font-size: 1.3rem;
+}
+
+/* ── Badges ── */
+.navbar__cart-count {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: all 0.3s ease;
+}
+
+.navbar__cart-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  animation: pulse-blue 2.2s infinite;
+}
+
+@keyframes pulse-blue {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.45);
+  }
+  70% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+  }
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .navbar__nav {
+    display: none;
+  }
+
+  .navbar__logo-home {
+    display: none;
+  }
+
+  .navbar__inner {
+    height: 68px;
+  }
+
+  .navbar--scrolled .navbar__inner {
+    height: 60px;
+  }
+}
