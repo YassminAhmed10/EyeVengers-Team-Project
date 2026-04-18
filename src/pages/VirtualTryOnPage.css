@@ -8,30 +8,29 @@
 }
 
 /* ═══════════════════════════════════════════
-   HERO HEADER  —  add/merge into VirtualTryOnPage.css
-   ═══════════════════════════════════════════ */
+   HERO HEADER
+═══════════════════════════════════════════ */
 
 .tryon-page-hero {
   width: 100%;
-  height: 220px;                        /* compact header height */
-  background-size: 50%;
-  background-position: right center;    /* glasses visible on the right */
-  background-repeat: no-repeat;
+  height: 280px;
+  background-size: auto 100%;
+  background-position: center center;
+  background-repeat: repeat-x;
   position: relative;
   display: flex;
   align-items: center;
   overflow: hidden;
 }
 
-/* dark-to-transparent gradient so text stays readable */
 .tryon-page-hero::before {
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to right,
-    rgba(8, 18, 38, 0.88) 0%,
-    rgba(8, 18, 38, 0.45) 50%,
+    rgba(8, 18, 38, 0.95) 0%,
+    rgba(8, 18, 38, 0.6) 55%,
     transparent 100%
   );
   z-index: 0;
@@ -40,56 +39,65 @@
 .tryon-page-hero__inner {
   position: relative;
   z-index: 1;
-  padding: 0 2.5rem;
-  max-width: 480px;
+  padding: 0 3rem;
+  max-width: 560px;
 }
 
 .tryon-page-hero__tag {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.09em;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.65);
-  margin-bottom: 0.45rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 0.6rem;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
 }
 
 .tryon-page-hero__title {
-  font-size: 1.9rem;
+  font-size: 2.6rem;
   font-weight: 800;
   line-height: 1.1;
   color: #fff;
-  margin: 0 0 0.45rem;
+  margin: 0 0 0.6rem;
+  letter-spacing: -0.02em;
 }
 
 .tryon-page-hero__title span {
-  color: #3b82f6;           /* blue accent — match your brand colour */
+  color: #3b82f6;
 }
 
 .tryon-page-hero__desc {
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0 0 0.8rem;
-  line-height: 1.5;
-  max-width: 340px;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0 0 1.1rem;
+  line-height: 1.6;
+  max-width: 380px;
 }
 
 .tryon-page-hero__back {
-  display: inline-block;
-  font-size: 0.76rem;
-  color: rgba(255, 255, 255, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 999px;
-  padding: 0.28rem 0.8rem;
+  padding: 0.35rem 1rem;
   text-decoration: none;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
 .tryon-page-hero__back:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* ═══════════════════════════════════════════
@@ -97,7 +105,7 @@
 ═══════════════════════════════════════════ */
 .tryon-layout {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: 380px 1fr;
   gap: 0;
   align-items: start;
   min-height: calc(100vh - 80px);
@@ -110,10 +118,10 @@
 .tryon-panel {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.65rem;
   background: #ffffff;
   border-right: 1px solid #e2e8f0;
-  padding: 2rem 1.5rem;
+  padding: 1.75rem 1.5rem 2rem;
   position: sticky;
   top: 68px;
   height: calc(100vh - 68px);
@@ -122,26 +130,20 @@
   scrollbar-color: #e2e8f0 transparent;
 }
 
-.tryon-panel::-webkit-scrollbar {
-  width: 4px;
-}
-
-.tryon-panel::-webkit-scrollbar-track {
-  background: transparent;
-}
-
+.tryon-panel::-webkit-scrollbar { width: 4px; }
+.tryon-panel::-webkit-scrollbar-track { background: transparent; }
 .tryon-panel::-webkit-scrollbar-thumb {
   background: #e2e8f0;
   border-radius: 4px;
 }
 
 .tryon-panel h3 {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #94a3b8;
-  margin: 0.75rem 0 0.25rem;
+  margin: 0.9rem 0 0.3rem;
   padding-top: 1rem;
   border-top: 1px solid #f1f5f9;
 }
@@ -154,7 +156,7 @@
 
 .tryon-panel select {
   width: 100%;
-  padding: 0.6rem 2rem 0.6rem 0.875rem;
+  padding: 0.62rem 2rem 0.62rem 0.9rem;
   border: 1.5px solid #e2e8f0;
   border-radius: 10px;
   font-size: 0.85rem;
@@ -185,10 +187,10 @@
 }
 
 .tryon-colors button {
-  padding: 0.38rem 0.8rem;
+  padding: 0.35rem 0.75rem;
   border: 1.5px solid #e2e8f0;
   border-radius: 100px;
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   font-weight: 600;
   color: #475569;
   background: #f8fafc;
@@ -214,7 +216,7 @@
 .tryon-source-actions {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.4rem;
 }
 
 /* ── Layer switch ── */
@@ -254,7 +256,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 600;
   color: #475569;
   cursor: pointer;
@@ -271,7 +273,7 @@
 /* ── Panel buttons ── */
 .tryon-panel .btn-primary {
   width: 100%;
-  padding: 0.7rem 1rem;
+  padding: 0.72rem 1rem;
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: #ffffff;
   border: none;
@@ -339,13 +341,13 @@
 }
 
 .tryon-tip {
-  font-size: 0.73rem;
+  font-size: 0.72rem;
   color: #94a3b8;
   background: #f8fafc;
   border-radius: 8px;
-  padding: 0.6rem 0.8rem;
+  padding: 0.65rem 0.85rem;
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.55;
   border-left: 3px solid #3b82f6;
 }
 
@@ -359,7 +361,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(160deg, #0f172a 0%, #1e293b 60%, #0f172a 100%);
+  background: linear-gradient(160deg, #0a1628 0%, #1e293b 60%, #0a1628 100%);
   overflow: hidden;
 }
 
@@ -368,9 +370,9 @@
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(59, 130, 246, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59, 130, 246, 0.04) 1px, transparent 1px);
-  background-size: 40px 40px;
+    linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
   pointer-events: none;
   z-index: 0;
 }
@@ -411,7 +413,7 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 38%;
+  width: 36%;
   aspect-ratio: 3 / 4;
   transform: translate(-50%, -54%);
   border: 1.5px dashed rgba(255, 255, 255, 0.1);
@@ -423,7 +425,7 @@
 
 @keyframes guidePulse {
   0%, 100% { border-color: rgba(255, 255, 255, 0.1); }
-  50%       { border-color: rgba(59, 130, 246, 0.28); }
+  50%       { border-color: rgba(59, 130, 246, 0.3); }
 }
 
 /* ── Glasses overlay ── */
@@ -456,11 +458,11 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
   text-align: center;
   padding: 2rem;
-  color: rgba(255, 255, 255, 0.25);
-  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.22);
+  font-size: 0.9rem;
   font-weight: 500;
   line-height: 1.6;
 }
@@ -468,8 +470,8 @@
 .tryon-empty::before {
   content: 'face';
   font-family: 'Material Symbols Outlined';
-  font-size: 5rem;
-  color: rgba(255, 255, 255, 0.07);
+  font-size: 5.5rem;
+  color: rgba(255, 255, 255, 0.06);
   display: block;
 }
 
@@ -480,11 +482,11 @@
   top: 1.25rem;
   right: 1.5rem;
   z-index: 10;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.18);
   pointer-events: none;
 }
 
@@ -493,13 +495,20 @@
 ═══════════════════════════════════════════ */
 @media (max-width: 1024px) {
   .tryon-layout {
-    grid-template-columns: 260px 1fr;
+    grid-template-columns: 330px 1fr;
   }
 }
 
 @media (max-width: 768px) {
   .tryon-page-hero {
-    padding: 6rem 1.5rem 3rem;
+    height: auto;
+    padding: 5rem 1.5rem 2.5rem;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .tryon-page-hero__title {
+    font-size: 2rem;
   }
 
   .tryon-layout {
@@ -519,8 +528,8 @@
   .tryon-stage-wrap {
     position: relative;
     top: 0;
-    height: 70vw;
-    min-height: 320px;
+    height: 72vw;
+    min-height: 340px;
     order: 1;
   }
 
@@ -531,10 +540,14 @@
 
 @media (max-width: 480px) {
   .tryon-page-hero {
-    padding: 5rem 1rem 2.5rem;
+    padding: 4.5rem 1rem 2rem;
+  }
+
+  .tryon-page-hero__title {
+    font-size: 1.7rem;
   }
 
   .tryon-stage-wrap {
-    height: 85vw;
+    height: 88vw;
   }
 }

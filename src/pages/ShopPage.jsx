@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import ProductCard from "../components/ProductCard";
 import { PRODUCTS } from "../data/products";
-import heroBg from "../assets/glassBG2.jpg";
+import heroBg from "../assets/glassBG5.jpg";
 import "./ShopPage.css";
 
 const sortOptions = ["Featured", "Price: Low to High", "Price: High to Low", "Name A-Z"];

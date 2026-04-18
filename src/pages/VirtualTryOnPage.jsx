@@ -258,9 +258,9 @@ export default function VirtualTryOnPage() {
         <div className="tryon-page-hero__inner">
           <span className="tryon-page-hero__tag">
             <span className="material-symbols-outlined" style={{ fontSize: "0.85rem" }}>
-              view_in_ar
+              
             </span>
-            Eyewear Tool
+            
           </span>
           <h1 className="tryon-page-hero__title">
             Virtual <span>Try-On</span>

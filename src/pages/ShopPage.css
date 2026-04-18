@@ -23,7 +23,7 @@
 .shop-hero__bg {
   position: absolute;
   inset: -20%;
-  background-size: cover;
+  background-size: 68%;
   background-position: center;
   will-change: transform;
 }
