@@ -180,8 +180,8 @@ export default function App() {
     []
   );
 
-  const withTransition    = (element) => <RouteShell>{element}</RouteShell>;
-  const withFullWidth     = (element) => <FullWidthShell>{element}</FullWidthShell>;
+  const withTransition = (element) => <RouteShell>{element}</RouteShell>;
+  const withFullWidth  = (element) => <FullWidthShell>{element}</FullWidthShell>;
 
   return (
     <div className="app">
@@ -233,6 +233,7 @@ export default function App() {
                 wishlistProducts={wishlistProducts}
                 onAddToCart={handleAddToCart}
                 onToggleWishlist={handleToggleWishlist}
+                onClearWishlist={() => setWishlistIds([])}
               />
             )}
           />
@@ -266,9 +267,9 @@ export default function App() {
             )}
           />
 
-          <Route path="/order/success"      element={withTransition(<OrderStatusPage />)} />
-          <Route path="/order/failed"       element={withTransition(<OrderStatusPage />)} />
-          <Route path="/track-order"        element={withTransition(<TrackOrderPage />)} />
+          <Route path="/order/success"     element={withTransition(<OrderStatusPage />)} />
+          <Route path="/order/failed"      element={withTransition(<OrderStatusPage />)} />
+          <Route path="/track-order"       element={withTransition(<TrackOrderPage />)} />
 
           <Route
             path="/account"
@@ -280,33 +281,27 @@ export default function App() {
             )}
           />
 
-          <Route path="/login"            element={withTransition(<AuthPage />)} />
-          <Route path="/register"         element={withTransition(<AuthPage />)} />
-          <Route path="/forgot-password"  element={withTransition(<AuthPage />)} />
-          <Route path="/about"            element={withTransition(<ContentPage />)} />
-          <Route path="/contact"          element={withTransition(<ContentPage />)} />
-          <Route path="/faq"              element={withTransition(<ContentPage />)} />
+          <Route path="/login"           element={withTransition(<AuthPage />)} />
+          <Route path="/register"        element={withTransition(<AuthPage />)} />
+          <Route path="/forgot-password" element={withTransition(<AuthPage />)} />
+          <Route path="/about"           element={withTransition(<ContentPage />)} />
+          <Route path="/contact"         element={withTransition(<ContentPage />)} />
+          <Route path="/faq"             element={withTransition(<ContentPage />)} />
 
-          <Route
-            path="/virtual-try-on"
-            element={withTransition(<VirtualTryOnPage />)}
-          />
-          <Route
-            path="/virtual-try-on/:productId"
-            element={withTransition(<VirtualTryOnPage />)}
-          />
+          <Route path="/virtual-try-on"            element={withTransition(<VirtualTryOnPage />)} />
+          <Route path="/virtual-try-on/:productId" element={withTransition(<VirtualTryOnPage />)} />
 
-          <Route path="/fit-assistant"      element={withTransition(<ToolsPage />)} />
-          <Route path="/size-guide"         element={withTransition(<SizeGuidePage />)} />
-          <Route path="/returns-center"     element={withTransition(<ReturnsCenterPage />)} />
-          <Route path="/help-center"        element={withTransition(<HelpCenterPage />)} />
-          <Route path="/shipping-returns"   element={withTransition(<ContentPage />)} />
-          <Route path="/warranty"           element={withTransition(<ContentPage />)} />
-          <Route path="/privacy"            element={withTransition(<ContentPage />)} />
-          <Route path="/terms"              element={withTransition(<ContentPage />)} />
-          <Route path="/cookies"            element={withTransition(<ContentPage />)} />
-          <Route path="/admin"              element={withTransition(<AdminPage />)} />
-          <Route path="*"                   element={withTransition(<NotFoundPage />)} />
+          <Route path="/fit-assistant"    element={withTransition(<ToolsPage />)} />
+          <Route path="/size-guide"       element={withTransition(<SizeGuidePage />)} />
+          <Route path="/returns-center"   element={withTransition(<ReturnsCenterPage />)} />
+          <Route path="/help-center"      element={withTransition(<HelpCenterPage />)} />
+          <Route path="/shipping-returns" element={withTransition(<ContentPage />)} />
+          <Route path="/warranty"         element={withTransition(<ContentPage />)} />
+          <Route path="/privacy"          element={withTransition(<ContentPage />)} />
+          <Route path="/terms"            element={withTransition(<ContentPage />)} />
+          <Route path="/cookies"          element={withTransition(<ContentPage />)} />
+          <Route path="/admin"            element={withTransition(<AdminPage />)} />
+          <Route path="*"                 element={withTransition(<NotFoundPage />)} />
 
         </Routes>
       </AnimatePresence>

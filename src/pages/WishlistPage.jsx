@@ -3,12 +3,12 @@ import PageHero from "../components/PageHero";
 import ProductCard from "../components/ProductCard";
 import "./WishlistPage.css";
 
-export default function WishlistPage({ wishlistProducts, onAddToCart, onToggleWishlist }) {
+export default function WishlistPage({ wishlistProducts, onAddToCart, onToggleWishlist, onClearWishlist }) {
   return (
     <main className="wishlist-page">
       <div className="container">
         <PageHero
-          eyebrow="Wishlist"
+          eyebrow=""
           title="Your Saved Frames"
           description="Keep your favorites in one place before you decide."
         />
@@ -32,7 +32,7 @@ export default function WishlistPage({ wishlistProducts, onAddToCart, onToggleWi
                 </span>
               </div>
               <div className="wishlist-summary__actions">
-                <button className="clear-wishlist-btn" onClick={() => {}}>
+                <button className="clear-wishlist-btn" onClick={onClearWishlist}>
                   Clear all
                 </button>
                 <button className="add-all-to-cart-btn" onClick={() => {}}>

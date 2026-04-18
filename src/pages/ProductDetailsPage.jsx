@@ -8,6 +8,7 @@ import {
   ProductLensSelector,
   ProductPurchaseFooter,
 } from "../product";
+import "./Productdetailspage.css";
 
 const EGP_FORMATTER = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -181,7 +182,7 @@ export default function ProductDetailsPage({ onAddToCart }) {
                 <span className="frame-size-chip">Medium</span>
               </div>
               <div>
-                <button className="size-guide-btn">Size guide</button>
+                  <button className="size-guide-btn" onClick={() => navigate("/size-guide")}>Size guide</button>
               </div>
             </div>
 
