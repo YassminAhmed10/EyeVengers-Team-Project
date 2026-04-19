@@ -1,0 +1,472 @@
+/* ============================================================
+   AccountPage.css — AURA Eyewear · Account
+   Aesthetic: luxury editorial · glass & light · refined dark
+   ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap");
+
+/* ══════════════════════════════════════════════
+   VARIABLES
+══════════════════════════════════════════════ */
+:root {
+  --ac-blue:        #1a3cf5;
+  --ac-blue-mid:    rgba(26, 60, 245, 0.18);
+  --ac-blue-light:  rgba(26, 60, 245, 0.08);
+  --ac-white:       #ffffff;
+  --ac-dark:        #0e0e12;
+  --ac-soft:        rgba(255,255,255,0.55);
+  --ac-border:      rgba(255,255,255,0.14);
+  --ac-card-bg:     rgba(255,255,255,0.07);
+  --ac-card-hover:  rgba(255,255,255,0.12);
+  --ac-glass:       rgba(255,255,255,0.72);
+
+  --font-display:   "Cormorant Garamond", Georgia, serif;
+  --font-body:      "DM Sans", sans-serif;
+
+  --radius-sm:  6px;
+  --radius-md:  14px;
+  --radius-lg:  22px;
+  --radius-xl:  32px;
+
+  --shadow-card:  0 4px 32px rgba(0,0,0,0.18), 0 1px 6px rgba(0,0,0,0.10);
+  --shadow-glow:  0 0 0 3px rgba(26,60,245,0.35);
+  --transition:   0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ══════════════════════════════════════════════
+   FIXED BACKGROUND LAYERS
+══════════════════════════════════════════════ */
+.account-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.account-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    140deg,
+    rgba(8, 20, 140, 0.72) 0%,
+    rgba(26, 60, 245, 0.52) 45%,
+    rgba(8, 20, 140, 0.68) 100%
+  );
+}
+
+.account-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(
+    ellipse 90% 80% at 50% 30%,
+    rgba(255,255,255,0.10) 0%,
+    transparent 70%
+  );
+}
+
+/* Grid lines removed */
+.account-grid {
+  display: none;
+}
+
+/* ══════════════════════════════════════════════
+   PAGE WRAPPER
+══════════════════════════════════════════════ */
+.account-page {
+  min-height: 100vh;
+  font-family: var(--font-body);
+  position: relative;
+}
+
+.account-page .container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 3rem 6rem;
+  box-sizing: border-box;
+}
+
+/* ══════════════════════════════════════════════
+   PAGE HERO
+══════════════════════════════════════════════ */
+.account-page .page-hero {
+  padding: 4.5rem 0 3rem;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.account-page .page-hero__eyebrow {
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.65);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.account-page .page-hero__eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 22px;
+  height: 1.5px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 2px;
+}
+
+.account-page .page-hero__title {
+  font-family: var(--font-display);
+  font-size: clamp(2.8rem, 5.5vw, 4.5rem);
+  font-weight: 300;
+  color: var(--ac-white);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.9rem;
+  text-shadow: 0 2px 24px rgba(0,0,0,0.2);
+}
+
+.account-page .page-hero__description {
+  font-size: 1rem;
+  color: rgba(255,255,255,0.65);
+  font-weight: 300;
+  line-height: 1.7;
+  max-width: 44ch;
+}
+
+.account-page .page-hero .inline-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.account-page .page-hero .btn-primary {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--ac-white);
+  background: var(--ac-blue);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1.75rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+
+.account-page .page-hero .btn-primary:hover {
+  background: #0f2bcc;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(26,60,245,0.4);
+}
+
+.account-page .page-hero .btn-secondary {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1.75rem;
+  cursor: pointer;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+  transition: background var(--transition), border-color var(--transition), transform var(--transition);
+}
+
+.account-page .page-hero .btn-secondary:hover {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.4);
+  transform: translateY(-1px);
+}
+
+/* ══════════════════════════════════════════════
+   TABS
+══════════════════════════════════════════════ */
+.account-page .account-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 2rem;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--ac-border);
+  border-radius: var(--radius-lg);
+  padding: 0.3rem;
+  width: fit-content;
+  backdrop-filter: blur(12px);
+}
+
+.account-page .account-tabs button {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.55);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.55rem 1.25rem;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.account-page .account-tabs button:hover {
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.08);
+}
+
+.account-page .account-tabs button.is-active {
+  color: var(--ac-dark);
+  background: var(--ac-white);
+  font-weight: 500;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+/* ══════════════════════════════════════════════
+   INFO CARDS — full page width, 4 equal columns
+══════════════════════════════════════════════ */
+.account-page .cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .account-page .cards-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 540px) {
+  .account-page .cards-grid { grid-template-columns: 1fr; }
+}
+
+.account-page .cards-grid > * {
+  background: rgba(255,255,255,0.11) !important;
+  border: 1px solid rgba(255,255,255,0.22) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.22), 0 1px 8px rgba(0,0,0,0.12) !important;
+  backdrop-filter: blur(20px) !important;
+  padding: 2.25rem 2rem !important;
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition) !important;
+  color: var(--ac-white) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.account-page .cards-grid > *:hover {
+  background: rgba(255,255,255,0.18) !important;
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.28) !important;
+}
+
+.account-page .cards-grid h3,
+.account-page .cards-grid [class*="title"],
+.account-page .cards-grid strong {
+  font-family: var(--font-display);
+  font-size: 1.5rem !important;
+  font-weight: 400;
+  color: var(--ac-white) !important;
+  margin-bottom: 0.65rem;
+  display: block;
+  line-height: 1.2;
+}
+
+.account-page .cards-grid p,
+.account-page .cards-grid [class*="text"] {
+  font-size: 0.92rem !important;
+  color: rgba(255,255,255,0.65) !important;
+  line-height: 1.65;
+  margin-bottom: 1.5rem;
+}
+
+.account-page .cards-grid .btn-link,
+.account-page .cards-grid a {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.85) !important;
+  text-decoration: none;
+  border-bottom: 1.5px solid rgba(255,255,255,0.35);
+  padding-bottom: 2px;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.account-page .cards-grid .btn-link:hover,
+.account-page .cards-grid a:hover {
+  color: var(--ac-white) !important;
+  border-bottom-color: rgba(255,255,255,0.9);
+}
+
+/* ══════════════════════════════════════════════
+   SHOWCASE GRID — full width
+══════════════════════════════════════════════ */
+.account-page .account-showcase-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 780px) {
+  .account-page .account-showcase-grid { grid-template-columns: 1fr; }
+}
+
+.account-page .account-showcase {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--ac-border);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  backdrop-filter: blur(18px);
+  box-shadow: var(--shadow-card);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.account-page .account-showcase__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.account-page .account-showcase__head h3 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: var(--ac-white);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.account-page .account-showcase__head .btn-link {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.account-page .account-showcase__head .btn-link:hover {
+  color: var(--ac-white);
+}
+
+.account-page .account-empty-note {
+  font-size: 0.95rem;
+  color: rgba(255,255,255,0.38);
+  font-style: italic;
+  font-family: var(--font-display);
+  text-align: center;
+  padding: 2.5rem 1rem;
+  line-height: 1.7;
+}
+
+.account-page .account-product-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.account-page .account-product-item {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition), padding var(--transition);
+}
+
+.account-page .account-product-item:last-child {
+  border-bottom: none;
+}
+
+.account-page .account-product-item:hover {
+  background: rgba(255,255,255,0.07);
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.account-page .account-product-item img {
+  width: 56px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.07);
+  padding: 4px;
+}
+
+.account-page .account-product-item > div strong {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.92);
+  margin-bottom: 0.2rem;
+}
+
+.account-page .account-product-item > div p {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.45);
+  margin: 0;
+  line-height: 1;
+}
+
+.account-page .account-product-item > span {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.75);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .account-page .container {
+    padding: 0 1rem 4rem;
+  }
+
+  .account-page .account-tabs {
+    width: 100%;
+  }
+
+  .account-page .account-tabs button {
+    flex: 1;
+    text-align: center;
+  }
+
+  .account-page .account-showcase {
+    padding: 1.25rem;
+  }
+}

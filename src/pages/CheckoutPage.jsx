@@ -1,5 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
+import glassBG6 from "../assets/glassBG6.jpg";
 import PageHero from "../components/PageHero";
+import "./CheckoutPage.css";
 
 const EGP_FORMATTER = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -20,13 +22,21 @@ export default function CheckoutPage({ cartItems, onCheckoutSuccess }) {
     if (typeof onCheckoutSuccess === "function") {
       onCheckoutSuccess();
     }
-
     navigate("/order/success");
   };
 
   if (!cartItems.length) {
     return (
-      <main className="main container">
+      <main
+        className="main container"
+        style={{
+          backgroundImage: `url(${glassBG6})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundAttachment: "fixed",
+          minHeight: "100vh",
+        }}
+      >
         <section className="empty-state">
           <h3>Your cart is empty</h3>
           <p>Please add at least one item before checkout.</p>
@@ -39,9 +49,18 @@ export default function CheckoutPage({ cartItems, onCheckoutSuccess }) {
   }
 
   return (
-    <main className="main container">
+    <main
+      className="main container"
+      style={{
+        backgroundImage: `url(${glassBG6})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+        minHeight: "100vh",
+      }}
+    >
       <PageHero
-        eyebrow="Checkout"
+        eyebrow=""
         title="Secure Checkout"
         description="Complete your order details and place your eyewear order."
       />
@@ -62,8 +81,16 @@ export default function CheckoutPage({ cartItems, onCheckoutSuccess }) {
           </select>
 
           <div className="checkout-form__actions">
-            <button className="btn-primary" type="button" onClick={handlePlaceOrder}>Place Order</button>
-            <button className="btn-secondary" type="button" onClick={() => navigate("/order/failed")}>Simulate Payment Failure</button>
+            <button className="btn-primary" type="button" onClick={handlePlaceOrder}>
+              Place Order
+            </button>
+            <button
+              className="btn-secondary"
+              type="button"
+              onClick={() => navigate("/order/failed")}
+            >
+              Simulate Payment Failure
+            </button>
           </div>
         </form>
 

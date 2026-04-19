@@ -1,0 +1,490 @@
+/* ============================================================
+   TrackOrderPage.css — AURA Eyewear · Track Order
+   Aesthetic: refined luxury · light editorial · optical precision
+   ============================================================ */
+
+/* ── Google Fonts ── */
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap");
+
+/* ══════════════════════════════════════════════
+   CSS VARIABLES
+══════════════════════════════════════════════ */
+:root {
+  --aura-blue: #1a3cf5;
+  --aura-blue-light: #e8edff;
+  --aura-dark: #0e0e12;
+  --aura-mid: #3a3a4a;
+  --aura-soft: #7a7a8a;
+  --aura-border: #e2e4ec;
+  --aura-bg: #f5f6fa;
+  --aura-white: #ffffff;
+
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "DM Sans", sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
+
+  --shadow-card: 0 2px 24px rgba(26, 60, 245, 0.07),
+    0 1px 4px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 0 4px rgba(26, 60, 245, 0.12);
+  --transition: 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ══════════════════════════════════════════════
+   GLOBAL BACKGROUND — applied to body via class
+   Add class="track-bg-active" to <body> in the
+   page component, OR rely on the wrapper below.
+══════════════════════════════════════════════ */
+
+/* Background lives on a dedicated fixed layer so
+   overflow and stacking on child elements never
+   clip or hide it. */
+/* Layer 1 — the actual background image */
+.track-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: var(--track-bg-image); /* set via inline style in JSX */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Layer 2 — blue brand overlay */
+.track-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(26, 60, 245, 0.55) 0%,
+      rgba(10, 30, 180, 0.40) 50%,
+      rgba(26, 60, 245, 0.60) 100%
+    );
+}
+
+/* Layer 3 — subtle white vignette so center text stays readable */
+.track-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 80% 70% at 50% 40%,
+    rgba(255, 255, 255, 0.18) 0%,
+    transparent 70%
+  );
+  z-index: 1;
+}
+
+/* Grid on top of the image */
+.track-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* ══════════════════════════════════════════════
+   PAGE LAYOUT
+══════════════════════════════════════════════ */
+.track-page {
+  min-height: 100vh;
+  font-family: var(--font-body);
+  position: relative;
+}
+
+.track-container {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 2rem 6rem;
+}
+
+/* ══════════════════════════════════════════════
+   HERO — text on blue-overlaid image
+══════════════════════════════════════════════ */
+.track-hero {
+  padding: 5rem 0 3.5rem;
+  background: transparent;
+}
+
+.track-hero__eyebrow {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 1rem;
+  display: none;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.track-hero__eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 24px;
+  height: 1.5px;
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 2px;
+}
+
+.track-hero__title {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  font-weight: 300;
+  color: #ffffff;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  margin: 0 0 1rem;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+}
+
+.track-hero__title em {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.track-hero__desc {
+  font-size: 0.925rem;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 300;
+  line-height: 1.7;
+  max-width: 42ch;
+  margin: 0;
+}
+
+/* ══════════════════════════════════════════════
+   TRACK BOX — main card
+══════════════════════════════════════════════ */
+.track-order-box {
+  background: var(--aura-white);
+  border: 1px solid var(--aura-border);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 2.5rem 3rem;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Corner accent */
+.track-order-box::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle at top right, rgba(26, 60, 245, 0.08), transparent 70%);
+  border-radius: 0 var(--radius-lg) 0 100%;
+  pointer-events: none;
+}
+
+/* ── FORM ── */
+.track-order-box form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+@media (max-width: 600px) {
+  .track-order-box form {
+    grid-template-columns: 1fr;
+  }
+}
+
+.track-order-box input {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 300;
+  color: var(--aura-dark);
+  background: var(--aura-bg);
+  border: 1.5px solid var(--aura-border);
+  border-radius: var(--radius-md);
+  padding: 0.875rem 1.25rem;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+  width: 100%;
+}
+
+.track-order-box input::placeholder {
+  color: #b0b3c1;
+  font-weight: 300;
+}
+
+.track-order-box input:focus {
+  border-color: var(--aura-blue);
+  background: var(--aura-white);
+  box-shadow: var(--shadow-glow);
+}
+
+/* Track button */
+.track-order-box .btn-primary {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--aura-white);
+  background: var(--aura-blue);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.875rem 2rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.track-order-box .btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.track-order-box .btn-primary:hover {
+  background: #0f2bcc;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(26, 60, 245, 0.35);
+}
+
+.track-order-box .btn-primary:hover::after {
+  opacity: 1;
+}
+
+.track-order-box .btn-primary:active {
+  transform: translateY(0);
+}
+
+/* ── DIVIDER ── */
+.track-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 2.5rem 0;
+}
+
+.track-divider::before,
+.track-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--aura-border);
+}
+
+.track-divider span {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #c0c3d0;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════
+   TRACKING STEPS — timeline
+══════════════════════════════════════════════ */
+.track-order-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  position: relative;
+}
+
+/* Horizontal connector line */
+.track-order-steps::before {
+  content: "";
+  position: absolute;
+  top: 22px;
+  left: calc(100% / 8);
+  right: calc(100% / 8);
+  height: 2px;
+  background: var(--aura-border);
+  z-index: 0;
+}
+
+/* Progress fill */
+.track-order-steps[data-active="1"]::before {
+  background: linear-gradient(90deg, var(--aura-blue) 0%, var(--aura-border) 0%);
+}
+.track-order-steps[data-active="2"]::before {
+  background: linear-gradient(90deg, var(--aura-blue) 33%, var(--aura-border) 33%);
+}
+.track-order-steps[data-active="3"]::before {
+  background: linear-gradient(90deg, var(--aura-blue) 67%, var(--aura-border) 67%);
+}
+.track-order-steps[data-active="4"]::before {
+  background: var(--aura-blue);
+}
+
+.track-order-steps li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  padding: 0 0.5rem;
+  animation: stepFadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.track-order-steps li:nth-child(1) { animation-delay: 0.05s; }
+.track-order-steps li:nth-child(2) { animation-delay: 0.15s; }
+.track-order-steps li:nth-child(3) { animation-delay: 0.25s; }
+.track-order-steps li:nth-child(4) { animation-delay: 0.35s; }
+
+@keyframes stepFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Step number bubble */
+.track-order-steps li span {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--aura-white);
+  border: 2px solid var(--aura-border);
+  color: var(--aura-soft);
+  margin-bottom: 0.875rem;
+  transition: all var(--transition);
+  position: relative;
+}
+
+/* Active step */
+.track-order-steps li.is-active span {
+  background: var(--aura-blue);
+  border-color: var(--aura-blue);
+  color: var(--aura-white);
+  box-shadow: 0 0 0 5px rgba(26, 60, 245, 0.15);
+}
+
+/* Current step pulse */
+.track-order-steps li.is-current span::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--aura-blue);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%       { opacity: 0; transform: scale(1.35); }
+}
+
+/* Step label */
+.track-order-steps li p {
+  font-size: 0.78rem;
+  color: var(--aura-soft);
+  line-height: 1.4;
+  font-weight: 300;
+  margin: 0;
+}
+
+.track-order-steps li.is-active p {
+  color: var(--aura-dark);
+  font-weight: 500;
+}
+
+/* Step icon for active check */
+.step-check {
+  display: none;
+}
+
+.track-order-steps li.is-done .step-check {
+  display: block;
+}
+
+.track-order-steps li.is-done .step-num {
+  display: none;
+}
+
+/* ── Estimated delivery badge ── */
+.track-eta {
+  margin-top: 2rem;
+  padding: 1rem 1.5rem;
+  background: var(--aura-blue-light);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  animation: stepFadeUp 0.5s 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.track-eta__icon {
+  width: 32px;
+  height: 32px;
+  background: var(--aura-blue);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.track-eta__icon svg {
+  width: 15px;
+  height: 15px;
+  color: white;
+}
+
+.track-eta__text {
+  font-size: 0.85rem;
+  color: var(--aura-dark);
+}
+
+.track-eta__text strong {
+  font-weight: 500;
+}
+
+.track-eta__text span {
+  color: var(--aura-blue);
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .track-order-steps {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 1.5rem 0;
+  }
+
+  .track-order-steps::before {
+    display: none;
+  }
+
+  .track-order-box {
+    padding: 1.75rem 1.25rem 2rem;
+  }
+
+  .track-page .page-hero {
+    padding: 3rem 0 2rem;
+  }
+}
