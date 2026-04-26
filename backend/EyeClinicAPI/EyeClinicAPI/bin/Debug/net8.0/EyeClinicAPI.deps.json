@@ -9,6 +9,7 @@
       "EyeClinicAPI/1.0.0": {
         "dependencies": {
           "BCrypt.Net-Next": "4.0.3",
+          "Hl7.Fhir.R4": "5.10.0",
           "MailKit": "4.14.1",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.11",
           "Microsoft.EntityFrameworkCore.Design": "8.0.0",
@@ -70,6 +71,50 @@
           "lib/net6.0/BouncyCastle.Cryptography.dll": {
             "assemblyVersion": "2.0.0.0",
             "fileVersion": "2.6.1.59591"
+          }
+        }
+      },
+      "Fhir.Metrics/1.3.0": {
+        "runtime": {
+          "lib/net8.0/Fhir.Metrics.dll": {
+            "assemblyVersion": "1.3.0.0",
+            "fileVersion": "1.3.0.0"
+          }
+        }
+      },
+      "Hl7.Fhir.Base/5.10.0": {
+        "dependencies": {
+          "Fhir.Metrics": "1.3.0",
+          "Newtonsoft.Json": "13.0.4",
+          "System.ComponentModel.Annotations": "5.0.0",
+          "System.Reflection.Emit.Lightweight": "4.7.0"
+        },
+        "runtime": {
+          "lib/net8.0/Hl7.Fhir.Base.dll": {
+            "assemblyVersion": "5.10.0.0",
+            "fileVersion": "5.10.0.0"
+          }
+        }
+      },
+      "Hl7.Fhir.Conformance/5.10.0": {
+        "dependencies": {
+          "Hl7.Fhir.Base": "5.10.0"
+        },
+        "runtime": {
+          "lib/net8.0/Hl7.Fhir.Conformance.dll": {
+            "assemblyVersion": "5.10.0.0",
+            "fileVersion": "5.10.0.0"
+          }
+        }
+      },
+      "Hl7.Fhir.R4/5.10.0": {
+        "dependencies": {
+          "Hl7.Fhir.Conformance": "5.10.0"
+        },
+        "runtime": {
+          "lib/net8.0/Hl7.Fhir.R4.dll": {
+            "assemblyVersion": "5.10.0.0",
+            "fileVersion": "5.10.0.0"
           }
         }
       },
@@ -721,6 +766,7 @@
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
         }
       },
+      "System.ComponentModel.Annotations/5.0.0": {},
       "System.Composition/6.0.0": {
         "dependencies": {
           "System.Composition.AttributedModel": "6.0.0",
@@ -851,6 +897,7 @@
         }
       },
       "System.Numerics.Vectors/4.5.0": {},
+      "System.Reflection.Emit.Lightweight/4.7.0": {},
       "System.Reflection.Metadata/6.0.1": {
         "dependencies": {
           "System.Collections.Immutable": "6.0.0"
@@ -994,6 +1041,34 @@
       "sha512": "sha512-vZsG2YILhthgRqO+ZVgRff4ZFKKTl0v7kqaVBLCtRvpREhfBP33pcWrdA3PRYgWuFL1RxiUFvjMUHTdBZlJcoA==",
       "path": "bouncycastle.cryptography/2.6.1",
       "hashPath": "bouncycastle.cryptography.2.6.1.nupkg.sha512"
+    },
+    "Fhir.Metrics/1.3.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-h4Krc9jt1sY7KIgijwAGkrsPRXa/EHjpL/Gx7sAbjprM6duxtKFI85jzRsHHDqzkWNa7JU14/DELV/vIPp5RqA==",
+      "path": "fhir.metrics/1.3.0",
+      "hashPath": "fhir.metrics.1.3.0.nupkg.sha512"
+    },
+    "Hl7.Fhir.Base/5.10.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-D3jjTPwyud2r/089vRehG9AWx24xCVVS+X6IzQNbLMX3SIB0KdlkxQYURrmA42hjyI9p8lzob2+AeolBHYlRKg==",
+      "path": "hl7.fhir.base/5.10.0",
+      "hashPath": "hl7.fhir.base.5.10.0.nupkg.sha512"
+    },
+    "Hl7.Fhir.Conformance/5.10.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-n3o2VUQzXGMBP/pRm2JzPpYrcqR122QzHXbsgsk3Lq3TtLx3YyMHyTbqaTKXhxKylj9iLLmnZQ0GoyxTytJ/WQ==",
+      "path": "hl7.fhir.conformance/5.10.0",
+      "hashPath": "hl7.fhir.conformance.5.10.0.nupkg.sha512"
+    },
+    "Hl7.Fhir.R4/5.10.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-RPxpu9YUMJjCgOA7mzFdOTcm8EpR+365qNtFhPYscapr7tAsThJ9ROdJYspLFGOZgxT2auJBFCuga0CrkdTgKw==",
+      "path": "hl7.fhir.r4/5.10.0",
+      "hashPath": "hl7.fhir.r4.5.10.0.nupkg.sha512"
     },
     "Humanizer.Core/2.14.1": {
       "type": "package",
@@ -1338,6 +1413,13 @@
       "path": "system.collections.immutable/6.0.0",
       "hashPath": "system.collections.immutable.6.0.0.nupkg.sha512"
     },
+    "System.ComponentModel.Annotations/5.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-dMkqfy2el8A8/I76n2Hi1oBFEbG1SfxD2l5nhwXV3XjlnOmwxJlQbYpJH4W51odnU9sARCSAgv7S3CyAFMkpYg==",
+      "path": "system.componentmodel.annotations/5.0.0",
+      "hashPath": "system.componentmodel.annotations.5.0.0.nupkg.sha512"
+    },
     "System.Composition/6.0.0": {
       "type": "package",
       "serviceable": true,
@@ -1442,6 +1524,13 @@
       "sha512": "sha512-QQTlPTl06J/iiDbJCiepZ4H//BVraReU4O4EoRw1U02H5TLUIT7xn3GnDp9AXPSlJUDyFs4uWjWafNX6WrAojQ==",
       "path": "system.numerics.vectors/4.5.0",
       "hashPath": "system.numerics.vectors.4.5.0.nupkg.sha512"
+    },
+    "System.Reflection.Emit.Lightweight/4.7.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-a4OLB4IITxAXJeV74MDx49Oq2+PsF6Sml54XAFv+2RyWwtDBcabzoxiiJRhdhx+gaohLh4hEGCLQyBozXoQPqA==",
+      "path": "system.reflection.emit.lightweight/4.7.0",
+      "hashPath": "system.reflection.emit.lightweight.4.7.0.nupkg.sha512"
     },
     "System.Reflection.Metadata/6.0.1": {
       "type": "package",

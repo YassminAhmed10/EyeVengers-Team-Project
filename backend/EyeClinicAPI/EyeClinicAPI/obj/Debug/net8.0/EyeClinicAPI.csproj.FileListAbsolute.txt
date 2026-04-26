@@ -287,3 +287,7 @@ C:\Users\LOQ\Downloads\backup\EyeVengers-Team-Project\backend\EyeClinicAPI\EyeCl
 C:\Users\LOQ\Downloads\backup\EyeVengers-Team-Project\backend\EyeClinicAPI\EyeClinicAPI\bin\Debug\net8.0\MimeKit.dll
 C:\Users\LOQ\Downloads\backup\EyeVengers-Team-Project\backend\EyeClinicAPI\EyeClinicAPI\bin\Debug\net8.0\System.Security.Cryptography.Pkcs.dll
 C:\Users\LOQ\Downloads\backup\EyeVengers-Team-Project\backend\EyeClinicAPI\EyeClinicAPI\bin\Debug\net8.0\runtimes\win\lib\net8.0\System.Security.Cryptography.Pkcs.dll
+C:\Users\LOQ\Downloads\backup\EyeVengers-Team-Project\backend\EyeClinicAPI\EyeClinicAPI\bin\Debug\net8.0\Fhir.Metrics.dll
+C:\Users\LOQ\Downloads\backup\EyeVengers-Team-Project\backend\EyeClinicAPI\EyeClinicAPI\bin\Debug\net8.0\Hl7.Fhir.Base.dll
+C:\Users\LOQ\Downloads\backup\EyeVengers-Team-Project\backend\EyeClinicAPI\EyeClinicAPI\bin\Debug\net8.0\Hl7.Fhir.Conformance.dll
+C:\Users\LOQ\Downloads\backup\EyeVengers-Team-Project\backend\EyeClinicAPI\EyeClinicAPI\bin\Debug\net8.0\Hl7.Fhir.R4.dll

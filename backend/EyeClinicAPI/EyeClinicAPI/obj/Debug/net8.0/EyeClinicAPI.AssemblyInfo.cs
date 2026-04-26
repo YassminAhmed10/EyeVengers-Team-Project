@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EyeClinicAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+479579afa9e514f527b14895067670a5591d38aa")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9178f7b809b9fc99fd19a65d1cfe57c7aa9daef8")]
 [assembly: System.Reflection.AssemblyProductAttribute("EyeClinicAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EyeClinicAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

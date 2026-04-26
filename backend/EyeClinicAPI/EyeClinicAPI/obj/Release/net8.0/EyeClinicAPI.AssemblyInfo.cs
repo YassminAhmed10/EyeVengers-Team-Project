@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EyeClinicAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+07c41be2d423cc55bca5a8b6b63252422a662054")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9178f7b809b9fc99fd19a65d1cfe57c7aa9daef8")]
 [assembly: System.Reflection.AssemblyProductAttribute("EyeClinicAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EyeClinicAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

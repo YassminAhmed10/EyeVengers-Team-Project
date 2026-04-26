@@ -15,6 +15,19 @@ builder.Services.AddDbContext<EyeClinicDbContext>(options =>
 // Register Email Service
 builder.Services.AddScoped<IEmailService, EmailService>();
 
+// Register RadiologyCenter FHIR Client Service
+builder.Services.AddHttpClient<IRadiologyCenterFhirClient, RadiologyCenterFhirClient>()
+    .ConfigureHttpClient((serviceProvider, httpClient) =>
+    {
+        var config = serviceProvider.GetRequiredService<IConfiguration>();
+        var radiologyCenterUrl = config["RadiologyCenter:BaseUrl"] ?? "http://localhost:7001";
+        httpClient.BaseAddress = new Uri(radiologyCenterUrl);
+        httpClient.Timeout = TimeSpan.FromSeconds(30);
+    });
+
+// Register Investigation to FHIR Mapper Service
+builder.Services.AddScoped<IInvestigationToFhirMapper, InvestigationToFhirMapper>();
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {

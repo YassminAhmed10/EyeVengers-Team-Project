@@ -83,20 +83,42 @@ export default function SignUpPage() {
     if (!formData.fullName || !formData.email || !formData.password) { setError("Please fill in all required fields."); return; }
     setLoading(true); setError("");
     try {
-      const data = await authApi.register({
+      // Split full name into first and last name
+      const nameParts = formData.fullName.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      // Updated register data with patient fields
+      const registerData = {
         username: formData.fullName.trim(),
         email: formData.email.trim().toLowerCase(),
-        passwordHash: formData.password,
+        password: formData.password,  // Note: changed from passwordHash to password
         role: "Patient",
-      });
+        // Patient specific fields
+        firstName: firstName,
+        lastName: lastName,
+        phone: formData.phone || "",
+        dateOfBirth: formData.dateOfBirth || null,
+      };
+      
+      const data = await authApi.register(registerData);
+      
+      // Store user data
       localStorage.setItem("userRole","Patient");
       localStorage.setItem("userName",formData.fullName);
       localStorage.setItem("userEmail",formData.email);
       localStorage.setItem("patientName",formData.fullName);
       localStorage.setItem("patientEmail",formData.email);
-      localStorage.setItem("patientPhone",formData.phone);
-      localStorage.setItem("patientDateOfBirth",formData.dateOfBirth);
-      if (data.patientId) localStorage.setItem("patientId",data.patientId);
+      localStorage.setItem("patientPhone",formData.phone || "");
+      localStorage.setItem("patientDateOfBirth",formData.dateOfBirth || "");
+      
+      // Store patient ID if returned
+      if (data.user?.patientId) {
+        localStorage.setItem("patientId", data.user.patientId.toString());
+      } else if (data.patientId) {
+        localStorage.setItem("patientId", data.patientId.toString());
+      }
+      
       alert("Account created successfully! Please login with your credentials.");
       navigate("/login");
     } catch (err) {
@@ -210,12 +232,11 @@ const s = {
     zIndex:1,
   },
 
-  /* ── Card: much bigger ── */
   card: {
     position:"relative", zIndex:2,
-    width:"100%", maxWidth:780,           /* was 640 */
+    width:"100%", maxWidth:780,
     margin:"24px 16px",
-    padding:"64px 90px 60px",            /* was 52px 64px 48px */
+    padding:"64px 90px 60px",
     borderRadius:36,
     background:"rgba(255,255,255,0.13)",
     backdropFilter:"blur(28px)", WebkitBackdropFilter:"blur(28px)",

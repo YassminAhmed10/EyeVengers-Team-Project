@@ -3,6 +3,7 @@ import "./App.css";
 import Footer from "./components/Radiology/Footer";
 import Navbar from "./components/Radiology/Navbar";
 import SendModal from "./components/Radiology/SendModal";
+import SuccessModal from "./components/Radiology/SuccessModal";
 import useGlobalUiMotion from "./hooks/useGlobalUiMotion";
 import BookingPage from "./pages/Radiology/BookingPage";
 import ConfirmPage from "./pages/Radiology/ConfirmPage";
@@ -18,8 +19,18 @@ import ServicesPage from "./pages/Radiology/ServicesPage";
 
 export default function App() {
   const [page, setPage] = useState("home");
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(
+    () => !!localStorage.getItem("radiologyPatientName")
+  );
   const [showSendModal, setShowSendModal] = useState(false);
+
+  // Global success modal state — controlled at App level so it's always centered
+  const [successModal, setSuccessModal] = useState({
+    isOpen: false,
+    message: "",
+    redirectTo: "home",
+  });
+
   const scrollProgress = useGlobalUiMotion(page, showSendModal);
 
   const goPage = (p) => {
@@ -27,21 +38,39 @@ export default function App() {
     window.scrollTo({ top: 0 });
   };
 
-  const contentPages = useMemo(() => new Set(["home", "services", "doctors", "booking", "results", "report", "contact"]), []);
-  const hideFooterPages = useMemo(() => new Set(["register", "login", "confirm"]), []);
+  // Show success modal then redirect after 2 seconds
+  const showSuccess = (message, redirectTo = "home") => {
+    setSuccessModal({ isOpen: true, message, redirectTo });
+    setTimeout(() => {
+      setSuccessModal(prev => ({ ...prev, isOpen: false }));
+      goPage(redirectTo);
+    }, 2200);
+  };
+
+  const handleLogin = (userData) => {
+    if (userData && userData.name) {
+      localStorage.setItem("radiologyPatientName", userData.name);
+      localStorage.setItem("radiologyPatientId", userData.id || "");
+      localStorage.setItem("radiologyPatientEmail", userData.email || "");
+    }
+    setLoggedIn(true);
+  };
+
+  const contentPages   = useMemo(() => new Set(["home","services","doctors","booking","results","report","contact"]), []);
+  const hideFooterPages = useMemo(() => new Set(["register","login","confirm"]), []);
 
   const pageMap = {
-    home: <HomePage setPage={goPage} />,
+    home:     <HomePage     setPage={goPage} />,
     services: <ServicesPage setPage={goPage} />,
-    doctors: <DoctorsPage setPage={goPage} />,
-    booking: <BookingPage setPage={goPage} />,
-    confirm: <ConfirmPage setPage={goPage} />,
-    results: <ResultsPage setPage={goPage} setShowSendModal={setShowSendModal} />,
-    report: <ReportPage setPage={goPage} setShowSendModal={setShowSendModal} />,
-    register: <RegisterPage setPage={goPage} onLogin={() => setLoggedIn(true)} />,
-    login: <LoginPage setPage={goPage} onLogin={() => setLoggedIn(true)} />,
-    profile: <ProfilePage setPage={goPage} />,
-    contact: <ContactPage />,
+    doctors:  <DoctorsPage  setPage={goPage} />,
+    booking:  <BookingPage  setPage={goPage} />,
+    confirm:  <ConfirmPage  setPage={goPage} />,
+    results:  <ResultsPage  setPage={goPage} setShowSendModal={setShowSendModal} />,
+    report:   <ReportPage   setPage={goPage} setShowSendModal={setShowSendModal} />,
+    register: <RegisterPage setPage={goPage} onLogin={handleLogin} showSuccess={showSuccess} />,
+    login:    <LoginPage    setPage={goPage} onLogin={handleLogin} showSuccess={showSuccess} />,
+    profile:  <ProfilePage  setPage={goPage} />,
+    contact:  <ContactPage />,
   };
 
   return (
@@ -55,6 +84,13 @@ export default function App() {
       </main>
       {!hideFooterPages.has(page) && <Footer setPage={goPage} />}
       {showSendModal && <SendModal onClose={() => setShowSendModal(false)} />}
+
+      {/* Global SuccessModal — at root level, always perfectly centered */}
+      <SuccessModal
+        isOpen={successModal.isOpen}
+        message={successModal.message}
+        onClose={() => setSuccessModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </>
   );
 }

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import { SignalRProvider } from './context/SignalRContext'
 import { PatientProvider } from './context/PatientContext'
+import { AuthProvider } from './context/AuthContext'
 import './index.css'
 
 const queryClient = new QueryClient()
@@ -15,7 +16,9 @@ createRoot(document.getElementById('root')).render(
       <BrowserRouter>
         <SignalRProvider>
           <PatientProvider>
-            <App />
+            <AuthProvider>
+              <App />
+            </AuthProvider>
           </PatientProvider>
         </SignalRProvider>
       </BrowserRouter>

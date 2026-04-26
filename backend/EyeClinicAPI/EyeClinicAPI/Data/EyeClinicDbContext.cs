@@ -56,6 +56,9 @@ public partial class EyeClinicDbContext : DbContext
 
     public virtual DbSet<WasteManagement> WasteManagement { get; set; }
 
+    // Doctor Orders
+    public virtual DbSet<EyeClinicAPI.Models.Clinic.DoctorOrder> DoctorOrders { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=EyeClinicDB;Integrated Security=True;Connect Timeout=30;Encrypt=False;");
@@ -112,102 +115,73 @@ public partial class EyeClinicDbContext : DbContext
         modelBuilder.Entity<Diagnosis>(entity =>
         {
             entity.HasIndex(e => e.CheckupDate, "IX_Diagnoses_CheckupDate");
-
             entity.HasIndex(e => e.MedicalRecordId, "IX_Diagnoses_MedicalRecordId");
-
             entity.Property(e => e.ICD10Code).HasColumnName("ICD10Code");
-
             entity.HasOne(d => d.MedicalRecord).WithMany(p => p.Diagnoses).HasForeignKey(d => d.MedicalRecordId);
         });
 
         modelBuilder.Entity<Doctor>(entity =>
         {
             entity.HasIndex(e => e.Email, "IX_Doctors_Email").IsUnique();
-
             entity.HasIndex(e => e.LicenseNumber, "IX_Doctors_LicenseNumber").IsUnique();
-
             entity.Property(e => e.ClinicAddress).HasMaxLength(200);
-            entity.Property(e => e.Email)
-                .IsRequired()
-                .HasMaxLength(100);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
             entity.Property(e => e.EmergencyContact).HasMaxLength(20);
-            entity.Property(e => e.FullName)
-                .IsRequired()
-                .HasMaxLength(100);
+            entity.Property(e => e.FullName).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Gender).IsRequired();
-            entity.Property(e => e.LicenseNumber)
-                .IsRequired()
-                .HasMaxLength(50);
+            entity.Property(e => e.LicenseNumber).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Notes).HasMaxLength(500);
-            entity.Property(e => e.PhoneNumber)
-                .IsRequired()
-                .HasMaxLength(20);
+            entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(20);
             entity.Property(e => e.Qualifications).HasMaxLength(500);
-            entity.Property(e => e.Specialization)
-                .IsRequired()
-                .HasMaxLength(100);
+            entity.Property(e => e.Specialization).IsRequired().HasMaxLength(100);
         });
 
         modelBuilder.Entity<DoctorSchedule>(entity =>
         {
             entity.HasKey(e => e.ScheduleId);
-
             entity.HasIndex(e => new { e.DoctorId, e.DayOfWeek }, "IX_DoctorSchedules_DoctorId_DayOfWeek");
-
             entity.HasOne(d => d.Doctor).WithMany().HasForeignKey(d => d.DoctorId);
         });
 
         modelBuilder.Entity<EyeExamination>(entity =>
         {
             entity.HasIndex(e => e.IsArchived, "IX_EyeExaminations_IsArchived");
-
             entity.HasIndex(e => e.MedicalRecordId, "IX_EyeExaminations_MedicalRecordId");
-
             entity.HasOne(d => d.MedicalRecord).WithMany(p => p.EyeExaminations).HasForeignKey(d => d.MedicalRecordId);
         });
 
         modelBuilder.Entity<Investigation>(entity =>
         {
             entity.HasIndex(e => e.MedicalRecordId, "IX_Investigations_MedicalRecordId");
-
             entity.HasOne(d => d.MedicalRecord).WithMany(p => p.Investigations).HasForeignKey(d => d.MedicalRecordId);
         });
 
         modelBuilder.Entity<MedicalHistory>(entity =>
         {
             entity.HasIndex(e => e.IsArchived, "IX_MedicalHistories_IsArchived");
-
             entity.HasIndex(e => e.MedicalRecordId, "IX_MedicalHistories_MedicalRecordId");
-
             entity.HasOne(d => d.MedicalRecord).WithMany(p => p.Histories).HasForeignKey(d => d.MedicalRecordId);
         });
 
         modelBuilder.Entity<MedicalRecord>(entity =>
         {
             entity.HasIndex(e => e.Id, "IX_MedicalRecords_Id");
-
             entity.HasIndex(e => e.PatientId, "IX_MedicalRecords_PatientId");
-
             entity.Property(e => e.PatientIdentifier).HasMaxLength(100);
         });
 
         modelBuilder.Entity<MedicalTestFile>(entity =>
         {
             entity.HasIndex(e => e.FileType, "IX_MedicalTestFiles_FileType");
-
             entity.HasIndex(e => e.MedicalRecordId, "IX_MedicalTestFiles_MedicalRecordId");
-
             entity.HasOne(d => d.MedicalRecord).WithMany(p => p.MedicalTestFiles).HasForeignKey(d => d.MedicalRecordId);
         });
 
         modelBuilder.Entity<Operation>(entity =>
         {
             entity.HasIndex(e => e.Date, "IX_Operations_Date");
-
             entity.HasIndex(e => e.IsArchived, "IX_Operations_IsArchived");
-
             entity.HasIndex(e => e.MedicalRecordId, "IX_Operations_MedicalRecordId");
-
             entity.Property(e => e.Anesthesia).IsRequired();
             entity.Property(e => e.Complications).IsRequired();
             entity.Property(e => e.Diagnosis).IsRequired();
@@ -215,50 +189,30 @@ public partial class EyeClinicDbContext : DbContext
             entity.Property(e => e.Eye).IsRequired();
             entity.Property(e => e.FollowUp).IsRequired();
             entity.Property(e => e.Name).IsRequired();
-            entity.Property(e => e.Notes)
-                .IsRequired()
-                .HasDefaultValue("");
-            entity.Property(e => e.OperationName)
-                .IsRequired()
-                .HasDefaultValue("");
+            entity.Property(e => e.Notes).IsRequired().HasDefaultValue("");
+            entity.Property(e => e.OperationName).IsRequired().HasDefaultValue("");
             entity.Property(e => e.PostMedications).IsRequired();
             entity.Property(e => e.PreMedications).IsRequired();
             entity.Property(e => e.SpecialInstructions).IsRequired();
             entity.Property(e => e.Status).IsRequired();
             entity.Property(e => e.Surgeon).IsRequired();
-
             entity.HasOne(d => d.MedicalRecord).WithMany(p => p.Operations).HasForeignKey(d => d.MedicalRecordId);
         });
 
         modelBuilder.Entity<Patient>(entity =>
         {
             entity.HasIndex(e => e.Email, "IX_Patients_Email");
-
             entity.HasIndex(e => e.Id, "IX_Patients_Id").IsUnique();
-
             entity.HasIndex(e => e.Phone, "IX_Patients_Phone");
-
             entity.Property(e => e.Address).IsRequired();
             entity.Property(e => e.Email).IsRequired();
-            entity.Property(e => e.EmergencyContactName)
-                .IsRequired()
-                .HasDefaultValue("");
-            entity.Property(e => e.EmergencyContactPhone)
-                .IsRequired()
-                .HasDefaultValue("");
-            entity.Property(e => e.FirstName)
-                .IsRequired()
-                .HasDefaultValue("");
+            entity.Property(e => e.EmergencyContactName).IsRequired().HasDefaultValue("");
+            entity.Property(e => e.EmergencyContactPhone).IsRequired().HasDefaultValue("");
+            entity.Property(e => e.FirstName).IsRequired().HasDefaultValue("");
             entity.Property(e => e.Gender).IsRequired();
-            entity.Property(e => e.InsuranceCompany)
-                .IsRequired()
-                .HasDefaultValue("");
-            entity.Property(e => e.InsuranceId)
-                .IsRequired()
-                .HasDefaultValue("");
-            entity.Property(e => e.LastName)
-                .IsRequired()
-                .HasDefaultValue("");
+            entity.Property(e => e.InsuranceCompany).IsRequired().HasDefaultValue("");
+            entity.Property(e => e.InsuranceId).IsRequired().HasDefaultValue("");
+            entity.Property(e => e.LastName).IsRequired().HasDefaultValue("");
             entity.Property(e => e.NationalId).IsRequired();
             entity.Property(e => e.Phone).IsRequired();
         });
@@ -266,17 +220,56 @@ public partial class EyeClinicDbContext : DbContext
         modelBuilder.Entity<PatientComplaint>(entity =>
         {
             entity.HasIndex(e => e.IsArchived, "IX_PatientComplaints_IsArchived");
-
             entity.HasIndex(e => e.MedicalRecordId, "IX_PatientComplaints_MedicalRecordId");
-
             entity.HasOne(d => d.MedicalRecord).WithMany(p => p.Complaints).HasForeignKey(d => d.MedicalRecordId);
         });
 
         modelBuilder.Entity<Prescription>(entity =>
         {
             entity.HasIndex(e => e.MedicalRecordId, "IX_Prescriptions_MedicalRecordId");
-
             entity.HasOne(d => d.MedicalRecord).WithMany(p => p.Prescriptions).HasForeignKey(d => d.MedicalRecordId);
+        });
+
+        // ── Doctor Orders ─────────────────────────────────────────────────────
+        modelBuilder.Entity<EyeClinicAPI.Models.Clinic.DoctorOrder>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasIndex(e => e.PatientId,       "IX_DoctorOrders_PatientId");
+            entity.HasIndex(e => e.MedicalRecordId, "IX_DoctorOrders_MedicalRecordId");
+            entity.HasIndex(e => e.Status,          "IX_DoctorOrders_Status");
+
+            entity.Property(e => e.OrderType)
+                  .IsRequired()
+                  .HasMaxLength(50);
+
+            entity.Property(e => e.DataJson)
+                  .IsRequired()
+                  .HasColumnType("nvarchar(max)");
+
+            entity.Property(e => e.Status)
+                  .IsRequired()
+                  .HasMaxLength(50)
+                  .HasDefaultValue("PendingPatientApproval");
+
+            entity.Property(e => e.RejectionReason)
+                  .HasMaxLength(500);
+
+            entity.Property(e => e.AppointmentTime)
+                  .HasMaxLength(10);
+
+            entity.Property(e => e.ExternalSystemConfirmationId)
+                  .HasMaxLength(100);
+
+            entity.HasOne<EyeClinicAPI.Models.EMR.Patient>(e => e.Patient)
+                  .WithMany()
+                  .HasForeignKey(e => e.PatientId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne<EyeClinicAPI.Models.EMR.MedicalRecord>(e => e.MedicalRecord)
+                  .WithMany()
+                  .HasForeignKey(e => e.MedicalRecordId)
+                  .OnDelete(DeleteBehavior.NoAction);
         });
     }
 

@@ -21,7 +21,6 @@ namespace EyeClinicAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Patient>>> GetPatients()
         {
-            // Get all patients from database
             var patients = await _context.Patients
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
@@ -35,6 +34,30 @@ namespace EyeClinicAPI.Controllers
             var patient = await _context.Patients.FindAsync(id);
             if (patient == null) return NotFound();
             return patient;
+        }
+
+        [HttpGet("debug/{id}")]
+        public async Task<ActionResult<object>> DebugGetPatient(int id)
+        {
+            var patient = await _context.Patients.FindAsync(id);
+            if (patient == null)
+            {
+                return NotFound(new { message = $"Patient with ID {id} not found in database" });
+            }
+            
+            return Ok(new
+            {
+                patient.Id,
+                patient.FirstName,
+                patient.LastName,
+                patient.Email,
+                patient.Phone,
+                DateOfBirth = patient.DateOfBirth.ToString("yyyy-MM-dd"),
+                patient.Gender,
+                patient.Address,
+                patient.NationalId,
+                patient.CreatedAt
+            });
         }
 
         [HttpGet("search")]

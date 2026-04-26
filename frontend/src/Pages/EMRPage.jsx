@@ -827,11 +827,13 @@ function EMRPage() {
                 {patientData && (
                     <MedicalRecord
                         patientName={patientData.name}
-                        patientId={numericPatientId || patientData.patientID} // ✅ دايمًا الـ ID الرقمي
+                        patientId={numericPatientId || patientData.patientID}
                         initialPatientData={patientData}
                         fromAppointment={!medicalRecordExists}
                         medicalRecordId={medicalRecordId}
                         onSectionSaved={onSectionSaved}
+                        readOnly={userRole === 'Patient'}
+                        userRole={userRole}
                     />
                 )}
             </main>

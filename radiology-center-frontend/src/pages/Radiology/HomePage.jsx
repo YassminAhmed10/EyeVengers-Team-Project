@@ -33,7 +33,7 @@ const LANG = {
       h1a: "أفضل جودة",
       h1b: "تصوير طبي",
       h1c: "لصحتك",
-      desc: "مركز Imagon للأشعة يقدم أحدث تقنيات التصوير الطبي بأيدي نخبة من أفضل الأطباء. نتائجك في 24 ساعة، وخدمتك أولويتنا.",
+      desc: "مركز Nile Radiology يقدم أحدث تقنيات التصوير الطبي بأيدي نخبة من أفضل الأطباء. نتائجك في 24 ساعة، وخدمتك أولويتنا.",
       cta1: "احجز موعدك الآن",
       cta2: "خدماتنا",
     },
@@ -99,7 +99,7 @@ const LANG = {
     trust: [["50K+","مريض تم خدمتهم"],["98%","دقة التشخيص"],["24h","تسليم النتائج"],["15+","طبيب متخصص"]],
     stats:  [["24/7","خدمة عملاء"],["1.5T","MRI متطور"],["45m","متوسط وقت التقرير"],["4.9/5","تقييم المرضى"]],
     scrollCards: {
-      eyebrow: "خدماتنا المتميزة", title: "لماذا تختار Imagon؟", subtitle: "مزيج فريد من التقنية المتقدمة والرعاية الإنسانية",
+      eyebrow: "خدماتنا المتميزة", title: "لماذا تختار Nile Radiology؟", subtitle: "مزيج فريد من التقنية المتقدمة والرعاية الإنسانية",
     },
   },
   en: {
@@ -109,7 +109,7 @@ const LANG = {
       h1a: "Best Quality",
       h1b: "Medical Imaging",
       h1c: "For You",
-      desc: "Imagon Radiology Center provides the latest medical imaging technology in the hands of Egypt's finest specialists. Results in 24 hours, your care is our priority.",
+      desc: "Nile Radiology Center provides the latest medical imaging technology in the hands of Egypt's finest specialists. Results in 24 hours, your care is our priority.",
       cta1: "Book an Appointment",
       cta2: "Our Services",
     },
@@ -175,7 +175,7 @@ const LANG = {
     trust: [["50K+","Patients Served"],["98%","Diagnostic Accuracy"],["24h","Report Delivery"],["15+","Specialist Doctors"]],
     stats:  [["24/7","Customer Service"],["1.5T","Advanced MRI"],["45m","Avg. Report Time"],["4.9/5","Patient Rating"]],
     scrollCards: {
-      eyebrow: "Our Services", title: "Why Choose Imagon?", subtitle: "A unique blend of advanced technology and human care",
+      eyebrow: "Our Services", title: "Why Choose Nile Radiology?", subtitle: "A unique blend of advanced technology and human care",
     },
   },
 };
@@ -598,9 +598,9 @@ export default function HomePage({ setPage }) {
             {/* Doctor cards row */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 28 }}>
               {[
-                { img: "/src/assets/radiologyhomedoctor1.png", name: lang==="ar"?"د. سارة محمود":"Dr. Sarah Mahmoud",   spec: lang==="ar"?"أشعة تشخيصية":"Diagnostic Radiology", exp: lang==="ar"?"12 سنة خبرة":"12 Years Experience", tags: lang==="ar"?["MRI","CT","عصبي"]:["MRI","CT","Neuro"], accent: C.primary },
-                { img: "/src/assets/radiologyhomedoctor3.png", name: lang==="ar"?"د. أحمد الجندي":"Dr. Ahmed Jundi",    spec: lang==="ar"?"أشعة تداخلية":"Interventional Radiology", exp: lang==="ar"?"9 سنوات خبرة":"9 Years Experience",  tags: lang==="ar"?["تداخلي","أوعية","قلب"]:["Interventional","Vascular","Cardiac"], accent: C.teal },
-                { img: "/src/assets/radiologyhomedoctor2.png", name: lang==="ar"?"د. ريم خالد":"Dr. Reem Khaled",       spec: lang==="ar"?"أشعة الثدي":"Breast Imaging",           exp: lang==="ar"?"15 سنة خبرة":"15 Years Experience", tags: lang==="ar"?["ثدي","موجات صوتية","AI"]:["Breast","Ultrasound","AI"], accent: "#7c3aed" },
+                { img: "/src/assets/radiologyhomedoctor3.png", name: lang==="ar"?"د. سارة محمود":"Dr. Sarah Mahmoud",   spec: lang==="ar"?"أشعة تشخيصية":"Diagnostic Radiology", exp: lang==="ar"?"12 سنة خبرة":"12 Years Experience", tags: lang==="ar"?["MRI","CT","عصبي"]:["MRI","CT","Neuro"], accent: C.primary },
+                { img: "/src/assets/radiologyhomedoctor1.png", name: lang==="ar"?"د. أحمد الجندي":"Dr. Ahmed Jundi",    spec: lang==="ar"?"أشعة تداخلية":"Interventional Radiology", exp: lang==="ar"?"9 سنوات خبرة":"9 Years Experience",  tags: lang==="ar"?["تداخلي","أوعية","قلب"]:["Interventional","Vascular","Cardiac"], accent: C.teal },
+                { img: "/src/assets/radiologyhomedoctor2.png", name: lang==="ar"?"علي خالد":"Dr. Ali Khaled",       spec: lang==="ar"?"أشعة الثدي":"Breast Imaging",           exp: lang==="ar"?"15 سنة خبرة":"15 Years Experience", tags: lang==="ar"?["ثدي","موجات صوتية","AI"]:["Breast","Ultrasound","AI"], accent: "#7c3aed" },
               ].map((doc, i) => (
                 <motion.div
                   key={doc.name}
@@ -865,7 +865,6 @@ export default function HomePage({ setPage }) {
       {/* ══════════════════════════════════
           7. SCROLL STACKING CARDS
       ══════════════════════════════════ */}
-      <div style={{ height: 80, background: "#f0f4f8" }} />
       <StackingCardsSection t={t} />
 
 

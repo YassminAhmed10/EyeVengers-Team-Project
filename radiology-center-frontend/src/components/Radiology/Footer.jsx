@@ -1,35 +1,64 @@
-import ScanIcon from "./ScanIcon";
+import { useState } from "react";
+import logoSrc from "../../assets/logo.png";
 
 export default function Footer({ setPage }) {
+  const [logoOk, setLogoOk] = useState(true);
   return (
-    <footer className="footer" dir="rtl">
+    <footer className="footer" dir="ltr">
       <div className="container">
         <div className="footer-grid">
           <div className="footer-brand">
-            <div className="nav-logo-mark">
-              <ScanIcon />
-            </div>
+            {logoOk && logoSrc ? (
+              <img
+                src={logoSrc}
+                alt="Nile Radiology Logo"
+                onError={() => setLogoOk(false)}
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 12,
+                  objectFit: "cover",
+                  marginBottom: 12,
+                }}
+              />
+            ) : (
+              <div style={{
+                width: 64,
+                height: 64,
+                borderRadius: 12,
+                background: "linear-gradient(135deg, #1f6bff, #00b8a8)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+                fontSize: 24,
+                fontWeight: 800,
+                marginBottom: 12,
+              }}>
+                NR
+              </div>
+            )}
             <div style={{ fontSize: 18, fontWeight: 700, color: "#fff", marginTop: 12 }}>
-              Ima<span style={{ color: "var(--primary)" }}>gon</span>
+              Nile <span style={{ color: "var(--primary)" }}>Radiology</span>
             </div>
-            <p className="footer-desc">مركز Imagon للأشعة التشخيصية — وجهتك الأولى لأحدث خدمات التصوير الطبي بأعلى معايير الجودة منذ 2010.</p>
+            <p className="footer-desc">Nile Radiology Center — Your premier destination for cutting-edge medical imaging services with the highest quality standards since 2010.</p>
           </div>
           <div className="footer-col">
-            <h5>خدماتنا</h5>
-            {["رنين مغناطيسي", "أشعة مقطعية", "أشعة سينية", "سونار", "طب نووي"].map((s) => (
+            <h5>Services</h5>
+            {["MRI Scan", "CT Scan", "X-Ray", "Ultrasound", "Nuclear Medicine"].map((s) => (
               <a key={s} onClick={() => setPage("services")}>
                 {s}
               </a>
             ))}
           </div>
           <div className="footer-col">
-            <h5>للمريض</h5>
+            <h5>For Patients</h5>
             {[
-              ["تسجيل جديد", "register"],
-              ["تسجيل الدخول", "login"],
-              ["حجز موعد", "booking"],
-              ["نتائجي", "results"],
-              ["الأطباء", "doctors"],
+              ["Register", "register"],
+              ["Login", "login"],
+              ["Book Appointment", "booking"],
+              ["My Results", "results"],
+              ["Our Doctors", "doctors"],
             ].map(([l, p]) => (
               <a key={l} onClick={() => setPage(p)}>
                 {l}
@@ -37,16 +66,16 @@ export default function Footer({ setPage }) {
             ))}
           </div>
           <div className="footer-col">
-            <h5>تواصل معنا</h5>
-            <a>📍 الدقي، الجيزة</a>
+            <h5>Contact Us</h5>
+            <a>📍 Dokki, Giza</a>
             <a>📞 02-37600000</a>
             <a>💬 01000000000</a>
-            <a>✉ info@imagon.eg</a>
+            <a>✉ info@nileradiology.eg</a>
           </div>
         </div>
         <div className="footer-bottom">
-          <div className="footer-copy">© 2025 Imagon Radiology Center — جميع الحقوق محفوظة</div>
-          <div className="footer-copy">سياسة الخصوصية · الشروط والأحكام</div>
+          <div className="footer-copy">© 2025 Nile Radiology Center — All Rights Reserved</div>
+          <div className="footer-copy">Privacy Policy · Terms & Conditions</div>
         </div>
       </div>
     </footer>

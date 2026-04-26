@@ -105,7 +105,6 @@ export const appointmentsApi = {
     create: (data) => apiClient.post('/Appointments', data).then(res => res.data),
     update: (id, data) => apiClient.put(`/Appointments/${id}`, data).then(res => res.data),
     delete: (id) => apiClient.delete(`/Appointments/${id}`).then(res => res.data),
-    // ... إضافة دوال أخرى
 };
 
 // ========== دوال الأطباء والمرضى ==========
@@ -118,11 +117,13 @@ export const doctorsApi = {
 };
 
 export const patientsApi = {
-    getAll: () => apiClient.get('/Patients').then(res => res.data),
-    getById: (id) => apiClient.get(`/Patients/${id}`).then(res => res.data),
-    create: (data) => apiClient.post('/Patients', data).then(res => res.data),
-    update: (id, data) => apiClient.put(`/Patients/${id}`, data).then(res => res.data),
-    delete: (id) => apiClient.delete(`/Patients/${id}`).then(res => res.data),
+    getAll: () => apiClient.get('/Patient').then(res => res.data),
+    getById: (id) => apiClient.get(`/Patient/${id}`).then(res => res.data),
+    create: (data) => apiClient.post('/Patient', data).then(res => res.data),
+    update: (id, data) => apiClient.put(`/Patient/${id}`, data).then(res => res.data),
+    delete: (id) => apiClient.delete(`/Patient/${id}`).then(res => res.data),
+    search: (query) => apiClient.get(`/Patient/search?query=${encodeURIComponent(query)}`).then(res => res.data),
+    getByEmail: (email) => apiClient.get(`/Patient/by-email/${encodeURIComponent(email)}`).then(res => res.data),
 };
 
 // ========== دوال Dashboard ==========
@@ -137,7 +138,28 @@ export const dashboardApi = {
 // ========== دوال Auth ==========
 export const authApi = {
     login: (credentials) => apiClient.post('/Auth/login', credentials).then(res => res.data),
-    register: (userData) => apiClient.post('/Auth/register', userData).then(res => res.data),
+    register: (userData) => {
+        // Ensure the data is properly formatted for the backend
+        const registerData = {
+            username: userData.username,
+            email: userData.email,
+            password: userData.password,
+            role: userData.role,
+            // Patient fields
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
+            phone: userData.phone || '',
+            dateOfBirth: userData.dateOfBirth || null,
+            address: userData.address || '',
+            nationalId: userData.nationalId || '',
+            insuranceCompany: userData.insuranceCompany || '',
+            insuranceId: userData.insuranceId || '',
+            emergencyContactName: userData.emergencyContactName || '',
+            emergencyContactPhone: userData.emergencyContactPhone || '',
+            gender: userData.gender || ''
+        };
+        return apiClient.post('/Auth/register', registerData).then(res => res.data);
+    },
     logout: () => apiClient.post('/Auth/logout').then(res => res.data),
 };
 

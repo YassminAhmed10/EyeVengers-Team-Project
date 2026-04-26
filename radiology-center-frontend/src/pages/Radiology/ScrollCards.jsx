@@ -267,7 +267,7 @@ function ProgressDots({ total, sectionProgress }) {
 export default function ScrollCards({
   cards   = CARDS,
   eyebrow = "Our Services",
-  title   = "Why Choose Imagon?",
+  title   = "Why Choose Nile Radiology?",
   subtitle = "A unique blend of advanced technology and human care",
 }) {
   const n         = cards.length;
@@ -332,8 +332,6 @@ export default function ScrollCards({
           <ProgressDots total={n} sectionProgress={scrollYProgress} />
         </div>
       </div>
-
-      <div style={{ height: 80 }} />
     </section>
   );
 }

@@ -13,6 +13,7 @@
   --primary: #2563eb;
   --primary-soft: #e1f1fe;
   --danger: #dc2626;
+  --navbar-h: 80px;
 }
 
 * {
@@ -24,9 +25,16 @@ body {
   min-height: 100vh;
   font-family: 'Cairo', 'Tajawal', sans-serif;
   color: var(--ink-900);
-  background:
+  background-color: #08111f;
+  background-image:
     linear-gradient(rgba(8, 17, 32, 0.65), rgba(8, 17, 32, 0.6)),
-    url('./assets/radiology1.jpg') center/cover no-repeat fixed;
+    url('./assets/radiology1.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  /* ✅ الحل: نحرك الـ background للأسفل بمقدار ارتفاع الـ navbar
+     عشان الصورة تبدأ من تحت الـ navbar مش من ورايه */
+  background-position: center var(--navbar-h);
 }
 
 #root {

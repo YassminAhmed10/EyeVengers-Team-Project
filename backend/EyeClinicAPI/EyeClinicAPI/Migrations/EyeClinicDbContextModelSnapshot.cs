@@ -191,7 +191,72 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasIndex(new[] { "DoctorId", "AppointmentDate", "AppointmentTime" }, "IX_Appointments_DoctorId_AppointmentDate_AppointmentTime");
 
-                    b.ToTable("Appointments", (string)null);
+                    b.ToTable("Appointments");
+                });
+
+            modelBuilder.Entity("EyeClinicAPI.Models.Clinic.DoctorOrder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("AppointmentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("AppointmentTime")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DataJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ExternalSystemConfirmationId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("MedicalRecordId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OrderType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("RespondedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("PendingPatientApproval");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "MedicalRecordId" }, "IX_DoctorOrders_MedicalRecordId");
+
+                    b.HasIndex(new[] { "PatientId" }, "IX_DoctorOrders_PatientId");
+
+                    b.HasIndex(new[] { "Status" }, "IX_DoctorOrders_Status");
+
+                    b.ToTable("DoctorOrders");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.Doctor", b =>
@@ -267,7 +332,7 @@ namespace EyeClinicAPI.Migrations
                     b.HasIndex(new[] { "LicenseNumber" }, "IX_Doctors_LicenseNumber")
                         .IsUnique();
 
-                    b.ToTable("Doctors", (string)null);
+                    b.ToTable("Doctors");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.DoctorSchedule", b =>
@@ -311,7 +376,7 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasIndex(new[] { "DoctorId", "DayOfWeek" }, "IX_DoctorSchedules_DoctorId_DayOfWeek");
 
-                    b.ToTable("DoctorSchedules", (string)null);
+                    b.ToTable("DoctorSchedules");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.Diagnosis", b =>
@@ -359,7 +424,7 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasIndex(new[] { "MedicalRecordId" }, "IX_Diagnoses_MedicalRecordId");
 
-                    b.ToTable("Diagnoses", (string)null);
+                    b.ToTable("Diagnoses");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.EyeExamination", b =>
@@ -433,7 +498,7 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasIndex(new[] { "MedicalRecordId" }, "IX_EyeExaminations_MedicalRecordId");
 
-                    b.ToTable("EyeExaminations", (string)null);
+                    b.ToTable("EyeExaminations");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.Investigation", b =>
@@ -448,9 +513,6 @@ namespace EyeClinicAPI.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("MedicalRecordId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("MedicalRecordId1")
                         .HasColumnType("int");
 
                     b.Property<string>("Notes")
@@ -473,11 +535,9 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MedicalRecordId1");
-
                     b.HasIndex(new[] { "MedicalRecordId" }, "IX_Investigations_MedicalRecordId");
 
-                    b.ToTable("Investigations", (string)null);
+                    b.ToTable("Investigations");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.MedicalHistory", b =>
@@ -491,8 +551,20 @@ namespace EyeClinicAPI.Migrations
                     b.Property<string>("Allergies")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ChronicDiseases")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("CurrentMedications")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EyeSurgeries")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FamilyEyeDiseases")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FamilyHistory")
                         .HasColumnType("nvarchar(max)");
@@ -501,9 +573,6 @@ namespace EyeClinicAPI.Migrations
                         .HasColumnType("bit");
 
                     b.Property<int>("MedicalRecordId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("MedicalRecordId1")
                         .HasColumnType("int");
 
                     b.Property<string>("PastMedicalHistory")
@@ -515,15 +584,16 @@ namespace EyeClinicAPI.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("Id");
+                    b.Property<string>("VisionSymptoms")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasIndex("MedicalRecordId1");
+                    b.HasKey("Id");
 
                     b.HasIndex(new[] { "IsArchived" }, "IX_MedicalHistories_IsArchived");
 
                     b.HasIndex(new[] { "MedicalRecordId" }, "IX_MedicalHistories_MedicalRecordId");
 
-                    b.ToTable("MedicalHistories", (string)null);
+                    b.ToTable("MedicalHistories");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.MedicalRecord", b =>
@@ -556,7 +626,7 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasIndex(new[] { "PatientId" }, "IX_MedicalRecords_PatientId");
 
-                    b.ToTable("MedicalRecords", (string)null);
+                    b.ToTable("MedicalRecords");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.MedicalTestFile", b =>
@@ -594,7 +664,7 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasIndex(new[] { "MedicalRecordId" }, "IX_MedicalTestFiles_MedicalRecordId");
 
-                    b.ToTable("MedicalTestFiles", (string)null);
+                    b.ToTable("MedicalTestFiles");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.Operation", b =>
@@ -688,7 +758,7 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasIndex(new[] { "MedicalRecordId" }, "IX_Operations_MedicalRecordId");
 
-                    b.ToTable("Operations", (string)null);
+                    b.ToTable("Operations");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.Patient", b =>
@@ -770,7 +840,7 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasIndex(new[] { "Phone" }, "IX_Patients_Phone");
 
-                    b.ToTable("Patients", (string)null);
+                    b.ToTable("Patients");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.PatientComplaint", b =>
@@ -782,6 +852,7 @@ namespace EyeClinicAPI.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Complaint")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -794,9 +865,6 @@ namespace EyeClinicAPI.Migrations
                         .HasColumnType("bit");
 
                     b.Property<int>("MedicalRecordId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("MedicalRecordId1")
                         .HasColumnType("int");
 
                     b.Property<string>("OriginalText")
@@ -813,13 +881,11 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MedicalRecordId1");
-
                     b.HasIndex(new[] { "IsArchived" }, "IX_PatientComplaints_IsArchived");
 
                     b.HasIndex(new[] { "MedicalRecordId" }, "IX_PatientComplaints_MedicalRecordId");
 
-                    b.ToTable("PatientComplaints", (string)null);
+                    b.ToTable("PatientComplaints");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.Prescription", b =>
@@ -839,9 +905,6 @@ namespace EyeClinicAPI.Migrations
                     b.Property<int>("MedicalRecordId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("MedicalRecordId1")
-                        .HasColumnType("int");
-
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
@@ -853,11 +916,9 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MedicalRecordId1");
-
                     b.HasIndex(new[] { "MedicalRecordId" }, "IX_Prescriptions_MedicalRecordId");
 
-                    b.ToTable("Prescriptions", (string)null);
+                    b.ToTable("Prescriptions");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.PrescriptionItem", b =>
@@ -908,7 +969,7 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasIndex("PrescriptionId");
 
-                    b.ToTable("PrescriptionItem", (string)null);
+                    b.ToTable("PrescriptionItems");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.Equipment", b =>
@@ -976,7 +1037,7 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("EquipmentId");
 
-                    b.ToTable("Equipment", (string)null);
+                    b.ToTable("Equipment");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.MaintenanceTasks", b =>
@@ -1039,7 +1100,7 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasIndex("EquipmentId");
 
-                    b.ToTable("MaintenanceTasks", (string)null);
+                    b.ToTable("MaintenanceTasks");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.MedicalSupplies", b =>
@@ -1109,7 +1170,7 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("SupplyId");
 
-                    b.ToTable("MedicalSupplies", (string)null);
+                    b.ToTable("MedicalSupplies");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.SanitizationSchedule", b =>
@@ -1166,7 +1227,7 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("SanitizationId");
 
-                    b.ToTable("SanitizationSchedule", (string)null);
+                    b.ToTable("SanitizationSchedule");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.User", b =>
@@ -1198,7 +1259,7 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.WasteManagement", b =>
@@ -1261,7 +1322,7 @@ namespace EyeClinicAPI.Migrations
 
                     b.HasKey("WasteId");
 
-                    b.ToTable("WasteManagement", (string)null);
+                    b.ToTable("WasteManagement");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.Appointment", b =>
@@ -1272,6 +1333,25 @@ namespace EyeClinicAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Doctor");
+                });
+
+            modelBuilder.Entity("EyeClinicAPI.Models.Clinic.DoctorOrder", b =>
+                {
+                    b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", "MedicalRecord")
+                        .WithMany()
+                        .HasForeignKey("MedicalRecordId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("EyeClinicAPI.Models.EMR.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MedicalRecord");
+
+                    b.Navigation("Patient");
                 });
 
             modelBuilder.Entity("EyeClinicAPI.Models.DoctorSchedule", b =>
@@ -1314,14 +1394,10 @@ namespace EyeClinicAPI.Migrations
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.Investigation", b =>
                 {
                     b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", "MedicalRecord")
-                        .WithMany()
+                        .WithMany("Investigations")
                         .HasForeignKey("MedicalRecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", null)
-                        .WithMany("Investigations")
-                        .HasForeignKey("MedicalRecordId1");
 
                     b.Navigation("MedicalRecord");
                 });
@@ -1329,14 +1405,10 @@ namespace EyeClinicAPI.Migrations
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.MedicalHistory", b =>
                 {
                     b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", "MedicalRecord")
-                        .WithMany()
+                        .WithMany("Histories")
                         .HasForeignKey("MedicalRecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", null)
-                        .WithMany("Histories")
-                        .HasForeignKey("MedicalRecordId1");
 
                     b.Navigation("MedicalRecord");
                 });
@@ -1373,14 +1445,10 @@ namespace EyeClinicAPI.Migrations
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.PatientComplaint", b =>
                 {
                     b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", "MedicalRecord")
-                        .WithMany()
+                        .WithMany("Complaints")
                         .HasForeignKey("MedicalRecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", null)
-                        .WithMany("Complaints")
-                        .HasForeignKey("MedicalRecordId1");
 
                     b.Navigation("MedicalRecord");
                 });
@@ -1388,14 +1456,10 @@ namespace EyeClinicAPI.Migrations
             modelBuilder.Entity("EyeClinicAPI.Models.EMR.Prescription", b =>
                 {
                     b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", "MedicalRecord")
-                        .WithMany()
+                        .WithMany("Prescriptions")
                         .HasForeignKey("MedicalRecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("EyeClinicAPI.Models.EMR.MedicalRecord", null)
-                        .WithMany("Prescriptions")
-                        .HasForeignKey("MedicalRecordId1");
 
                     b.Navigation("MedicalRecord");
                 });

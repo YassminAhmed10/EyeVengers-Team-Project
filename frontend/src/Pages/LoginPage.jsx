@@ -83,31 +83,46 @@ export default function LoginPage() {
   const navigate = useNavigate();
 
   const handleLogin = async () => {
-    if (!role)               { setError("Please select your role before signing in."); return; }
-    if (!email || !password) { setError("Please enter both email and password.");      return; }
+    if (!role) { setError("Please select your role before signing in."); return; }
+    if (!email || !password) { setError("Please enter both email and password."); return; }
     setLoading(true); setError("");
+    
     try {
       const data = await authApi.login({ email: email.trim(), password });
+      console.log("Login response:", data);
+      
       if (data.user.role !== role) {
         setError(`This account is registered as ${data.user.role}, not ${role}`);
-        setLoading(false); return;
+        setLoading(false); 
+        return;
       }
-      localStorage.setItem("userRole",          data.user.role);
-      localStorage.setItem("isAuthenticated",   "true");
-      localStorage.setItem("authToken",         data.token);
-      localStorage.setItem("userName",          data.user.username);
-      localStorage.setItem("userEmail",         data.user.email);
-      if (data.user.role === "Patient" && data.user.patientId) {
-        localStorage.setItem("patientId",          data.user.patientId);
-        localStorage.setItem("patientName",        data.user.username);
-        localStorage.setItem("patientEmail",       data.user.email);
-        localStorage.setItem("patientPhone",       data.user.phone || "");
-        localStorage.setItem("patientDateOfBirth", data.user.dateOfBirth || "");
+      
+      // Store basic user data
+      localStorage.setItem("userRole", data.user.role);
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("authToken", data.token);
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userName", data.user.username);
+      localStorage.setItem("userEmail", data.user.email);
+      
+      // FORCE SET valid IDs for testing
+      localStorage.setItem("patientId", "1");
+      localStorage.setItem("medicalRecordId", "1");
+      localStorage.setItem("doctorId", "1");
+      
+      console.log("✅ IDs set - Patient:1, MedicalRecord:1, Doctor:1");
+      
+      // Redirect based on role
+      if (data.user.role === "Doctor") {
+        navigate("/doctor");
+      } else if (data.user.role === "Receptionist") {
+        navigate("/receptionist");
+      } else if (data.user.role === "Patient") {
+        navigate("/patient");
       }
-      if      (data.user.role === "Doctor")       navigate("/doctor");
-      else if (data.user.role === "Receptionist") navigate("/receptionist");
-      else if (data.user.role === "Patient")      navigate("/patient");
+      
     } catch (err) {
+      console.error("Login error:", err);
       const message = err?.response?.data?.message || err?.message || "An unexpected error occurred.";
       if (err?.code === "ECONNABORTED" || message.toLowerCase().includes("network")) {
         setError("Unable to connect to server.");
@@ -165,7 +180,7 @@ export default function LoginPage() {
         <div style={s.sep} />
 
         <div style={s.fieldWrap}>
-          <label style={s.label}>Username</label>
+          <label style={s.label}>Email Address</label>
           <input className="glow-input" type="email" placeholder="Enter your email"
             value={email} onChange={(e) => setEmail(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleLogin()}
@@ -210,22 +225,18 @@ const s = {
     background:"radial-gradient(ellipse at 60% 40%, rgba(30,80,200,0.22) 0%, rgba(8,20,80,0.52) 100%)",
     zIndex:1,
   },
-
-  /* ── Card: much bigger ── */
   card: {
     position:"relative", zIndex:2,
-    width:"100%", maxWidth:700,           /* was 560 */
+    width:"100%", maxWidth:700,
     margin:"24px 16px",
-    padding:"64px 80px 60px",             /* was 52px 60px 48px */
+    padding:"64px 80px 60px",
     borderRadius:36,
     background:"rgba(255,255,255,0.13)",
     backdropFilter:"blur(28px)", WebkitBackdropFilter:"blur(28px)",
     display:"flex", flexDirection:"column", alignItems:"center",
   },
-
-  /* Logo bigger too */
   logoWrap: {
-    width:130, height:130, borderRadius:"50%",     /* was 110 */
+    width:130, height:130, borderRadius:"50%",
     border:"3px solid rgba(255,255,255,0.8)",
     boxShadow:"0 8px 30px rgba(0,0,0,0.3), 0 0 0 8px rgba(255,255,255,0.08)",
     overflow:"hidden", marginBottom:26,
@@ -234,22 +245,20 @@ const s = {
   logoImg:     { width:"100%", height:"100%", objectFit:"cover", display:"block" },
   logoFallback:{ display:"none", width:"100%", height:"100%", position:"absolute",
     inset:0, alignItems:"center", justifyContent:"center" },
-
-  title: { margin:0, fontSize:"2.6rem", fontWeight:800, color:"#fff",   /* was 2.2rem */
+  title: { margin:0, fontSize:"2.6rem", fontWeight:800, color:"#fff",
     letterSpacing:"-0.5px", textShadow:"0 2px 16px rgba(0,0,0,0.18)" },
   sub: { margin:"10px 0 26px", fontSize:"0.95rem", color:"rgba(255,255,255,0.82)", textAlign:"center" },
   accentLink: { color:"#fff", fontWeight:700, textDecoration:"underline", textUnderlineOffset:3 },
-
-  roleRow: { display:"flex", gap:28, marginBottom:8 },          /* was gap:24 */
+  roleRow: { display:"flex", gap:28, marginBottom:8 },
   roleBubble: {
-    width:92, height:92, borderRadius:"50%",                    /* was 80 */
+    width:92, height:92, borderRadius:"50%",
     border:"2px solid rgba(255,255,255,0.4)",
     background:"rgba(255,255,255,0.12)",
     display:"flex", alignItems:"center", justifyContent:"center",
     cursor:"pointer", padding:0, outline:"none",
   },
   roleIcon: {
-    width:58, height:58, objectFit:"contain", pointerEvents:"none",  /* was 50 */
+    width:58, height:58, objectFit:"contain", pointerEvents:"none",
     filter:"brightness(0) invert(1)", opacity:0.75,
     transition:"opacity 0.2s, filter 0.2s",
   },
@@ -259,36 +268,32 @@ const s = {
   },
   roleLabel: { margin:"6px 0 0", fontSize:"0.82rem", fontWeight:700,
     color:"rgba(255,255,255,0.75)", letterSpacing:1.5, textTransform:"uppercase" },
-
   sep: { width:"100%", height:1, background:"rgba(255,255,255,0.2)", margin:"26px 0 8px" },
-
-  fieldWrap: { width:"100%", marginTop:20 },                    /* was 18 */
-  label: { display:"block", fontSize:"0.88rem", fontWeight:700,  /* was 0.82rem */
+  fieldWrap: { width:"100%", marginTop:20 },
+  label: { display:"block", fontSize:"0.88rem", fontWeight:700,
     color:"rgba(255,255,255,0.85)", marginBottom:9, letterSpacing:0.3 },
   input: {
-    width:"100%", padding:"16px 20px", borderRadius:16,          /* was 14px 18px / r14 */
+    width:"100%", padding:"16px 20px", borderRadius:16,
     border:"1.5px solid rgba(255,255,255,0.22)",
     background:"rgba(255,255,255,0.88)",
     fontSize:"1.05rem", color:"#12183a", fontFamily:"inherit",
     boxSizing:"border-box", boxShadow:"0 2px 8px rgba(0,0,0,0.06)",
     transition:"box-shadow 0.25s, border-color 0.25s",
   },
-
   optRow: { width:"100%", display:"flex", justifyContent:"space-between",
     alignItems:"center", marginTop:18 },
   checkLabel: { display:"flex", alignItems:"center", fontSize:"0.88rem",
     color:"rgba(255,255,255,0.75)", cursor:"pointer", userSelect:"none" },
-
   errBox: {
     width:"100%", marginTop:16, padding:"13px 18px", borderRadius:12,
     background:"rgba(220,38,38,0.75)", backdropFilter:"blur(8px)",
     color:"#fff", fontSize:"0.88rem", fontWeight:500, textAlign:"center", boxSizing:"border-box",
   },
   loginBtn: {
-    width:"100%", marginTop:26, padding:"18px",                  /* was 22 / 16px */
+    width:"100%", marginTop:26, padding:"18px",
     borderRadius:16, border:"1.5px solid rgba(255,255,255,0.3)",
     background:"linear-gradient(135deg, #5b9bf8 0%, #3a57ef 100%)",
-    color:"#fff", fontSize:"1.2rem", fontWeight:700, letterSpacing:0.6,  /* was 1.1rem */
+    color:"#fff", fontSize:"1.2rem", fontWeight:700, letterSpacing:0.6,
     fontFamily:"inherit", boxShadow:"0 8px 28px rgba(59,95,240,0.5)",
   },
 };

@@ -424,7 +424,7 @@ export function PatientDashboard() {
       {/* ── SCROLL STACKING CARDS ── */}
       <ScrollCards
         eyebrow="Our Services"
-        title="Why Choose Imagon?"
+        title="Why Choose Nile Radiology?"
         subtitle="A unique blend of advanced technology and human care"
       />
     </div>
