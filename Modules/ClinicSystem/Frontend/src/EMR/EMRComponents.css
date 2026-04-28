@@ -1,0 +1,115 @@
+/* ========== تصميم طبي بسيط ========== */
+.patient-info-section,
+.form-section,
+.MuiPaper-root {
+  background: #ffffff;
+  border: 1px solid #cae8ff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* العناوين */
+.patient-info-section h6,
+.form-section h6,
+.MuiTypography-h5,
+.MuiTypography-h6 {
+  color: #1e3a5f;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #cae8ff;
+}
+
+/* أزرار */
+.MuiButton-contained {
+  background-color: #1e3a5f;
+  color: white;
+  box-shadow: none;
+}
+.MuiButton-contained:hover {
+  background-color: #16324d;
+  box-shadow: none;
+}
+.MuiButton-outlined {
+  border: 1px solid #1e3a5f;
+  color: #1e3a5f;
+}
+.MuiButton-outlined:hover {
+  background-color: #f0f7ff;
+}
+.MuiButton-outlinedError {
+  border-color: #d32f2f;
+  color: #d32f2f;
+}
+.MuiButton-outlinedError:hover {
+  background-color: #ffebee;
+}
+
+/* حقول الإدخال */
+.MuiTextField-root .MuiOutlinedInput-root {
+  border-radius: 6px;
+}
+.MuiTextField-root .MuiOutlinedInput-notchedOutline {
+  border-color: #cae8ff;
+}
+.MuiTextField-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #1e3a5f;
+}
+.MuiTextField-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #1e3a5f;
+}
+
+/* علامات التبويب */
+.MuiTabs-root {
+  border-bottom: 1px solid #cae8ff;
+  margin-bottom: 1.5rem;
+  background: none;
+  padding: 0;
+}
+.MuiTab-root {
+  color: #1e3a5f;
+  font-weight: 500;
+  text-transform: none;
+  min-width: auto;
+  padding: 8px 16px;
+}
+.MuiTab-root.Mui-selected {
+  color: #1e3a5f;
+  font-weight: 700;
+  border-bottom: 3px solid #1e3a5f;
+}
+.MuiTabs-indicator {
+  display: none;
+}
+
+/* جداول */
+.MuiTableHead-root {
+  background-color: #f0f7ff;
+}
+.MuiTableHead-root .MuiTableCell-root {
+  color: #1e3a5f;
+  font-weight: 700;
+}
+
+/* بطاقات الملفات */
+.past-images-container .MuiGrid-item .MuiBox-root {
+  border: 1px solid #cae8ff;
+  border-radius: 8px;
+  padding: 1rem;
+  background: white;
+}
+.past-images-container img {
+  border-radius: 6px;
+}
+
+/* رسائل النجاح والخطأ */
+.MuiAlert-standardSuccess {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+.MuiAlert-standardError {
+  background-color: #ffebee;
+  color: #c62828;
+}

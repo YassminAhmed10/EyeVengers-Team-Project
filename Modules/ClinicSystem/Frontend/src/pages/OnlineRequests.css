@@ -1,0 +1,999 @@
+/* =============================================
+   ONLINE REQUESTS TAB - COMPLETE ISOLATED CSS
+   ============================================= */
+
+/* Main Container */
+.online-req-container {
+    padding: 2rem;
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+/* Header Section */
+.online-req-header {
+    background: linear-gradient(135deg, #2563EB 0%, #1e40af 100%);
+    color: white;
+    padding: 1.25rem 2rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
+}
+
+.online-req-header-with-badge {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.online-req-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.online-req-header-icon {
+    font-size: 1.5rem;
+}
+
+.online-req-header-subtitle {
+    font-size: 0.9rem;
+    opacity: 0.95;
+    margin: 0;
+    font-weight: 400;
+}
+
+.online-req-total-pending-badge {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.online-req-badge-icon {
+    font-size: 1.5rem;
+}
+
+.online-req-badge-value {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.online-req-badge-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+}
+
+/* Toolbar Section */
+.online-req-toolbar {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.online-req-search-container {
+    flex: 1;
+    min-width: 300px;
+    position: relative;
+}
+
+.online-req-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-size: 1rem;
+}
+
+.online-req-search-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 3rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.online-req-search-input:focus {
+    outline: none;
+    border-color: #2563EB;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.online-req-clear-btn {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.online-req-clear-btn:hover {
+    background: #f3f4f6;
+    color: #ef4444;
+}
+
+/* Filter Group */
+.online-req-filter-group {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.online-req-filter-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.online-req-filter-icon {
+    color: #2563EB;
+    font-size: 1.1rem;
+}
+
+.online-req-date-filter,
+.online-req-date-picker-btn {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    background: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 150px;
+}
+
+.online-req-date-filter:hover,
+.online-req-date-picker-btn:hover {
+    border-color: #2563EB;
+    background: #f9fafb;
+}
+
+.online-req-clear-date-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.875rem;
+    margin-left: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.online-req-clear-date-btn:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+.online-req-calendar-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 999;
+}
+
+.online-req-calendar-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 0.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    padding: 1rem;
+}
+
+/* Sort Controls */
+.online-req-sort-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.online-req-sort-select {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    background: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 180px;
+}
+
+.online-req-sort-select:focus {
+    outline: none;
+    border-color: #2563EB;
+}
+
+.online-req-sort-direction-btn {
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    background: white;
+    color: #2563EB;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-size: 1.2rem;
+}
+
+.online-req-sort-direction-btn:hover {
+    border-color: #2563EB;
+    background: #f9fafb;
+}
+
+/* View Toggle */
+.online-req-view-toggle {
+    display: flex;
+    gap: 0.5rem;
+    background: #f3f4f6;
+    padding: 0.25rem;
+    border-radius: 10px;
+}
+
+.online-req-view-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.online-req-view-btn:hover {
+    background: white;
+    color: #2563EB;
+}
+
+.online-req-view-btn.active {
+    background: #2563EB;
+    color: white;
+}
+
+/* Results Info */
+.online-req-results-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    color: #6b7280;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.online-req-clear-all-filters-btn {
+    padding: 0.5rem 1rem;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.online-req-clear-all-filters-btn:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+}
+
+/* Card Grid */
+.online-req-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Request Card */
+.online-req-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: 2px solid #e5e7eb;
+}
+
+.online-req-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15);
+    border-color: #2563EB;
+}
+
+.online-req-card.urgent {
+    border-color: #ef4444;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15);
+}
+
+/* Card Header */
+.online-req-card-header {
+    background: linear-gradient(135deg, #2563EB 0%, #1e40af 100%);
+    color: white;
+    padding: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.online-req-id-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.online-req-id-icon {
+    font-size: 1.2rem;
+}
+
+.online-req-submitted-date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    opacity: 0.95;
+}
+
+.online-req-submitted-icon {
+    font-size: 1rem;
+}
+
+/* Card Body */
+.online-req-card-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.online-req-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.online-req-section-icon {
+    color: #2563EB;
+    font-size: 1.1rem;
+}
+
+/* Appointment Info */
+.online-req-appointment-details-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.online-req-appointment-detail-item {
+    background: #f9fafb;
+    padding: 1rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.online-req-detail-icon {
+    font-size: 1.5rem;
+    color: #2563EB;
+}
+
+.online-req-detail-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.online-req-detail-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.online-req-detail-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.online-req-detail-value.highlight {
+    color: #2563EB;
+    font-size: 1.1rem;
+}
+
+.online-req-detail-extra {
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+/* Patient Info */
+.online-req-patient-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.online-req-patient-info-item {
+    background: #f9fafb;
+    padding: 1rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.online-req-patient-info-item.online-req-full-width {
+    grid-column: 1 / -1;
+}
+
+.online-req-info-icon {
+    font-size: 1.3rem;
+    color: #2563EB;
+    margin-top: 0.15rem;
+}
+
+.online-req-info-content {
+    flex: 1;
+}
+
+.online-req-info-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.online-req-info-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.online-req-reason-value {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #374151;
+}
+
+/* Card Actions */
+.online-req-card-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding-top: 1rem;
+    border-top: 2px solid #f3f4f6;
+}
+
+.online-req-action-btn {
+    flex: 1;
+    min-width: 140px;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.online-req-btn-icon {
+    font-size: 1.1rem;
+}
+
+.online-req-confirm-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.online-req-confirm-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+}
+
+.online-req-cancel-btn {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+.online-req-cancel-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+}
+
+.online-req-details-btn {
+    background: linear-gradient(135deg, #2563EB 0%, #1e40af 100%);
+    color: white;
+}
+
+.online-req-details-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+}
+
+/* Card Footer */
+.online-req-card-footer {
+    background: #f9fafb;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.online-req-status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 140px;
+    width: fit-content;
+}
+
+.online-req-status-badge.online-req-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+/* No Requests Message */
+.online-req-no-requests-message {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.online-req-no-requests-icon {
+    font-size: 4rem;
+    color: #d1d5db;
+    margin-bottom: 1rem;
+}
+
+.online-req-no-requests-message h3 {
+    font-size: 1.5rem;
+    color: #1f2937;
+    margin: 0 0 0.5rem 0;
+}
+
+.online-req-no-requests-message p {
+    font-size: 1rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* Table View */
+.online-req-table-container {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.online-req-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.online-req-table thead {
+    background: linear-gradient(135deg, #2563EB 0%, #1e40af 100%);
+    color: white;
+}
+
+.online-req-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.online-req-table th:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.online-req-table-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.online-req-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.2s ease;
+}
+
+.online-req-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.online-req-table tbody tr.urgent-row {
+    background: #fef2f2;
+}
+
+.online-req-table tbody tr.urgent-row:hover {
+    background: #fee2e2;
+}
+
+.online-req-table td {
+    padding: 1rem;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+/* Table Cell Styles */
+.online-req-table-cell-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.online-req-request-id-cell {
+    font-weight: 600;
+    color: #2563EB;
+}
+
+.online-req-patient-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.online-req-patient-name {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.online-req-patient-id-small {
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+.online-req-patient-details-small {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.online-req-contact-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.online-req-phone-cell,
+.online-req-email-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+}
+
+.online-req-cell-icon {
+    font-size: 0.9rem;
+    color: #2563EB;
+}
+
+.online-req-date-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.online-req-day-name {
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+.online-req-time-badge {
+    background: #ede9fe;
+    color: #7c3aed;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.online-req-reason-cell {
+    max-width: 200px;
+}
+
+.online-req-reason-cell strong {
+    color: #1f2937;
+}
+
+.online-req-symptoms-small {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+.online-req-status-badge.online-req-pending-small {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+/* Table Actions */
+.online-req-table-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.online-req-table-action-btn {
+    width: 35px;
+    height: 35px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+.online-req-table-action-btn.online-req-confirm-small {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.online-req-table-action-btn.online-req-confirm-small:hover {
+    background: #10b981;
+    color: white;
+    transform: scale(1.1);
+}
+
+.online-req-table-action-btn.online-req-cancel-small {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.online-req-table-action-btn.online-req-cancel-small:hover {
+    background: #ef4444;
+    color: white;
+    transform: scale(1.1);
+}
+
+.online-req-table-action-btn.online-req-details-small {
+    background: #e0e7ff;
+    color: #2563EB;
+}
+
+.online-req-table-action-btn.online-req-details-small:hover {
+    background: #2563EB;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .online-req-grid {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .online-req-container {
+        padding: 1rem;
+    }
+
+    .online-req-header {
+        padding: 1.5rem;
+    }
+
+    .online-req-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .online-req-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .online-req-search-container {
+        min-width: 100%;
+    }
+
+    .online-req-filter-group {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .online-req-filter-item,
+    .online-req-sort-item {
+        width: 100%;
+    }
+
+    .online-req-date-filter,
+    .online-req-sort-select {
+        width: 100%;
+    }
+
+    .online-req-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .online-req-table-container {
+        overflow-x: auto;
+    }
+
+    .online-req-table {
+        min-width: 900px;
+    }
+}
+
+@media (max-width: 480px) {
+    .online-req-header-with-badge {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .online-req-total-pending-badge {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .online-req-card-actions {
+        flex-direction: column;
+    }
+
+    .online-req-action-btn {
+        width: 100%;
+    }
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .online-req-container {
+    background: #1e3a5f;
+}
+
+[data-theme="dark"] .online-req-header {
+    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+}
+
+[data-theme="dark"] .online-req-toolbar {
+    background: #2d5575;
+    border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .online-req-search-input {
+    background: #1e3a5f;
+    border-color: #334155;
+    color: #cae8ff;
+}
+
+[data-theme="dark"] .online-req-search-input::placeholder {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .online-req-filter-select,
+[data-theme="dark"] .online-req-sort-select {
+    background: #1e3a5f;
+    border-color: #334155;
+    color: #cae8ff;
+}
+
+[data-theme="dark"] .online-req-card {
+    background: #2d5575;
+    border-color: #334155;
+}
+
+[data-theme="dark"] .online-req-card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .online-req-id-badge,
+[data-theme="dark"] .online-req-submitted-date {
+    background: #1e3a5f;
+}
+
+[data-theme="dark"] .online-req-id-text,
+[data-theme="dark"] .online-req-section-title,
+[data-theme="dark"] .online-req-detail-label,
+[data-theme="dark"] .online-req-info-label {
+    color: #90CAF9;
+}
+
+[data-theme="dark"] .online-req-detail-value,
+[data-theme="dark"] .online-req-info-value {
+    color: #cae8ff;
+}
+
+[data-theme="dark"] .online-req-table {
+    background: #2d5575;
+}
+
+[data-theme="dark"] .online-req-table thead tr {
+    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+}
+
+[data-theme="dark"] .online-req-table tbody tr {
+    border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .online-req-table tbody tr:hover {
+    background: #1e3a5f;
+}
+
+[data-theme="dark"] .online-req-no-requests-message {
+    background: #2d5575;
+    color: #94a3b8;
+}

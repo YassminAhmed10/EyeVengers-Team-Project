@@ -1,0 +1,84 @@
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import LoginPage from "./Pages/LoginPage";
+import SignUpPage from "./Pages/SignUpPage";
+import DoctorLayout from "./DoctorDashboard/DoctorLayout";
+import DoctorDashboard from "./DoctorDashboard/Dashboard";
+import ReceptionistLayout from "./Appointment/ReceptionistLayout";
+import ReceptionistDashboard from "./Appointment/ReceptionistDashboard";
+import ReceptionistProfile from "./Appointment/ReceptionistProfile";
+import AppointmentsPage from "./Pages/AppointmentsPage";
+import BookAppointmentPage from "./Pages/BookAppointmentPage";
+import AppointmentDetails from "./Pages/AppointmentDetails";
+import ClinicPageNew from "./Pages/ClinicPageNew";
+import SettingsPage from "./Pages/SettingsPage";
+import EMRPage from "./Pages/EMRPage";
+import PatientEMRPage from "./Pages/PatientEMRPage";
+import PatientPageNew from "./Pages/PatientPageNew";
+import PatientHomepage from "./Pages/PatientHomepage";
+import PatientAppointments from "./Pages/PatientAppointments";
+import PatientProfilePage from "./Pages/PatientProfilePage";
+import PatientPharmacyPage from "./Pages/PatientPharmacyPage";
+import PatientGlassesStorePage from "./Pages/PatientGlassesStorePage";
+import FinancePageNew from "./Pages/FinancePageNew";
+import ContactPage from "./Pages/ContactPage";
+import RadiologyRedirectPage from "./Pages/RadiologyRedirectPage";
+import Rotating3DNav from "./components/Rotating3DNav/Rotating3DNav";
+import PatientMedicalRecord from "./components/PatientMedicalRecord";
+import PatientOrdersPage from "./PatientManagement/PatientOrdersPage"; // ← NEW
+
+function AllProject() {
+  return (
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <Routes>
+
+        <Route path="/" element={<Navigate to="/signup" />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/book-appointment" element={<BookAppointmentPage />} />
+
+        {/* Doctor Routes */}
+        <Route path="/doctor" element={<DoctorLayout />}>
+          <Route index element={<DoctorDashboard />} />
+          <Route path="patients" element={<PatientPageNew />} />
+          <Route path="appointments" element={<AppointmentsPage />} />
+          <Route path="appointment-details/:appointmentId" element={<AppointmentDetails />} />
+          <Route path="clinic-system" element={<ClinicPageNew />} />
+          <Route path="finance" element={<FinancePageNew />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="view-medical-record/:patientId" element={<EMRPage />} />
+        </Route>
+
+        {/* Receptionist Routes */}
+        <Route path="/receptionist" element={<ReceptionistLayout />}>
+          <Route index element={<ReceptionistDashboard />} />
+          <Route path="appointments" element={<AppointmentsPage />} />
+          <Route path="profile" element={<ReceptionistProfile />} />
+          <Route path="patients" element={<PatientPageNew />} />
+          <Route path="settings" element={<SettingsPage />} />
+        </Route>
+
+        <Route path="/appointments" element={<AppointmentsPage />} />
+
+        {/* Patient Routes */}
+        <Route path="/patient" element={<PatientHomepage />} />
+        <Route path="/patient/radiology-redirect" element={<RadiologyRedirectPage />} />
+        <Route path="/patient/pharmacy" element={<PatientPharmacyPage />} />
+        <Route path="/patient/glasses-store" element={<PatientGlassesStorePage />} />
+        <Route path="/patient/appointments" element={<PatientAppointments />} />
+        <Route path="/patient/profile" element={<PatientProfilePage />} />
+        <Route path="/patient/orders" element={<PatientOrdersPage />} />  {/* ← NEW */}
+        <Route path="/contact" element={<ContactPage />} />
+
+        {/* Patient Medical Record */}
+        <Route path="/patient/medical-record" element={<PatientMedicalRecord />} />
+
+        <Route path="/rotating-nav" element={<Rotating3DNav />} />
+        <Route path="*" element={<Navigate to="/login" />} />
+
+      </Routes>
+    </Router>
+  );
+}
+
+export default AllProject;

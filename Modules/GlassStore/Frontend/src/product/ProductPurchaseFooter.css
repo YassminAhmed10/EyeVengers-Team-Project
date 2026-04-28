@@ -1,0 +1,33 @@
+.purchase-box {
+  margin-top: 24px;
+  padding: 20px;
+  border-radius: 20px;
+  background: #fafafa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.price-label {
+  font-size: 14px;
+  color: #777;
+}
+
+.price {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* Buttons */
+.btn-primary {
+  background: black;
+  color: white;
+  padding: 14px 22px;
+  border-radius: 999px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+}

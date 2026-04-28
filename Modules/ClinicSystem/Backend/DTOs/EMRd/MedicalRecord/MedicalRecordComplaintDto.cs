@@ -1,0 +1,15 @@
+// DTOs/EMRd/MedicalRecord/MedicalRecordComplaintDto.cs
+using System;
+
+namespace EyeClinicAPI.DTOs.MedicalRecord
+{
+    public class MedicalRecordComplaintDto
+    {
+        public int Id { get; set; }
+        public string Complaint { get; set; } = string.Empty;
+        public string OriginalText { get; set; } = string.Empty;
+        public string Duration { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+    }
+}
