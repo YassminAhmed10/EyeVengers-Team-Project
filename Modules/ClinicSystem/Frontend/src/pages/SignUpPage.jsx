@@ -103,6 +103,10 @@ export default function SignUpPage() {
       
       const data = await authApi.register(registerData);
       
+      // Clear any old patient data from previous logins
+      ["patientId", "patientIdentifier", "medicalRecordId", "patient"]
+        .forEach(key => localStorage.removeItem(key));
+      
       // Store user data
       localStorage.setItem("userRole","Patient");
       localStorage.setItem("userName",formData.fullName);
@@ -112,11 +116,35 @@ export default function SignUpPage() {
       localStorage.setItem("patientPhone",formData.phone || "");
       localStorage.setItem("patientDateOfBirth",formData.dateOfBirth || "");
       
-      // Store patient ID if returned
+      // Store patient ID if returned from backend
       if (data.user?.patientId) {
         localStorage.setItem("patientId", data.user.patientId.toString());
       } else if (data.patientId) {
         localStorage.setItem("patientId", data.patientId.toString());
+      } else if (data.patient?.id) {
+        localStorage.setItem("patientId", data.patient.id.toString());
+      }
+      
+      // Store patient identifier if available
+      const patientIdentifier = data.patient?.patientIdentifier || data.patientIdentifier;
+      if (patientIdentifier) {
+        const formatted = /^P-/i.test(patientIdentifier) 
+          ? patientIdentifier 
+          : `P-${patientIdentifier}`;
+        localStorage.setItem("patientIdentifier", formatted);
+      } else if (data.user?.patientId || data.patientId || data.patient?.id) {
+        // Fallback: generate from numeric ID if identifier not available
+        const numericId = data.user?.patientId || data.patientId || data.patient?.id;
+        if (numericId) {
+          const generated = `P-${String(numericId).padStart(6, '0')}`;
+          localStorage.setItem("patientIdentifier", generated);
+        }
+      }
+      
+      // Store full patient object if returned
+      if (data.patient || data.user?.patient) {
+        const patientObj = data.patient || data.user.patient;
+        localStorage.setItem("patient", JSON.stringify(patientObj));
       }
       
       alert("Account created successfully! Please login with your credentials.");

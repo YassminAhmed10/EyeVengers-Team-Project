@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" />
+    <PackageReference Include="Hl7.Fhir.Serialization" />
     <PackageReference Include="MailKit" />
     <PackageReference Include="MimeKit" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />

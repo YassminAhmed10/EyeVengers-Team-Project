@@ -1,15 +1,14 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using EyeClinicAPI.Data;
 using EyeClinicAPI.Models;
+using EyeClinicAPI.Models.EMR;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
 {
-    // DTOs and controller copied from original AppointmentsController
-
     // ===================== DTOs =====================
 
     public class CreateAppointmentRequest
@@ -126,7 +125,8 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
             var appointments = await _context.Appointments
                 .Where(a => a.PatientId.ToLower() == patientId.ToLower())
                 .Include(a => a.Doctor)
-                .OrderByDescending(a => a.AppointmentDate)
+                .OrderBy(a => a.AppointmentDate)
+                .ThenBy(a => a.AppointmentTime)
                 .ToListAsync();
 
             return Ok(appointments);
@@ -226,11 +226,90 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
             return Ok(unique);
         }
 
+        [HttpGet("CheckPhoneExists/{phone}")]
+        public async Task<ActionResult<object>> CheckPhoneExists(string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone))
+                return Ok(new { exists = false });
+
+            var exists = await _context.Appointments
+                .AnyAsync(a => a.Phone == phone);
+
+            return Ok(new { exists });
+        }
+
+        [HttpGet("CheckNationalIdExists/{nationalId}")]
+        public async Task<ActionResult<object>> CheckNationalIdExists(string nationalId)
+        {
+            if (string.IsNullOrWhiteSpace(nationalId))
+                return Ok(new { exists = false });
+
+            var exists = await _context.Appointments
+                .AnyAsync(a => a.NationalId == nationalId);
+
+            return Ok(new { exists });
+        }
+
+        // ✅ Helper method to create medical record automatically
+        private async Task<int?> CreateMedicalRecordForPatient(string patientId, string? patientName = null)
+        {
+            try
+            {
+                _logger.LogInformation("Creating medical record for patient: {PatientId}", patientId);
+                
+                // Check if medical record already exists
+                var existingRecord = await _context.MedicalRecords
+                    .FirstOrDefaultAsync(m => m.PatientIdentifier == patientId || 
+                                              (m.PatientId.HasValue && m.PatientId.ToString() == patientId));
+                
+                if (existingRecord != null)
+                {
+                    _logger.LogInformation("Medical record already exists for patient {PatientId} with ID: {RecordId}", patientId, existingRecord.Id);
+                    return existingRecord.Id;
+                }
+                
+                // Try to find patient in Patients table
+                int? resolvedPatientId = null;
+                var patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.Id.ToString() == patientId || p.Email == patientId || p.Phone == patientId);
+                
+                if (patient != null)
+                {
+                    resolvedPatientId = patient.Id;
+                    _logger.LogInformation("Found patient in Patients table with ID: {PatientId}", resolvedPatientId);
+                }
+                
+                // Create new medical record
+                var medicalRecord = new MedicalRecord
+                {
+                    PatientIdentifier = patientId,
+                    PatientId = resolvedPatientId,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                
+                _context.MedicalRecords.Add(medicalRecord);
+                await _context.SaveChangesAsync();
+                
+                _logger.LogInformation("✅ Medical record created successfully for patient {PatientId} with ID: {RecordId}", patientId, medicalRecord.Id);
+                
+                return medicalRecord.Id;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating medical record for patient {PatientId}", patientId);
+                return null;
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> PostAppointment([FromBody] CreateAppointmentRequest request)
         {
             _logger.LogInformation("Received appointment request: PatientName={PatientName}, Date={Date}, Time={Time}", 
                 request?.PatientName, request?.AppointmentDate, request?.AppointmentTime);
+            
+            _logger.LogInformation("Appointment request fields - Gender={Gender}, NationalId={NationalId}, Address={Address}, InsuranceCompany={InsuranceCompany}", 
+                request?.PatientGender, request?.NationalId, request?.Address, request?.InsuranceCompany);
 
             if (request == null)
                 return BadRequest(new { message = "Appointment data is required" });
@@ -243,9 +322,12 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
                 if (!TimeSpan.TryParse(request.AppointmentTime, out TimeSpan appointmentTime))
                     return BadRequest(new { message = "Invalid appointment time format. Expected format: HH:mm" });
 
+                // Generate PatientId if not provided
+                string finalPatientId = request.PatientId ?? "P-" + DateTime.Now.Ticks.ToString().Substring(0, 6);
+                
                 var appointment = new Appointment
                 {
-                    PatientId = request.PatientId ?? "P-" + DateTime.Now.Ticks.ToString().Substring(0, 6),
+                    PatientId = finalPatientId,
                     PatientName = request.PatientName ?? "",
                     PatientGender = (PatientGender)(request.PatientGender ?? 0),
                     Phone = request.Phone,
@@ -292,7 +374,19 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
                 
                 _logger.LogInformation("Appointment created successfully: ID={appointmentId}", appointment.AppointmentId);
                 
-                return Ok(appointment);
+                // ✅ AFTER creating appointment, create medical record automatically
+                int? medicalRecordId = null;
+                if (!string.IsNullOrEmpty(appointment.PatientId))
+                {
+                    medicalRecordId = await CreateMedicalRecordForPatient(appointment.PatientId, appointment.PatientName);
+                }
+                
+                return Ok(new 
+                { 
+                    appointment = appointment,
+                    medicalRecordId = medicalRecordId,
+                    message = "Appointment created successfully" + (medicalRecordId != null ? " Medical record also created." : "")
+                });
             }
             catch (DbUpdateException ex)
             {
@@ -320,15 +414,23 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
                 return NotFound();
             }
 
-            _logger.LogInformation("Current appointment status: {currentStatus}", appointment.Status);
+            bool statusChangedToConfirmed = false;
+            var oldStatus = appointment.Status;
 
             if (request.Status.HasValue &&
                 Enum.IsDefined(typeof(AppointmentStatus), request.Status.Value))
             {
-                var oldStatus = appointment.Status;
                 appointment.Status = (AppointmentStatus)request.Status.Value;
                 appointment.UpdatedAt = DateTime.Now;
                 _logger.LogInformation("Status updated from {oldStatus} to {newStatus}", oldStatus, appointment.Status);
+                
+                // ✅ Check if status changed to confirmed/upcoming
+                if ((oldStatus != AppointmentStatus.Upcoming && appointment.Status == AppointmentStatus.Upcoming) ||
+                    (oldStatus != AppointmentStatus.InProgress && appointment.Status == AppointmentStatus.InProgress) ||
+                    (oldStatus != AppointmentStatus.Completed && appointment.Status == AppointmentStatus.Completed))
+                {
+                    statusChangedToConfirmed = true;
+                }
             }
 
             if (request.IsSurgery.HasValue)
@@ -340,7 +442,19 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
             await _context.SaveChangesAsync();
             _logger.LogInformation("Appointment {id} saved successfully to database", id);
             
-            return NoContent();
+            // ✅ If appointment was confirmed/completed, create medical record automatically
+            int? medicalRecordId = null;
+            if (statusChangedToConfirmed && !string.IsNullOrEmpty(appointment.PatientId))
+            {
+                medicalRecordId = await CreateMedicalRecordForPatient(appointment.PatientId, appointment.PatientName);
+            }
+            
+            return Ok(new 
+            { 
+                message = "Appointment updated successfully",
+                medicalRecordId = medicalRecordId,
+                statusChanged = statusChangedToConfirmed
+            });
         }
 
         [HttpPut("confirm/{id}")]
@@ -375,10 +489,18 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
                 await _context.SaveChangesAsync();
                 _logger.LogInformation("Appointment {id} confirmed successfully", id);
                 
+                // ✅ AFTER confirming appointment, create medical record automatically
+                int? medicalRecordId = null;
+                if (!string.IsNullOrEmpty(appointment.PatientId))
+                {
+                    medicalRecordId = await CreateMedicalRecordForPatient(appointment.PatientId, appointment.PatientName);
+                }
+                
                 return Ok(new 
                 { 
                     message = "Appointment confirmed successfully",
                     appointment = appointment,
+                    medicalRecordId = medicalRecordId,
                     notificationSent = true
                 });
             }
@@ -390,4 +512,3 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
         }
     }
 }
-

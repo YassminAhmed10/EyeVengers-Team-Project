@@ -6,7 +6,7 @@ import {
     FaArrowRight, FaCheck, FaChevronLeft, FaChevronRight, FaShieldAlt,
     FaFileMedical, FaAllergies, FaHeartbeat, FaPills, FaSyringe, FaUserMd, FaEye,
     FaCheckCircle, FaCalendarDay, FaMoneyBillWave, FaInfoCircle, FaClipboard,
-    FaPercent, FaCalendarTimes, FaPhoneAlt, FaHistory, FaPlus
+    FaPercent, FaCalendarTimes, FaPhoneAlt, FaHistory, FaPlus, FaFlag
 } from 'react-icons/fa';
 import { appointmentsAPI, doctorsAPI } from '../services/apiConfig';
 import PatientLayout from '../components/PatientLayout';
@@ -39,6 +39,22 @@ const BookAppointmentPage = () => {
         'Light Sensitivity',
         'Night Blindness',
         'Headaches'
+    ];
+    
+    // Reason for visit options
+    const reasonForVisitOptions = [
+        'Regular Eye Checkup',
+        'Vision Correction (Glasses/Contacts)',
+        'Eye Infection',
+        'Cataract Surgery',
+        'LASIK Surgery',
+        'Glaucoma Screening',
+        'Diabetic Retinopathy',
+        'Eye Injury',
+        'Floaters/Flashes',
+        'Dry Eye Syndrome',
+        'Retina Issues',
+        'Other'
     ];
 
     // Insurance providers with offers
@@ -77,47 +93,74 @@ const BookAppointmentPage = () => {
         'Emergency Only',
         'Specialized Care'
     ];
-    const [formData, setFormData] = useState({
-        // Patient Info
-        patientName: '',
-        patientId: 'P-' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0'),
-        appointmentId: 'A-' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0'),
-        phone: '',
-        email: '',
-        dateOfBirth: '',
-        age: '',
-        gender: 'Male',
-        nationalId: '',
-        address: '',
+    const [formData, setFormData] = useState(() => {
+        // Get correct patientId from localStorage - PREFER patientIdentifier (P-XXXXXX format)
+        const patientId = localStorage.getItem("patientIdentifier") || 
+                         localStorage.getItem("PatientIdentifier") ||
+                         localStorage.getItem("patientId") || 
+                         localStorage.getItem("PatientId");
+        
+        const patientName = localStorage.getItem("patientName") || 
+                           localStorage.getItem("userName") || '';
+        
+        const email = localStorage.getItem("patientEmail") || 
+                     localStorage.getItem("userEmail") || '';
+        
+        const phone = localStorage.getItem("patientPhone") || '';
+        
+        const dob = localStorage.getItem("patientDateOfBirth") || '';
+        
+        return {
+            // Patient Info
+            patientName: patientName,
+            patientId: patientId || 'P-' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0'),
+            appointmentId: 'A-' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0'),
+            phone: phone,
+            email: email,
+            dateOfBirth: dob,
+            age: '',
+            gender: '',
+            nationalId: '',
+            address: '',
 
-        // Appointment Details
-        doctorId: '',
-        appointmentDate: '',
-        appointmentTime: '',
-        reasonForVisit: '',
+            // Appointment Details
+            doctorId: '',
+            appointmentDate: '',
+            appointmentTime: '',
+            reasonForVisit: '',
+            reasonForVisitOther: '',
 
-        // Medical History
-        eyeAllergies: [],
-        otherAllergies: '',
-        chronicDiseases: [],
-        currentMedications: '',
-        eyeSurgeries: [],
-        otherEyeSurgeries: '',
-        familyEyeDiseases: [],
-        otherFamilyEyeDiseases: '',
-        visionSymptoms: [],
+            // Medical History
+            eyeAllergies: [],
+            otherAllergies: '',
+            chronicDiseases: [],
+            currentMedications: '',
+            eyeSurgeries: [],
+            otherEyeSurgeries: '',
+            familyEyeDiseases: [],
+            otherFamilyEyeDiseases: '',
+            visionSymptoms: [],
 
-        // Insurance Information
-        insuranceProvider: '',
-        insuranceId: '',
-        policyNumber: '',
-        coveragePercentage: '',
-        coverageType: '',
-        insuranceExpiryDate: '',
-        insuranceContact: '',
-        noInsurance: false,
-        calculatedPrice: 500,
-        finalPrice: 500
+            // Insurance Information
+            insuranceProvider: '',
+            insuranceId: '',
+            policyNumber: '',
+            coveragePercentage: '',
+            coverageType: '',
+            insuranceExpiryDate: '',
+            insuranceContact: '',
+            noInsurance: false,
+            calculatedPrice: 500,
+            finalPrice: 500,
+            status: 'Pending'
+        };
+    });
+
+    // Field validation status: 'valid' | 'invalid' | 'duplicate' | 'empty'
+    const [fieldStatus, setFieldStatus] = useState({
+        phone: 'empty',
+        nationalId: 'empty',
+        email: 'empty'
     });
 
     // Fetch doctors on component mount
@@ -249,9 +292,161 @@ const BookAppointmentPage = () => {
         };
     };
 
+    // Validate Egyptian phone number format
+    const isValidEgyptianPhone = (phone) => {
+        if (!phone) return false;
+        // Remove all non-digit characters
+        const digitsOnly = phone.replace(/\D/g, '');
+        // Egyptian mobile: 01X (10 or 11 digits starting with 01)
+        // Pattern: 010, 011, 012, 015 followed by 8 digits
+        // OR: 0 followed by area code (2,3) and 8 digits
+        const egyptianMobilePattern = /^(201[0-2,5]|01[0-2,5])\d{8}$/; // +20 or 0 format
+        const egyptianLandlinePattern = /^(20[2,3]|0[2,3])\d{8}$/; // +20 or 0 format
+        
+        return egyptianMobilePattern.test(digitsOnly) || egyptianLandlinePattern.test(digitsOnly);
+    };
+
+    // Check for duplicate phone number
+    const checkPhoneDuplicate = async (phone) => {
+        if (!phone) {
+            setFieldStatus(prev => ({ ...prev, phone: 'empty' }));
+            return false;
+        }
+
+        if (!isValidEgyptianPhone(phone)) {
+            setFieldStatus(prev => ({ ...prev, phone: 'invalid' }));
+            return false;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:5201/api/Appointments/CheckPhoneExists/${phone}`);
+            if (response.ok) {
+                const { exists } = await response.json();
+                if (exists) {
+                    setFieldStatus(prev => ({ ...prev, phone: 'duplicate' }));
+                    return false;
+                } else {
+                    setFieldStatus(prev => ({ ...prev, phone: 'valid' }));
+                    return true;
+                }
+            } else {
+                setFieldStatus(prev => ({ ...prev, phone: 'valid' }));
+            }
+        } catch (error) {
+            console.warn('Phone check failed:', error);
+            setFieldStatus(prev => ({ ...prev, phone: 'valid' }));
+        }
+        return true;
+    };
+
+    // Validate Egyptian National ID format (14 digits)
+    const isValidEgyptianNationalId = (nationalId) => {
+        if (!nationalId) return false;
+        const digitsOnly = nationalId.replace(/\D/g, '');
+        // Egyptian National ID: exactly 14 digits
+        return /^\d{14}$/.test(digitsOnly);
+    };
+
+    // Check for duplicate National ID
+    const checkNationalIdDuplicate = async (nationalId) => {
+        if (!nationalId || nationalId.trim() === '') {
+            setFieldStatus(prev => ({ ...prev, nationalId: 'empty' }));
+            return true; // Optional field
+        }
+
+        if (!isValidEgyptianNationalId(nationalId)) {
+            setFieldStatus(prev => ({ ...prev, nationalId: 'invalid' }));
+            return false;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:5201/api/Appointments/CheckNationalIdExists/${nationalId}`);
+            if (response.ok) {
+                const { exists } = await response.json();
+                if (exists) {
+                    setFieldStatus(prev => ({ ...prev, nationalId: 'duplicate' }));
+                    return false;
+                } else {
+                    setFieldStatus(prev => ({ ...prev, nationalId: 'valid' }));
+                    return true;
+                }
+            } else {
+                setFieldStatus(prev => ({ ...prev, nationalId: 'valid' }));
+            }
+        } catch (error) {
+            console.warn('National ID check failed:', error);
+            setFieldStatus(prev => ({ ...prev, nationalId: 'valid' }));
+        }
+        return true;
+    };
+
+    // Helper function to get validation icon
+    const getValidationIcon = (status) => {
+        if (status === 'valid') {
+            return <span style={{color: '#22c55e', fontSize: '1.2rem'}}>✓</span>;
+        } else if (status === 'duplicate') {
+            return <span style={{color: '#ef4444', fontSize: '1.2rem', fontWeight: 'bold'}}>✗</span>;
+        } else if (status === 'invalid') {
+            return <span style={{color: '#ef4444', fontSize: '1.2rem', fontWeight: 'bold'}}>✗</span>;
+        }
+        return null;
+    };
+
+    // Helper function to get validation message
+    const getValidationMessage = (status) => {
+        if (status === 'duplicate') {
+            return <span style={{color: '#ef4444', fontSize: '0.75rem', fontWeight: '600'}}>Already exists in system</span>;
+        } else if (status === 'invalid') {
+            return <span style={{color: '#ef4444', fontSize: '0.75rem', fontWeight: '600'}}>Invalid format</span>;
+        }
+        return null;
+    };
+
+    // Validation function for each step
+    const validateStep = (step) => {
+        const errors = [];
+
+        if (step === 1) {
+            // Personal Information validation
+            if (!formData.patientName || formData.patientName.trim() === '') errors.push('Patient Name is required');
+            if (!formData.phone || formData.phone.trim() === '') errors.push('Phone Number is required');
+            if (!/^\d{10,}$/.test(formData.phone.replace(/\D/g, ''))) errors.push('Phone Number must be at least 10 digits');
+            if (!formData.email || formData.email.trim() === '') errors.push('Email Address is required');
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.push('Email Address is invalid');
+            if (!formData.gender || formData.gender === '') errors.push('Gender is required');
+            if (!formData.address || formData.address.trim() === '') errors.push('Address is required');
+        } else if (step === 2) {
+            // Appointment Details validation
+            if (!formData.doctorId || formData.doctorId === '') errors.push('Doctor is required');
+            if (!formData.appointmentDate || formData.appointmentDate === '') errors.push('Appointment Date is required');
+            if (!formData.appointmentTime || formData.appointmentTime === '') errors.push('Appointment Time is required');
+        } else if (step === 3) {
+            // Medical History - can be empty but validate if filled
+            if (formData.dateOfBirth && new Date(formData.dateOfBirth) > new Date()) {
+                errors.push('Date of Birth cannot be in the future');
+            }
+        } else if (step === 4) {
+            // Insurance Information - can be empty but validate if filled
+            if (formData.insuranceProvider && formData.insuranceExpiryDate) {
+                if (new Date(formData.insuranceExpiryDate) < new Date()) {
+                    errors.push('Insurance Expiry Date cannot be in the past');
+                }
+            }
+        }
+
+        return errors;
+    };
+
     const nextStep = () => {
-        // Don't allow advancing if trying to submit on non-final step
-        // Just advance to the next step without validation
+        // Validate current step before advancing
+        const stepErrors = validateStep(currentStep);
+        
+        if (stepErrors.length > 0) {
+            alert(`Please fix the following errors:\n\n${stepErrors.join('\n')}`);
+            return;
+        }
+
+        // Allow advancing to next step
         if (currentStep < 5) {
             setCurrentStep(currentStep + 1);
         }
@@ -292,11 +487,68 @@ const BookAppointmentPage = () => {
         setLoading(true);
 
         try {
-            // Validate required fields
-            if (!formData.patientName || !formData.appointmentDate || !formData.appointmentTime || !formData.doctorId) {
-                alert('Please fill in all required fields: Patient Name, Date, Time, and Doctor');
+            // Validate all required fields
+            const requiredFields = {
+                patientName: 'Patient Name',
+                phone: 'Phone Number',
+                email: 'Email Address',
+                gender: 'Gender',
+                address: 'Address',
+                appointmentDate: 'Appointment Date',
+                appointmentTime: 'Appointment Time',
+                doctorId: 'Doctor'
+            };
+
+            const missingFields = [];
+            for (const [field, label] of Object.entries(requiredFields)) {
+                if (!formData[field] || formData[field].toString().trim() === '') {
+                    missingFields.push(label);
+                }
+            }
+
+            if (missingFields.length > 0) {
+                alert(`Please fill in all required fields:\n${missingFields.join('\n')}`);
                 setLoading(false);
                 return;
+            }
+
+            // Validate phone number format (basic check)
+            if (!/^\d{10,}$/.test(formData.phone.replace(/\D/g, ''))) {
+                alert('Please enter a valid phone number (at least 10 digits)');
+                setLoading(false);
+                return;
+            }
+
+            // Check for duplicate phone number in database
+            try {
+                const phoneCheckResponse = await fetch(`http://localhost:5201/api/Appointments/CheckPhoneExists/${formData.phone}`);
+                if (phoneCheckResponse.ok) {
+                    const { exists } = await phoneCheckResponse.json();
+                    if (exists) {
+                        alert('This phone number is already registered in the system. Please use a different phone number.');
+                        setLoading(false);
+                        return;
+                    }
+                }
+            } catch (phoneCheckError) {
+                console.warn('Phone uniqueness check failed, continuing...', phoneCheckError);
+            }
+
+            // Check for duplicate National ID if provided
+            if (formData.nationalId && formData.nationalId.trim() !== '') {
+                try {
+                    const nationalIdCheckResponse = await fetch(`http://localhost:5201/api/Appointments/CheckNationalIdExists/${formData.nationalId}`);
+                    if (nationalIdCheckResponse.ok) {
+                        const { exists } = await nationalIdCheckResponse.json();
+                        if (exists) {
+                            alert('This National ID is already registered in the system. Please check your information.');
+                            setLoading(false);
+                            return;
+                        }
+                    }
+                } catch (nationalIdCheckError) {
+                    console.warn('National ID uniqueness check failed, continuing...', nationalIdCheckError);
+                }
             }
 
             // Format appointmentTime to HH:mm:ss
@@ -318,8 +570,8 @@ const BookAppointmentPage = () => {
                 email: formData.email || null,
                 patientBirthDate: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null,
                 age: formData.age ? formData.age.toString() : "0",
-                nationalId: formData.nationalId || null,
-                address: formData.address || null,
+                nationalId: formData.nationalId && formData.nationalId.trim() !== '' ? formData.nationalId : '',
+                address: formData.address && formData.address.trim() !== '' ? formData.address : '',
                 doctorId: parseInt(formData.doctorId),
                 appointmentDate: appointmentDateFormatted,
                 appointmentTime: timeFormatted,
@@ -372,7 +624,9 @@ const BookAppointmentPage = () => {
                     appointmentDate: appointmentData.appointmentDate,
                     appointmentTime: appointmentData.appointmentTime,
                     doctor: doctors.find(d => d.id === appointmentData.doctorId)?.name || 'Dr. Mohab Khairy',
-                    patientId: appointmentData.patientId
+                    patientId: appointmentData.patientId,
+                    finalPrice: appointmentData.finalPrice || 500,
+                    status: 'Pending Confirmation'
                 });
                 setBookingSuccess(true);
                 setLoading(false);
@@ -504,41 +758,16 @@ const BookAppointmentPage = () => {
                                 <span className="detail-label">Doctor:</span>
                                 <span className="detail-value">{bookingDetails?.doctor}</span>
                             </div>
-                        </div>
-
-                        <div className="next-steps">
-                            <h3><FaInfoCircle /> What's Next?</h3>
-                            <ul>
-                                <li>Our receptionist will review your request</li>
-                                <li>You will receive a confirmation call or email within 24 hours</li>
-                                <li>Please arrive 15 minutes before your appointment time</li>
-                                <li>Bring your ID and insurance card (if applicable)</li>
-                            </ul>
-                        </div>
-
-                        <div className="success-actions">
-                            <button 
-                                className="btn-primary" 
-                                onClick={() => {
-                                    setBookingSuccess(false);
-                                    setCurrentStep(1);
-                                    setFormData({});
-                                }}
-                            >
-                                <FaPlus /> Book Another Appointment
-                            </button>
-                            <button 
-                                className="btn-secondary" 
-                                onClick={() => navigate('/patient/appointments')}
-                            >
-                                <FaHistory /> View Appointment History
-                            </button>
-                            <button 
-                                className="btn-secondary" 
-                                onClick={() => navigate('/patient')}
-                            >
-                                Back to Home
-                            </button>
+                            <div className="detail-row">
+                                <FaMoneyBillWave className="detail-icon" />
+                                <span className="detail-label">Consultation Fee:</span>
+                                <span className="detail-value">{bookingDetails?.finalPrice} EGP</span>
+                            </div>
+                            <div className="detail-row">
+                                <FaShieldAlt className="detail-icon" />
+                                <span className="detail-label">Status:</span>
+                                <span className="detail-value" style={{ color: '#10b981', fontWeight: '700' }}>{bookingDetails?.status}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -559,149 +788,181 @@ const BookAppointmentPage = () => {
                         {/* Step 1: Personal Information */}
                         {currentStep === 1 && (
                             <div className="form-step active">
-                                <div className="form-grid personal-info-grid">
-                                    <div className="form-group">
-                                        <label><FaIdCard /> Patient ID</label>
-                                        <input
-                                            type="text"
-                                            name="patientId"
-                                            value={formData.patientId}
-                                            readOnly
-                                            className="readonly-input"
-                                        />
+                                <div className="form-grid-simple">
+                                    {/* Patient ID */}
+                                    <div className="form-field-simple">
+                                        <label>Patient ID</label>
+                                        <input type="text" value={formData.patientId} readOnly />
                                     </div>
 
-                                    <div className="form-group">
-                                        <label><FaCalendarAlt /> Appointment ID</label>
-                                        <input
-                                            type="text"
-                                            name="appointmentId"
-                                            value={formData.appointmentId}
-                                            readOnly
-                                            className="readonly-input"
-                                        />
+                                    {/* Appointment ID */}
+                                    <div className="form-field-simple">
+                                        <label>Appointment ID</label>
+                                        <input type="text" value={formData.appointmentId} readOnly />
                                     </div>
 
-                                    <div className="form-group">
-                                        <label><FaUser /> Full Name *</label>
-                                    <input
-                                        type="text"
-                                        name="patientName"
-                                        value={formData.patientName}
-                                        onChange={handleInputChange}
-                                        required
-                                        placeholder="Enter your full name"
-                                    />
-                                    {formData.patientName && (
-                                        <span className="validation-icon">
-                                            {formData.patientName.trim().length > 0 ? <FaCheck style={{color: '#22c55e'}} /> : <span style={{color: '#ef4444'}}>✕</span>}
-                                        </span>
-                                    )}
-                                </div>
+                                    {/* Full Name */}
+                                    <div className="form-field-simple">
+                                        <label>Full Name *</label>
+                                        <div className="input-with-validation">
+                                            <input
+                                                type="text"
+                                                name="patientName"
+                                                value={formData.patientName}
+                                                onChange={handleInputChange}
+                                                required
+                                                placeholder="Enter full name"
+                                            />
+                                            <span className="status-icon">
+                                                {formData.patientName && formData.patientName.trim() ? <span className="valid">✓</span> : formData.patientName ? <span className="invalid">✗</span> : null}
+                                            </span>
+                                        </div>
+                                    </div>
 
-                                <div className="form-group">
-                                    <label><FaPhone /> Phone Number *</label>
-                                    <input
-                                        type="tel"
-                                        name="phone"
-                                        value={formData.phone}
-                                        onChange={handleInputChange}
-                                        required
-                                        placeholder="+20 123 456 7890"
-                                        pattern="[0-9+\-\s]{7,}"
-                                    />
-                                    {formData.phone && (
-                                        <span className="validation-icon">
-                                            {/^[0-9+\-\s]{7,}$/.test(formData.phone) ? <FaCheck style={{color: '#22c55e'}} /> : <span style={{color: '#ef4444'}}>✕</span>}
-                                        </span>
-                                    )}
-                                </div>
+                                    {/* Phone Number */}
+                                    <div className="form-field-simple">
+                                        <label><FaFlag style={{color: '#CE1126', marginRight: '0.5rem'}} /> Phone Number *</label>
+                                        <div className="input-with-validation">
+                                            <input
+                                                type="tel"
+                                                name="phone"
+                                                value={formData.phone}
+                                                onChange={handleInputChange}
+                                                onBlur={() => checkPhoneDuplicate(formData.phone)}
+                                                required
+                                                placeholder="201xxxxxxxxxx (14 digits)"
+                                            />
+                                            <span className="status-icon">
+                                                {fieldStatus.phone === 'valid' && <span className="valid">✓</span>}
+                                                {fieldStatus.phone === 'duplicate' && <span className="invalid">✗</span>}
+                                                {fieldStatus.phone === 'invalid' && <span className="invalid">✗</span>}
+                                            </span>
+                                        </div>
+                                    </div>
 
-                                <div className="form-group">
-                                    <label><FaEnvelope /> Email Address</label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleInputChange}
-                                        placeholder="example@email.com"
-                                    />
-                                    {formData.email && (
-                                        <span className="validation-icon">
-                                            {/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? <FaCheck style={{color: '#22c55e'}} /> : <span style={{color: '#ef4444'}}>✕</span>}
-                                        </span>
-                                    )}
-                                </div>
+                                    {/* Email */}
+                                    <div className="form-field-simple">
+                                        <label>Email Address *</label>
+                                        <div className="input-with-validation">
+                                            <input
+                                                type="email"
+                                                name="email"
+                                                value={formData.email}
+                                                onChange={handleInputChange}
+                                                required
+                                                placeholder="example@email.com"
+                                            />
+                                            <span className="status-icon">
+                                                {formData.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? <span className="valid">✓</span> : formData.email ? <span className="invalid">✗</span> : null}
+                                            </span>
+                                        </div>
+                                    </div>
 
-                                <div className="form-group">
-                                    <label><FaVenusMars /> Gender *</label>
-                                    <select
-                                        name="gender"
-                                        value={formData.gender}
-                                        onChange={handleInputChange}
-                                        required
-                                    >
-                                        <option value="Male" style={{color: '#4682B4'}}>Male</option>
-                                        <option value="Female" style={{color: '#ff69b4'}}>Female</option>
-                                    </select>
-                                </div>
+                                    {/* Gender */}
+                                    <div className="form-field-simple">
+                                        <label>Gender *</label>
+                                        <div className="input-with-validation">
+                                            <select
+                                                name="gender"
+                                                value={formData.gender}
+                                                onChange={handleInputChange}
+                                                required
+                                            >
+                                                <option value="">Select gender</option>
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                            </select>
+                                            <span className="status-icon">
+                                                {formData.gender && <span className="valid">✓</span>}
+                                            </span>
+                                        </div>
+                                    </div>
 
-                                <div className="form-group">
-                                    <label><FaBirthdayCake /> Date of Birth</label>
-                                    <input
-                                        type="date"
-                                        name="dateOfBirth"
-                                        value={formData.dateOfBirth}
-                                        onChange={handleInputChange}
-                                    />
-                                </div>
+                                    {/* Date of Birth */}
+                                    <div className="form-field-simple">
+                                        <label>Date of Birth</label>
+                                        <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleInputChange} />
+                                    </div>
 
-                                <div className="form-group">
-                                    <label><FaIdCard /> National ID</label>
-                                    <input
-                                        type="text"
-                                        name="nationalId"
-                                        value={formData.nationalId}
-                                        onChange={handleInputChange}
-                                        placeholder="29801010101234"
-                                    />
-                                </div>
+                                    {/* National ID */}
+                                    <div className="form-field-simple">
+                                        <label>National ID (14 digits)</label>
+                                        <div className="input-with-validation">
+                                            <input
+                                                type="text"
+                                                name="nationalId"
+                                                value={formData.nationalId}
+                                                onChange={handleInputChange}
+                                                onBlur={() => checkNationalIdDuplicate(formData.nationalId)}
+                                                placeholder="xxxxxxxxxxxxx (14 digits)"
+                                                maxLength="14"
+                                            />
+                                            <span className="status-icon">
+                                                {fieldStatus.nationalId === 'valid' && <span className="valid">✓</span>}
+                                                {fieldStatus.nationalId === 'duplicate' && <span className="invalid">✗</span>}
+                                                {fieldStatus.nationalId === 'invalid' && <span className="invalid">✗</span>}
+                                            </span>
+                                        </div>
+                                    </div>
 
-                                <div className="form-group">
-                                    <label><FaHome /> Address</label>
-                                    <input
-                                        type="text"
-                                        name="address"
-                                        value={formData.address}
-                                        onChange={handleInputChange}
-                                        placeholder="Enter your full address"
-                                    />
-                                </div>
+                                    {/* Address */}
+                                    <div className="form-field-simple">
+                                        <label>Address *</label>
+                                        <div className="input-with-validation">
+                                            <input
+                                                type="text"
+                                                name="address"
+                                                value={formData.address}
+                                                onChange={handleInputChange}
+                                                required
+                                                placeholder="Enter address"
+                                            />
+                                            <span className="status-icon">
+                                                {formData.address && formData.address.trim() ? <span className="valid">✓</span> : formData.address ? <span className="invalid">✗</span> : null}
+                                            </span>
+                                        </div>
+                                    </div>
 
-                                <div className="form-group">
-                                    <label><FaCalendarAlt /> Age</label>
-                                    <input
-                                        type="number"
-                                        name="age"
-                                        value={formData.age || ''}
-                                        readOnly
-                                        className="readonly-input"
-                                        placeholder="Auto-calculated"
-                                    />
+                                    {/* Age */}
+                                    <div className="form-field-simple">
+                                        <label>Age</label>
+                                        <input type="number" name="age" value={formData.age || ''} readOnly placeholder="Auto-calculated" />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
                     {/* Step 2: Appointment Details */}
                     {currentStep === 2 && (
                         <div className="form-step active">
-                            <div className="appointment-details-layout">
-                                {/* Calendar Section */}
-                                <div className="calendar-wrapper">
-                                    <h3 className="section-subtitle"><FaCalendarDay /> Select Date</h3>
-                                    <div className="calendar-section">
-                                        <div className="calendar-header">
+                            {/* Doctor Selection - Simple */}
+                            <div className="step2-doctor-section">
+                                <h3><FaUserMd /> Select Your Doctor *</h3>
+                                <div className="step2-doctors-list">
+                                    {doctors.map((doctor) => (
+                                        <button
+                                            key={doctor.doctorId}
+                                            type="button"
+                                            className={`step2-doctor-btn ${formData.doctorId === doctor.doctorId.toString() ? 'selected' : ''}`}
+                                            onClick={() => setFormData(prev => ({ ...prev, doctorId: doctor.doctorId.toString() }))}
+                                        >
+                                            <span className="doctor-info">
+                                                <strong>{doctor.fullName}</strong>
+                                                <small>{doctor.specialization}</small>
+                                            </span>
+                                            {formData.doctorId === doctor.doctorId.toString() && <FaCheck />}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Two Column Layout */}
+                            <div className="step2-two-columns">
+                                {/* Left: Calendar */}
+                                <div className="step2-calendar-col">
+                                    <h3><FaCalendarDay /> Select Date *</h3>
+                                    <div className="step2-calendar">
+                                        <div className="step2-calendar-nav">
                                             <button type="button" onClick={() => {
                                                 if (currentMonth === 0) {
                                                     setCurrentMonth(11);
@@ -712,7 +973,7 @@ const BookAppointmentPage = () => {
                                             }}>
                                                 <FaChevronLeft />
                                             </button>
-                                            <h3>{monthNames[currentMonth]} {currentYear}</h3>
+                                            <span>{monthNames[currentMonth]} {currentYear}</span>
                                             <button type="button" onClick={() => {
                                                 if (currentMonth === 11) {
                                                     setCurrentMonth(0);
@@ -724,7 +985,7 @@ const BookAppointmentPage = () => {
                                                 <FaChevronRight />
                                             </button>
                                         </div>
-                                        <div className="days-header">
+                                        <div className="step2-calendar-days">
                                             <div className="day-name">Sun</div>
                                             <div className="day-name">Mon</div>
                                             <div className="day-name">Tue</div>
@@ -733,48 +994,62 @@ const BookAppointmentPage = () => {
                                             <div className="day-name">Fri</div>
                                             <div className="day-name">Sat</div>
                                         </div>
-                                        <div className="calendar-grid">
+                                        <div className="step2-calendar-grid">
                                             {renderCalendar()}
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Time Slots Section */}
-                                <div className="visit-details-wrapper">
-                                    <h3 className="section-subtitle"><FaClock /> Select Available Time</h3>
+                                {/* Right: Time Slots & Reason */}
+                                <div className="step2-time-col">
+                                    <h3><FaClock /> Select Time *</h3>
                                     {selectedDate ? (
-                                        <div className="time-slots-section">
-                                            <div className="time-slots-grid">
+                                        <>
+                                            <div className="step2-time-slots">
                                                 {timeSlots.map(time => (
                                                     <button
                                                         key={time}
                                                         type="button"
-                                                        className={`time-slot ${selectedTime === time ? 'selected' : ''}`}
+                                                        className={`step2-time-btn ${selectedTime === time ? 'selected' : ''}`}
                                                         onClick={() => handleTimeSelect(time)}
                                                     >
                                                         {time}
+                                                        {selectedTime === time && <FaCheck />}
                                                     </button>
                                                 ))}
                                             </div>
-                                        </div>
+
+                                            {selectedTime && (
+                                                <div className="step2-reason">
+                                                    <label><FaClipboard /> Reason for Visit *</label>
+                                                    <select
+                                                        name="reasonForVisit"
+                                                        value={formData.reasonForVisit}
+                                                        onChange={handleInputChange}
+                                                        required
+                                                    >
+                                                        <option value="">Select a reason</option>
+                                                        {reasonForVisitOptions.map(reason => (
+                                                            <option key={reason} value={reason}>{reason}</option>
+                                                        ))}
+                                                    </select>
+                                                    
+                                                    {formData.reasonForVisit === 'Other' && (
+                                                        <textarea
+                                                            name="reasonForVisitOther"
+                                                            value={formData.reasonForVisitOther || ''}
+                                                            onChange={handleInputChange}
+                                                            placeholder="Please describe your reason..."
+                                                            rows="4"
+                                                            required
+                                                        />
+                                                    )}
+                                                </div>
+                                            )}
+                                        </>
                                     ) : (
-                                        <div className="no-date-selected">
-                                            <p>Please select a date first to see available time slots</p>
-                                        </div>
-                                    )}
-                                    
-                                    {/* Reason for Visit */}
-                                    {selectedDate && selectedTime && (
-                                        <div className="reason-section">
-                                            <label><FaClipboard /> Reason for Visit *</label>
-                                            <textarea
-                                                name="reasonForVisit"
-                                                value={formData.reasonForVisit}
-                                                onChange={handleInputChange}
-                                                required
-                                                rows="4"
-                                                placeholder="Please describe your symptoms or reason for visit..."
-                                            />
+                                        <div className="step2-message">
+                                            <p>Select a date to see available times</p>
                                         </div>
                                     )}
                                 </div>
@@ -1328,7 +1603,13 @@ const BookAppointmentPage = () => {
                         )}
                         
                         {currentStep < 5 ? (
-                            <button type="button" className="btn-primary" onClick={nextStep}>
+                            <button 
+                                type="button" 
+                                className="btn-primary" 
+                                onClick={nextStep}
+                                disabled={validateStep(currentStep).length > 0}
+                                title={validateStep(currentStep).length > 0 ? `Please fix: ${validateStep(currentStep).join(', ')}` : ''}
+                            >
                                 Next <FaArrowRight />
                             </button>
                         ) : (

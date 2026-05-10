@@ -11,7 +11,7 @@ export default function RegisterPage({ setPage, onLogin, showSuccess }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "",
+    firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "", gender: "", address: "",
   });
   const [errors, setErrors] = useState({});
 
@@ -62,20 +62,89 @@ export default function RegisterPage({ setPage, onLogin, showSuccess }) {
       const fullName = `${formData.firstName} ${formData.lastName}`;
       const uid = result.user.uid;
 
-      localStorage.setItem("firebaseToken", result.token);
-      localStorage.setItem("userRole", "patient");
-      localStorage.setItem("userName", fullName);
-      localStorage.setItem("userEmail", formData.email);
-      localStorage.setItem("userId", uid);
-      localStorage.setItem("radiologyPatientName", fullName);
-      localStorage.setItem("radiologyPatientFirstName", formData.firstName);
-      localStorage.setItem("radiologyPatientLastName", formData.lastName);
-      localStorage.setItem("radiologyPatientId", uid);
-      localStorage.setItem("radiologyPatientEmail", formData.email);
+      // Also register in Radiology backend to save phone number and get RAD-##### ID
+      try {
+        const radiologyResponse = await fetch(
+          `${import.meta.env.VITE_RADIOLOGY_BASE_URL}/api/Patient/register`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+              firstName: formData.firstName,
+              lastName: formData.lastName,
+              email: formData.email,
+              phone: formData.phone,
+              gender: formData.gender || "",
+              address: formData.address || ""
+            })
+          }
+        );
 
-      window.dispatchEvent(new Event("userDataUpdated"));
-      onLogin({ name: fullName, firstName: formData.firstName, lastName: formData.lastName, id: uid, email: formData.email });
-      showSuccess("Registration Successful!", "home");
+        let radiologyPatientId = uid; // fallback to Firebase UID
+        let radiologyIdentifier = `RAD-${Math.random().toString(36).substr(2, 5).toUpperCase()}`; // fallback ID
+
+        if (radiologyResponse.ok) {
+          const radiologyData = await radiologyResponse.json();
+          radiologyPatientId = radiologyData.patientId || uid;
+          radiologyIdentifier = radiologyData.identifier || radiologyIdentifier;
+        }
+
+        localStorage.setItem("firebaseToken", result.token);
+        localStorage.setItem("userRole", "patient");
+        localStorage.setItem("userName", fullName);
+        localStorage.setItem("userEmail", formData.email);
+        localStorage.setItem("userId", uid);
+        localStorage.setItem("radiologyPatientName", fullName);
+        localStorage.setItem("radiologyPatientFirstName", formData.firstName);
+        localStorage.setItem("radiologyPatientLastName", formData.lastName);
+        localStorage.setItem("radiologyPatientId", radiologyPatientId);
+        localStorage.setItem("radiologyPatientEmail", formData.email);
+        localStorage.setItem("radiologyPatientPhone", formData.phone);
+        localStorage.setItem("radiologyPatientGender", formData.gender);
+        localStorage.setItem("radiologyPatientAddress", formData.address);
+        localStorage.setItem("radiologyPatientIdentifier", radiologyIdentifier);
+
+        window.dispatchEvent(new Event("userDataUpdated"));
+        onLogin({ 
+          name: fullName, 
+          firstName: formData.firstName, 
+          lastName: formData.lastName, 
+          id: radiologyIdentifier,
+          email: formData.email,
+          phone: formData.phone 
+        });
+        showSuccess("Registration Successful!", "home");
+      } catch (err) {
+        console.error("Error registering with Radiology backend:", err);
+        // Still consider registration successful if Firebase worked
+        localStorage.setItem("firebaseToken", result.token);
+        localStorage.setItem("userRole", "patient");
+        localStorage.setItem("userName", fullName);
+        localStorage.setItem("userEmail", formData.email);
+        localStorage.setItem("userId", uid);
+        localStorage.setItem("radiologyPatientName", fullName);
+        localStorage.setItem("radiologyPatientFirstName", formData.firstName);
+        localStorage.setItem("radiologyPatientLastName", formData.lastName);
+        localStorage.setItem("radiologyPatientId", uid);
+        localStorage.setItem("radiologyPatientEmail", formData.email);
+        localStorage.setItem("radiologyPatientPhone", formData.phone);
+        localStorage.setItem("radiologyPatientGender", formData.gender);
+        localStorage.setItem("radiologyPatientAddress", formData.address);
+
+        window.dispatchEvent(new Event("userDataUpdated"));
+        onLogin({ 
+          name: fullName, 
+          firstName: formData.firstName, 
+          lastName: formData.lastName, 
+          id: uid, 
+          email: formData.email,
+          phone: formData.phone 
+        });
+        showSuccess("Registration Successful!", "home");
+      }
     } else {
       if (result.code === "auth/email-already-in-use") setErrors({ email: result.error });
       else if (result.code === "auth/weak-password") setErrors({ password: result.error });
@@ -237,6 +306,49 @@ export default function RegisterPage({ setPage, onLogin, showSuccess }) {
             />
             {errors.phone && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ fontSize: 11, color: "#dc3545", marginTop: 6, display: "block" }}>{errors.phone}</motion.span>}
           </motion.div>
+
+          {/* Gender + Address */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 22 }}>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.37 }}
+            >
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a2e", marginBottom: 8 }}>Gender</label>
+              <motion.select 
+                whileFocus="focus" 
+                variants={inputVariants} 
+                name="gender"
+                value={formData.gender} onChange={handleChange}
+                style={{ width: "100%", padding: "15px 18px", border: "2px solid #e0e0e0", borderRadius: 12, fontSize: 15, outline: "none", background: "#fff", boxSizing: "border-box", cursor: "pointer" }}
+                onMouseEnter={(e) => { e.target.style.borderColor = "#1f6bff"; }}
+                onMouseLeave={(e) => { if (!formData.gender) e.target.style.borderColor = "#e0e0e0"; }}
+              >
+                <option value="">Select gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </motion.select>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.42 }}
+            >
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1a1a2e", marginBottom: 8 }}>Address</label>
+              <motion.input 
+                whileFocus="focus" 
+                variants={inputVariants} 
+                type="text" name="address"
+                value={formData.address} onChange={handleChange}
+                style={{ width: "100%", padding: "15px 18px", border: "2px solid #e0e0e0", borderRadius: 12, fontSize: 15, outline: "none", background: "#fff", boxSizing: "border-box" }}
+                placeholder="Street address (optional)"
+                onMouseEnter={(e) => { e.target.style.borderColor = "#1f6bff"; }}
+                onMouseLeave={(e) => { if (!formData.address) e.target.style.borderColor = "#e0e0e0"; }}
+              />
+            </motion.div>
+          </div>
 
           {/* Password */}
           <motion.div

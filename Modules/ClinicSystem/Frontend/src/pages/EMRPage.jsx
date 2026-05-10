@@ -6,12 +6,12 @@ import {
     CalendarMonth, Phone, Edit, Description, Science, Visibility,
     LocalHospital, Medication, Assignment, EventNote, AccessTime,
     CheckCircle, HistoryEdu, MedicalServices, Person, Email,
-    Home, CreditCard, ExpandMore, Badge, CloudDownload
+    Home, CreditCard, ExpandMore, Badge, CloudDownload, Add
 } from '@mui/icons-material';
 import emrService from '../services/emrService';
 import { appointmentsAPI } from '../services/apiConfig';
 
-// ===== History Timeline Component (GitHub-style) =====
+// ===== History Timeline Component =====
 function HistoryTimeline({ entries }) {
     if (!entries || entries.length === 0) return null;
 
@@ -61,7 +61,6 @@ function HistoryTimeline({ entries }) {
             </h2>
 
             <div style={{ position: "relative" }}>
-                {/* Vertical line */}
                 <div style={{
                     position: "absolute",
                     left: "20px",
@@ -81,7 +80,6 @@ function HistoryTimeline({ entries }) {
                             marginBottom: idx < entries.length - 1 ? "24px" : "0",
                             position: "relative"
                         }}>
-                            {/* Icon bubble */}
                             <div style={{
                                 width: "42px",
                                 height: "42px",
@@ -99,7 +97,6 @@ function HistoryTimeline({ entries }) {
                                 <cfg.IconComponent sx={{ fontSize: 20, color: cfg.color }} />
                             </div>
 
-                            {/* Content card */}
                             <div style={{
                                 flex: 1,
                                 background: cfg.bg,
@@ -167,9 +164,6 @@ function HistoryTimeline({ entries }) {
     );
 }
 
-// ===== Appointment Info Card =====
-
-
 // ===== Main EMRPage =====
 function EMRPage() {
     const navigate = useNavigate();
@@ -182,26 +176,28 @@ function EMRPage() {
     const [medicalRecordExists, setMedicalRecordExists] = useState(false);
     const [medicalRecordId, setMedicalRecordId] = useState(null);
     const [appointmentRawData, setAppointmentRawData] = useState(null);
-    const [numericPatientId, setNumericPatientId] = useState(null); // ✅ الـ ID الرقمي الصحيح
-    const numericPatientIdRef = React.useRef(null); // ✅ ref for stable callbacks
-    const [lastModified, setLastModified] = useState(null); // ✅ تاريخ آخر تعديل
-    const [loadingFromDB, setLoadingFromDB] = useState(false); // ✅ تحميل من الداتا بيز
-    const [lastSaved, setLastSaved] = useState(null); // ✅ آخر save: { section, timestamp }
+    const [numericPatientId, setNumericPatientId] = useState(null);
+    const numericPatientIdRef = React.useRef(null);
+    const [lastModified, setLastModified] = useState(null);
+    const [loadingFromDB, setLoadingFromDB] = useState(false);
+    const [lastSaved, setLastSaved] = useState(null);
 
     const userRole = localStorage.getItem("userRole");
     const currentPatientId = localStorage.getItem("patientId");
 
-    // ===== استخراج الـ numeric ID من أي صيغة =====
     const extractNumericId = React.useCallback((id) => {
         if (!id) return null;
-        // لو رقم بالفعل
-        if (/^\d+$/.test(id.toString())) return id.toString();
-        // لو صيغة زي "P-629904" أو "PAT-123"
-        const match = id.toString().match(/\d+/);
-        return match ? match[0] : null;
+        // Remove 'P-' or 'PAT-' prefix first
+        const cleaned = String(id).replace(/^(P-|PAT-)/i, '').trim();
+        // If it's pure numeric, return it
+        if (/^\d+$/.test(cleaned)) return cleaned;
+        // Otherwise try to extract first numeric sequence
+        const match = cleaned.match(/(\d+)/);
+        const extracted = match ? match[1] : null;
+        console.log(`[EXTRACT ID] Input: "${id}" → Cleaned: "${cleaned}" → Extracted: "${extracted}"`);
+        return extracted;
     }, []);
 
-    // ===== بناء timeline من بيانات السجل الطبي =====
     // التحقق من الصلاحيات
     React.useEffect(() => {
         if (userRole !== "Doctor" && userRole !== "Patient") {
@@ -212,7 +208,6 @@ function EMRPage() {
         }
     }, [userRole, navigate, patientId, currentPatientId]);
 
-    // ===== Format Functions (defined before useEffect) =====
     const calculateAge = React.useCallback((dob) => {
         if (!dob) return null;
         try {
@@ -233,10 +228,21 @@ function EMRPage() {
     }, []);
 
     const formatMedicalRecordData = React.useCallback((medicalRecord, appointment) => {
-        // Support both nested patientInfo and flat structure
-        const patientInfo = medicalRecord.patientInfo || medicalRecord;
+        // Patient info is at root level of API response
+        const patientInfo = medicalRecord;
 
-        // ── complaints: DB first, fall back to appointment reasonForVisit ──
+        console.log("[FORMAT] API Response Patient Fields:", {
+            name: medicalRecord.name,
+            age: medicalRecord.age,
+            gender: medicalRecord.gender,
+            contactNumber: medicalRecord.contactNumber,
+            email: medicalRecord.email,
+            address: medicalRecord.address,
+            birthDate: medicalRecord.birthDate,
+            insuranceCompany: medicalRecord.insuranceCompany,
+            emergencyContactName: medicalRecord.emergencyContactName
+        });
+
         const dbComplaints = medicalRecord.complaints || [];
         const complaints = dbComplaints.length > 0
             ? dbComplaints
@@ -244,7 +250,6 @@ function EMRPage() {
                 ? [{ complaint: appointment.reasonForVisit, originalText: appointment.reasonForVisit, createdAt: appointment.appointmentDate }]
                 : []);
 
-        // ── histories: DB first, fall back to appointment medical history fields ──
         const dbHistories = medicalRecord.histories || [];
         const hasAptHistory = appointment && (
             appointment.chronicDiseases || appointment.currentMedications ||
@@ -266,25 +271,42 @@ function EMRPage() {
                 createdAt: appointment.appointmentDate
             }] : []);
 
-        return {
+        // Format age to string, ensuring it's not null
+        const ageValue = patientInfo.age 
+            ? String(patientInfo.age).trim() 
+            : (appointment?.age 
+                ? String(appointment.age).trim() 
+                : calculateAge(patientInfo.birthDate || patientInfo.dateOfBirth || appointment?.patientBirthDate) || "");
+
+        // Format gender - handle null/empty cases
+        const genderValue = patientInfo.gender 
+            ? patientInfo.gender.trim() 
+            : (appointment?.patientGender === 0 ? "Male" : appointment?.patientGender === 1 ? "Female" : "");
+
+        // Format address - handle null/empty cases
+        const addressValue = patientInfo.address 
+            ? patientInfo.address.trim() 
+            : (appointment?.address ? appointment.address.trim() : "");
+
+        const formattedResult = {
             name: patientInfo.name || appointment?.patientName || "Patient",
-            patientID: patientInfo.patientId || numericPatientIdRef.current || patientId || "Unknown",
-            age: patientInfo.age || calculateAge(patientInfo.birthDate || patientInfo.dateOfBirth) || null,
-            gender: formatGender(patientInfo.gender),
+            patientID: medicalRecord.patientIdentifier || patientInfo.patientIdentifier || patientInfo.patientId || numericPatientIdRef.current || patientId || "Unknown",
+            age: ageValue,
+            gender: genderValue,
             contactNumber: patientInfo.contactNumber || patientInfo.phone || appointment?.phone || "",
             email: patientInfo.email || appointment?.email || "",
-            address: patientInfo.address || "",
-            insuranceCompany: patientInfo.insuranceCompany || "",
-            birthDate: patientInfo.birthDate || patientInfo.dateOfBirth || null,
+            address: addressValue,
+            insuranceCompany: patientInfo.insuranceCompany || appointment?.insuranceCompany || "",
+            birthDate: patientInfo.birthDate || patientInfo.dateOfBirth || appointment?.patientBirthDate || null,
             visitDate: medicalRecord.visitDate
                 ? new Date(medicalRecord.visitDate).toISOString().split('T')[0]
                 : new Date().toISOString().split('T')[0],
-            nationalId: patientInfo.nationalId || "",
-            insuranceId: patientInfo.insuranceId || "",
-            policyNumber: patientInfo.policyNumber || "",
-            coverage: patientInfo.coverage || "",
-            emergencyContactName: patientInfo.emergencyContactName || "",
-            emergencyContactPhone: patientInfo.emergencyContactPhone || "",
+            nationalId: patientInfo.nationalId || appointment?.nationalId || "",
+            insuranceId: patientInfo.insuranceId || appointment?.insuranceId || "",
+            policyNumber: patientInfo.policyNumber || appointment?.policyNumber || "",
+            coverage: patientInfo.coverage || appointment?.coverage || "",
+            emergencyContactName: patientInfo.emergencyContactName || appointment?.emergencyContactName || "",
+            emergencyContactPhone: patientInfo.emergencyContactPhone || appointment?.emergencyContactPhone || "",
             complaints,
             histories,
             investigations: medicalRecord.investigations || [],
@@ -294,18 +316,17 @@ function EMRPage() {
             prescriptions: medicalRecord.prescriptions || [],
             diagnoses: medicalRecord.diagnoses || []
         };
+
+        console.log("[FORMAT] Final Formatted Result:", formattedResult);
+        return formattedResult;
     }, [patientId, calculateAge, formatGender]);
 
     const formatAppointmentData = React.useCallback((a) => {
-        // ✅ Fix swapped PatientId/PatientName in database
-        // Check if patientId contains a name (has spaces/letters) instead of ID
         let actualPatientId = a.patientId;
         let actualPatientName = a.patientName;
         
-        // If patientId looks like a name (contains space or doesn't start with P-/PAT-)
         if (actualPatientId && (actualPatientId.includes(' ') || 
             (!actualPatientId.startsWith('P-') && !actualPatientId.startsWith('PAT-')))) {
-            // Swap them - the values are reversed in DB
             const temp = actualPatientId;
             actualPatientId = actualPatientName || numericPatientIdRef.current || patientId;
             actualPatientName = temp;
@@ -375,69 +396,64 @@ function EMRPage() {
                 setLoading(true);
                 setError("");
 
-                // ✅ استخراج الـ ID الرقمي الصحيح
                 const rawId = patientId || (userRole === "Patient" ? currentPatientId : null);
-                console.log("🔍 Raw ID:", rawId);
+                console.log("[SEARCH] 🔍 Raw ID from URL/localStorage:", rawId);
                 if (!rawId) throw new Error("No patient ID found");
 
-                const numId = extractNumericId(rawId);
-                console.log("🔢 Numeric ID:", numId);
+                const numId = rawId; // Keep P-XXXXXX as-is, don't strip prefix
+                console.log("[SEARCH] ✅ Extracted Numeric ID:", numId);
+                if (!numId) {
+                    console.error("[SEARCH] ❌ CRITICAL: Could not extract numeric ID from:", rawId);
+                    throw new Error("Invalid patient ID format");
+                }
+                
                 numericPatientIdRef.current = numId;
                 setNumericPatientId(numId);
+                console.log("[SEARCH] 📌 Set as PRIMARY authoritative patientId:", numId);
 
-                // ✅ Keep original rawId for matching (e.g. "P-012") and numId for DB lookups
-                const idToFetch = numId || rawId;
-                console.log("🎯 ID to Fetch:", idToFetch, "| Raw ID:", rawId);
+                // ✓ MODIFIED: Use numId as the primary ID
+                const cleanId = numId; // Use extracted numeric ID, not the P- prefixed version
+                const idToFetch = numId;
+                console.log("[TARGET] 🎯 ID to Fetch (AUTHORITATIVE):", idToFetch);
 
-                // Step 1: (history no longer displayed in UI, skip)
-                console.log("📋 Step 1: Skipping history fetch (not used in UI).");
-
-                // التحقق من وجود سجل طبي — try rawId first (e.g. "P-012"), then numId
-                console.log("📋 Step 2: Checking if medical record exists...");
-                let checkResult = await emrService.checkMedicalRecordExists(rawId);
+                console.log("[STEP] Step 2: Checking if medical record exists...");
+                let checkResult = await emrService.checkMedicalRecordExists(cleanId || rawId);
                 if (!checkResult.exists && numId && numId !== rawId) {
                     checkResult = await emrService.checkMedicalRecordExists(numId);
                 }
-                console.log("✅ Check result:", checkResult);
+                console.log("[SUCCESS] Check result:", checkResult);
                 setMedicalRecordExists(checkResult.exists);
 
                 let appointmentData = null;
-                let medicalRecord = null;
-
-                // ✅ جلب بيانات الـ appointment دايمًا (إن وجدت)
-                console.log("📋 Step 3: Fetching appointments...");
-                let correctedPatientId = null; // ✅ متغير محلي لتخزين الـ ID الصحيح
+                
+                console.log("[STEP] Step 3: Fetching appointments...");
+                let correctedPatientId = null;
                 
                 try {
                     const appointments = await appointmentsAPI.getAll();
-                    console.log("✅ All appointments count:", appointments.length);
+                    console.log("[SUCCESS] All appointments count:", appointments.length);
                     const patientAppointments = appointments.filter(a => {
-                        // Check both patientId and patientName (in case they're swapped in DB)
                         const aPatientId = a.patientId?.toString();
                         const aPatientName = a.patientName?.toString();
                         const searchId = idToFetch?.toString();
-                        const originalId = rawId?.toString(); // ✅ Keep original e.g. "P-012"
+                        const originalId = rawId?.toString();
                         
                         return aPatientId === searchId || 
                                aPatientId === originalId ||
                                aPatientName === searchId ||
                                aPatientName === originalId ||
-                               // Also check if patientName field contains the ID we're looking for
                                (aPatientName && (aPatientName.startsWith('P-') || aPatientName.startsWith('PAT-')) && (aPatientName === searchId || aPatientName === originalId));
                     });
-                    console.log("✅ Patient appointments count:", patientAppointments.length);
+                    console.log("[SUCCESS] Patient appointments count:", patientAppointments.length);
                     
                     if (patientAppointments.length > 0) {
-                        // أحدث appointment
                         appointmentData = patientAppointments.sort(
                             (a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate)
                         )[0];
-                        console.log("✅ Selected appointment:", appointmentData);
+                        console.log("[SUCCESS] Selected appointment:", appointmentData);
                         setAppointmentRawData(appointmentData);
                         
-                        // ✅ استخدام الـ patientId الصحيح من الـ appointment
                         if (appointmentData.patientId || appointmentData.patientName) {
-                            // Check which field has the actual ID
                             const correctId = (appointmentData.patientId && 
                                 (appointmentData.patientId.startsWith('P-') || 
                                  appointmentData.patientId.startsWith('PAT-') || 
@@ -451,10 +467,10 @@ function EMRPage() {
                                 : null;
                             
                             if (correctId) {
-                                console.log("🔧 Correcting ID from appointment:", correctId);
+                                console.log("[FIX] Correcting ID from appointment:", correctId);
                                 const correctedNumId = extractNumericId(correctId);
                                 if (correctedNumId) {
-                                    correctedPatientId = correctedNumId; // ✅ حفظ في متغير محلي
+                                    correctedPatientId = correctedNumId;
                                     numericPatientIdRef.current = correctedNumId;
                                     setNumericPatientId(correctedNumId);
                                 }
@@ -462,61 +478,49 @@ function EMRPage() {
                         }
                     }
                 } catch (e) {
-                    console.warn("⚠️ Could not fetch appointments:", e);
+                    console.warn("[WARNING] Could not fetch appointments:", e);
                 }
 
-                console.log("📋 Step 4: Loading patient data...");
+                console.log("[STEP] Step 4: Loading patient data...");
                 
-                // ✅ استخدام الـ ID الصحيح (من appointment إن وُجد، أو من الأصلي)
                 const finalIdToFetch = correctedPatientId || numId || idToFetch;
-                const finalRawId = rawId; // ✅ Keep original for fallback
-                console.log("🎯 Final ID to use:", finalIdToFetch, "| Raw:", finalRawId);
+                console.log("[TARGET] Final ID to use:", finalIdToFetch);
 
-                // ✅ إعادة جلب التاريخ والتحقق باستخدام الـ ID الصحيح إذا تغير
                 if (correctedPatientId && correctedPatientId !== rawId && correctedPatientId !== numId) {
                     console.log("🔄 Re-checking existence with corrected ID:", correctedPatientId);
                     const correctedCheck = await emrService.checkMedicalRecordExists(correctedPatientId);
-                    console.log("✅ Corrected check result:", correctedCheck);
+                    console.log("[SUCCESS] Corrected check result:", correctedCheck);
                     checkResult.exists = correctedCheck.exists;
                     checkResult.recordId = correctedCheck.recordId;
                 }
                 
-                if (checkResult.exists) {
-                    console.log("✅ Medical record exists, loading from database...");
+                if (checkResult.exists && checkResult.recordId) {
+                    console.log("[SUCCESS] Medical record exists, loading from database...");
                     setMedicalRecordId(checkResult.recordId);
-                    medicalRecord = await emrService.getPatientMedicalRecord(finalIdToFetch);
-                    console.log("📋 Medical Record from API:", medicalRecord);
+                    const medicalRecord = await emrService.getPatientMedicalRecord(finalIdToFetch);
+                    console.log("[DATA] Medical Record from API:", medicalRecord);
                     const formattedData = formatMedicalRecordData(medicalRecord, appointmentData);
-                    console.log("✅ Formatted Data:", formattedData);
+                    console.log("[SUCCESS] Formatted Data:", formattedData);
                     setPatientData(formattedData);
-                    // ✅ حفظ آخر تاريخ تعديل
                     if (medicalRecord.updatedAt) {
                         setLastModified(medicalRecord.updatedAt);
                     } else if (medicalRecord.createdAt) {
                         setLastModified(medicalRecord.createdAt);
                     }
                 } else if (appointmentData) {
-                    console.log("📅 No medical record, using appointment data...");
-                    console.log("📅 Appointment Data:", appointmentData);
+                    console.log("[INFO] No medical record, using appointment data...");
                     const appointmentFormatted = formatAppointmentData(appointmentData);
-                    console.log("✅ Formatted Appointment Data:", appointmentFormatted);
+                    console.log("[SUCCESS] Formatted Appointment Data:", appointmentFormatted);
                     setPatientData(appointmentFormatted);
                 } else {
-                    console.log("⚠️ No data available, using fallback...");
+                    console.log("[WARNING] No data available, using fallback...");
                     setPatientData(getFallbackData(idToFetch));
                 }
 
-                console.log("✅ All done! Patient data loaded successfully.");
+                console.log("[SUCCESS] All done! Patient data loaded successfully.");
 
             } catch (err) {
-                console.error("❌ Full Error:", err);
-                console.error("❌ Error Message:", err.message);
-                console.error("❌ Error Stack:", err.stack);
-                if (err.response) {
-                    console.error("❌ API Response:", err.response);
-                    console.error("❌ API Status:", err.response.status);
-                    console.error("❌ API Data:", err.response.data);
-                }
+                console.error("[ERROR] Full Error:", err);
                 setError(`Failed to load patient data: ${err.message || 'Unknown error'}`);
                 const rawId = patientId || currentPatientId;
                 const numId = extractNumericId(rawId);
@@ -532,8 +536,9 @@ function EMRPage() {
     const handleCreateMedicalRecord = async () => {
         try {
             setLoading(true);
-            const idToUse = patientId || numericPatientId; // ✅ prefer original "P-012" format
-            const response = await emrService.createMedicalRecord(idToUse);
+            const idToUse = patientId || numericPatientId;
+            const cleanId = idToUse ? idToUse.replace(/^P-/, '') : '';
+            const response = await emrService.createMedicalRecord(cleanId);
 
             if (response && response.success) {
                 const newRecordId = response.recordId;
@@ -542,13 +547,11 @@ function EMRPage() {
                 const now = new Date().toISOString();
                 setLastModified(now);
 
-                // ✅ Reload from DB to get real patient info (name, age, etc.)
                 try {
                     const medicalRecord = await emrService.getMedicalRecordById(newRecordId);
                     const formattedData = formatMedicalRecordData(medicalRecord, appointmentRawData);
                     setPatientData(prev => ({
-                        ...prev,
-                        // Overwrite with DB data but keep appointment values as fallback
+                        ...formattedData,
                         name: formattedData.name || prev?.name || "Patient",
                         patientID: formattedData.patientID || prev?.patientID || idToUse,
                         age: formattedData.age || prev?.age || null,
@@ -563,7 +566,6 @@ function EMRPage() {
                         emergencyContactName: formattedData.emergencyContactName || prev?.emergencyContactName || "",
                         emergencyContactPhone: formattedData.emergencyContactPhone || prev?.emergencyContactPhone || "",
                         visitDate: new Date().toISOString().split('T')[0],
-                        // ✅ Keep appointment sub-arrays as pre-fill (DB is empty after fresh create)
                         complaints: prev?.complaints || [],
                         histories: prev?.histories || [],
                         investigations: prev?.investigations || [],
@@ -575,13 +577,9 @@ function EMRPage() {
                     }));
                 } catch (reloadErr) {
                     console.warn("Could not reload patient info after create:", reloadErr);
-                    setPatientData(prev => ({
-                        ...prev,
-                        visitDate: new Date().toISOString().split('T')[0],
-                    }));
                 }
 
-                alert("Medical record created successfully! You can now save each section.");
+                alert("Medical record created successfully!");
             } else {
                 throw new Error(response?.message || "Failed to create medical record");
             }
@@ -593,7 +591,6 @@ function EMRPage() {
         }
     };
 
-    // ✅ تحميل كل بيانات السجل الطبي من الداتا بيز
     const handleLoadFromDatabase = async () => {
         if (!medicalRecordId) return;
         try {
@@ -601,7 +598,6 @@ function EMRPage() {
             setError("");
             const medicalRecord = await emrService.getMedicalRecordById(medicalRecordId);
             const formattedData = formatMedicalRecordData(medicalRecord, appointmentRawData);
-            // ✅ تحميل كل البيانات مع الحفاظ على بيانات المريض الأساسية
             setPatientData(prev => ({
                 ...formattedData,
                 name: formattedData.name || prev?.name || "Patient",
@@ -622,7 +618,6 @@ function EMRPage() {
             }));
             if (medicalRecord.updatedAt) setLastModified(medicalRecord.updatedAt);
             else if (medicalRecord.createdAt) setLastModified(medicalRecord.createdAt);
-            // (history list no longer needed in UI)
         } catch (err) {
             console.error("Error loading from database:", err);
             setError("Failed to load data from database: " + err.message);
@@ -635,19 +630,16 @@ function EMRPage() {
         navigate(userRole === "Patient" ? "/patient" : "/doctor");
     };
 
-    // ✅ callback بيتفعل بعد كل save بدون reload - بيجيب أحدث بيانات من DB
     const onSectionSaved = async (sectionName) => {
         const now = new Date().toISOString();
         setLastSaved({ section: sectionName, timestamp: now });
         setLastModified(now);
-        // ✅ Re-fetch من DB عشان كل الفورمز تتحدث بأحدث بيانات محفوظة
         if (medicalRecordId) {
             try {
                 const medicalRecord = await emrService.getMedicalRecordById(medicalRecordId);
                 const formattedData = formatMedicalRecordData(medicalRecord, appointmentRawData);
                 setPatientData(prev => ({
                     ...formattedData,
-                    // ✅ الحفاظ على بيانات المريض الشخصية (ممكن تكون فاضية في الـ medical record)
                     name: formattedData.name || prev?.name || "Patient",
                     patientID: formattedData.patientID || prev?.patientID || "",
                     age: formattedData.age || prev?.age || null,
@@ -705,11 +697,10 @@ function EMRPage() {
                             cursor: "pointer", fontWeight: "500", fontSize: "14px"
                         }}
                     >
-                        ➕ Create Medical Record
+                        <Add sx={{ fontSize: '1rem' }} /> Create Medical Record
                     </button>
                 )}
 
-                {/* ✅ بعد ال Create - يتحول لزر آخر save ولو دوستيه يحمل من DB */}
                 {userRole === "Doctor" && medicalRecordExists && lastSaved && (
                     <button
                         onClick={handleLoadFromDatabase}
@@ -756,7 +747,6 @@ function EMRPage() {
                 justifyContent: "space-between",
                 gap: "20px"
             }}>
-                {/* Patient Name + ID + Last Updated */}
                 <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                     <div style={{
                         width: "52px", height: "52px",
@@ -778,7 +768,7 @@ function EMRPage() {
                         }}>
                             <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                                 <Badge sx={{ fontSize: 14 }} />
-                                ID: {numericPatientId || patientData?.patientID || "—"}
+                                ID: {patientData?.patientID || numericPatientId || "—"}
                             </span>
                             {lastModified && (
                                 <span style={{
@@ -805,7 +795,6 @@ function EMRPage() {
                         </div>
                     </div>
                 </div>
-
             </div>
 
             {/* Warning for doctors */}
@@ -820,21 +809,22 @@ function EMRPage() {
                 </div>
             )}
 
-
-
             {/* Main Medical Record */}
             <main>
                 {patientData && (
-                    <MedicalRecord
-                        patientName={patientData.name}
-                        patientId={numericPatientId || patientData.patientID}
-                        initialPatientData={patientData}
-                        fromAppointment={!medicalRecordExists}
-                        medicalRecordId={medicalRecordId}
-                        onSectionSaved={onSectionSaved}
-                        readOnly={userRole === 'Patient'}
-                        userRole={userRole}
-                    />
+                    <>
+                        {console.log("[RENDER] MedicalRecord - numericPatientId (authoritative from URL):", numericPatientId, "patientData.patientID:", patientData.patientID)}
+                        <MedicalRecord
+                            patientName={patientData.name}
+                            patientId={numericPatientId}
+                            initialPatientData={patientData}
+                            fromAppointment={!medicalRecordExists}
+                            medicalRecordId={medicalRecordId}
+                            onSectionSaved={onSectionSaved}
+                            readOnly={userRole === 'Patient'}
+                            userRole={userRole}
+                        />
+                    </>
                 )}
             </main>
         </div>

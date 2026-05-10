@@ -1,5 +1,4 @@
 // src/components/PatientMedicalRecord.jsx
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -50,20 +49,36 @@ const RECORD_KEY = {
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5201";
 
-// ─── Helpers ─────────────────────────────────────────────────
-function getPatientId() {
-  // ✅ Try every possible key the login page might use
-  return (
-    localStorage.getItem("patientId") ||
-    localStorage.getItem("PatientId") ||
-    localStorage.getItem("patient_id") ||
-    localStorage.getItem("userId") ||
-    null
-  );
+// ─── Get the PatientIdentifier (e.g. P-532756) — the ONE true ID ─────────────
+// Priority:
+//   1. localStorage "patientIdentifier"  (set at login if available)
+//   2. localStorage "patientId" if it looks like P-XXXXXX
+//   3. Fall back to numeric patientId for the check endpoint
+function getPatientIdentifier() {
+  // Explicit P-XXXXXX style identifier saved at login
+  const pi = localStorage.getItem("patientIdentifier") ||
+             localStorage.getItem("PatientIdentifier");
+  if (pi) return pi;
+
+  // patientId that already looks like P-XXXXXX
+  const pid = localStorage.getItem("patientId") ||
+              localStorage.getItem("PatientId");
+  if (pid && /^P-/i.test(String(pid).trim())) return pid.trim();
+
+  // Numeric fallback (will be used with check endpoint)
+  return pid || null;
+}
+
+function getNumericPatientId() {
+  const raw = localStorage.getItem("patientId") ||
+              localStorage.getItem("PatientId") ||
+              localStorage.getItem("patient_id");
+  if (!raw) return null;
+  const n = parseInt(String(raw).replace(/\D/g, ""), 10);
+  return isNaN(n) ? null : n;
 }
 
 function isLoggedIn() {
-  // ✅ Check any auth token key
   return !!(
     localStorage.getItem("authToken") ||
     localStorage.getItem("token") ||
@@ -77,18 +92,22 @@ function initials(name = "") {
 
 function fmtDate(s) {
   if (!s) return "—";
-  return new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  const d = new Date(s);
+  if (isNaN(d) || d.getFullYear() < 1900) return "—";
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 function fmtDateTime(s) {
   if (!s) return "—";
-  return new Date(s).toLocaleString("en-GB", {
+  const d = new Date(s);
+  if (isNaN(d) || d.getFullYear() < 1900) return "—";
+  return d.toLocaleString("en-GB", {
     day: "2-digit", month: "short", year: "numeric",
     hour: "2-digit", minute: "2-digit",
   });
 }
 
-// ─── Field ───────────────────────────────────────────────────
+// ─── UI helpers ───────────────────────────────────────────────
 function Field({ label, value, Icon, color }) {
   return (
     <div className="pmr-field">
@@ -124,7 +143,7 @@ function Empty({ Icon }) {
   );
 }
 
-// ─── Patient info 4-column block ─────────────────────────────
+// ─── Patient info block ───────────────────────────────────────
 function PatientInfoBlock({ d }) {
   const [open, setOpen] = useState(true);
   return (
@@ -140,12 +159,12 @@ function PatientInfoBlock({ d }) {
         <div className="pmr-info-columns">
           <div className="pmr-info-col">
             <ColTitle Icon={Ic.User} label="Basic Info" />
-            <Field label="Patient ID"   value={d.patientId || d.patientID} Icon={Ic.Id} />
-            <Field label="Full Name"    value={d.name}                      Icon={Ic.User} />
-            <Field label="Age"          value={d.age ? String(d.age) : null} Icon={Ic.Calendar} />
-            <Field label="Gender"       value={d.gender}                    Icon={Ic.Wc} />
-            {d.birthDate  && <Field label="Date of Birth" value={fmtDate(d.birthDate)} Icon={Ic.Calendar} />}
-            {d.nationalId && <Field label="National ID"   value={d.nationalId}         Icon={Ic.Id} />}
+            <Field label="Patient ID"    value={d.patientIdentifier || d.patientId || d.patientID} Icon={Ic.Id} />
+            <Field label="Full Name"     value={d.name}                      Icon={Ic.User} />
+            <Field label="Age"           value={d.age ? String(d.age) : null} Icon={Ic.Calendar} />
+            <Field label="Gender"        value={d.gender}                    Icon={Ic.Wc} />
+            {d.birthDate   && <Field label="Date of Birth" value={fmtDate(d.birthDate)}   Icon={Ic.Calendar} />}
+            <Field label="National ID" value={d.nationalId || d.NationalId || d.national_id || "—"} Icon={Ic.Id} />
           </div>
           <div className="pmr-info-col">
             <ColTitle Icon={Ic.Phone} label="Contact" />
@@ -174,7 +193,23 @@ function PatientInfoBlock({ d }) {
 // ─── Tab panels ───────────────────────────────────────────────
 function ComplaintPanel({ d }) {
   const list = d.complaints || [];
-  if (!list.length) return <Empty Icon={Ic.Doc} />;
+  
+  // If no complaints recorded, show reasonForVisit from appointment as the chief complaint
+  if (!list.length) {
+    if (d.reasonForVisit) {
+      return (
+        <div className="pmr-record">
+          <Stamp date={d.appointmentDate} />
+          <div className="pmr-record-grid g1">
+            <Field label="Chief Complaint" value={d.reasonForVisit} />
+            <Field label="Appointment Date" value={fmtDate(d.appointmentDate)} />
+          </div>
+        </div>
+      );
+    }
+    return <Empty Icon={Ic.Doc} />;
+  }
+  
   return list.map((item, i) => (
     <div className="pmr-record" key={item.id || i}>
       <Stamp date={item.createdAt} />
@@ -375,11 +410,11 @@ const PANEL_MAP = {
   prescriptions: PrescriptionsPanel, diagnoses: DiagnosesPanel,
 };
 
-// ─── Fallback data from localStorage ─────────────────────────
-function getLocalFallback(patientId) {
+// ─── Fallback ─────────────────────────────────────────────────
+function getLocalFallback(patientIdentifier) {
   return {
+    patientIdentifier,
     name:      localStorage.getItem("patientName") || localStorage.getItem("userName") || "Patient",
-    patientId: patientId || localStorage.getItem("patientId") || "—",
     email:     localStorage.getItem("patientEmail") || localStorage.getItem("userEmail") || "",
     phone:     localStorage.getItem("patientPhone") || "",
     birthDate: localStorage.getItem("patientDateOfBirth") || null,
@@ -396,14 +431,16 @@ export default function PatientMedicalRecord() {
   const [data,      setData]      = useState(null);
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState("");
+  const [isNewPatient, setIsNewPatient] = useState(false); // Track if patient has no medical record
 
-  // ✅ Get patientId from any possible localStorage key
-  const patientId = getPatientId();
-  const token     = localStorage.getItem("authToken") || localStorage.getItem("token");
+  // ── The ONE true identifier: P-XXXXXX ──────────────────────
+  const patientIdentifier = getPatientIdentifier();
+  const numericPatientId  = getNumericPatientId();
+  const token = localStorage.getItem("authToken") || localStorage.getItem("token");
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
   useEffect(() => {
-    // ✅ Only redirect if truly not logged in (no token AND no patientId)
-    if (!isLoggedIn() && !patientId) {
+    if (!isLoggedIn() && !patientIdentifier && !numericPatientId) {
       navigate("/login");
       return;
     }
@@ -415,55 +452,87 @@ export default function PatientMedicalRecord() {
       setLoading(true);
       setError("");
 
-      // If no patientId, show basic info from localStorage only
-      if (!patientId) {
+      // ── Strategy: use PatientIdentifier (P-XXXXXX) as primary key ──
+      // The backend check/patient endpoints accept both numeric ID and PatientIdentifier
+      const idToUse = patientIdentifier || numericPatientId;
+
+      if (!idToUse) {
         setData(getLocalFallback(null));
         return;
       }
 
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const numId   = patientId.toString().match(/\d+/)?.[0] || patientId;
-
-      // Step 1: check if medical record exists
-      let checkData = { exists: false };
+      // Step 1: Check if medical record exists using the identifier
+      let checkData = { exists: false, recordId: null, patientIdentifier: null };
       try {
         const { data: check } = await axios.get(
-          `${API_BASE}/api/MedicalRecord/check/${numId}`, { headers }
+          `${API_BASE}/api/MedicalRecord/check/${encodeURIComponent(idToUse)}`,
+          { headers }
         );
         checkData = check;
-      } catch {
-        // API unreachable — show fallback
-        setData(getLocalFallback(patientId));
+      } catch (err) {
+        setData(getLocalFallback(patientIdentifier));
+        setError("Could not reach the server. Showing basic information.");
         return;
       }
 
       if (checkData.exists) {
-        // Step 2: fetch full record
-        const { data: rec } = await axios.get(
-          `${API_BASE}/api/MedicalRecord/patient/${numId}`, { headers }
-        );
-        const pi = rec.patientInfo || rec.PatientInfo || {};
-        setData({ ...pi, ...rec });
+        // Step 2: Fetch full record using the PatientIdentifier from the check result
+        // This ensures we always use the correct identifier the server knows about
+        const fetchId = checkData.patientIdentifier || idToUse;
+
+        try {
+          const { data: rec } = await axios.get(
+            `${API_BASE}/api/MedicalRecord/patient/${encodeURIComponent(fetchId)}`,
+            { headers }
+          );
+
+          const pi = rec.patientInfo || rec.PatientInfo || {};
+
+          // Merge and ensure patientIdentifier is always set correctly
+          setData({
+    ...pi,
+    ...rec,
+    patientIdentifier:    checkData.patientIdentifier || patientIdentifier || fetchId,
+    nationalId:           rec.nationalId || pi.nationalId || "",
+    gender:               rec.gender     || pi.gender     || "",
+    emergencyContactName: rec.emergencyContactName  || pi.emergencyContactName  || "",
+    emergencyContactPhone:rec.emergencyContactPhone || pi.emergencyContactPhone || "",
+    address:              rec.address    || pi.address    || "",
+});
+
+          // Cache the PatientIdentifier for future use
+          if (checkData.patientIdentifier) {
+            localStorage.setItem("patientIdentifier", checkData.patientIdentifier);
+          }
+
+        } catch (err) {
+          setError("Could not load full record.");
+          setData(getLocalFallback(patientIdentifier));
+        }
+
       } else {
-        // Step 3: no record yet — try appointment-info
+        // Step 3: No record — try appointment-info
+        setIsNewPatient(true); // Mark as new patient with no medical record
         try {
           const { data: info } = await axios.get(
-            `${API_BASE}/api/MedicalRecord/appointment-info/${numId}`, { headers }
+            `${API_BASE}/api/MedicalRecord/appointment-info/${encodeURIComponent(idToUse)}`,
+            { headers }
           );
           setData({
             ...info,
+            patientIdentifier: patientIdentifier || idToUse,
             complaints: [], histories: [], investigations: [],
             eyeExaminations: [], operations: [], prescriptions: [],
             diagnoses: [], medicalTestFiles: [],
           });
         } catch {
-          setData(getLocalFallback(patientId));
+          setData(getLocalFallback(patientIdentifier));
         }
       }
+
     } catch (err) {
-      console.error("PatientMedicalRecord error:", err);
       setError("Could not load full record. Showing basic information.");
-      setData(getLocalFallback(patientId));
+      setData(getLocalFallback(patientIdentifier));
     } finally {
       setLoading(false);
     }
@@ -478,10 +547,87 @@ export default function PatientMedicalRecord() {
     </div>
   );
 
-  const d    = data || getLocalFallback(patientId);
+  // ── New Patient View: No medical record yet ──────────────────
+  if (isNewPatient) {
+    const name = localStorage.getItem("patientName") || localStorage.getItem("userName") || "Patient";
+    const displayId = patientIdentifier || numericPatientId || "—";
+    return (
+      <div className="pmr-page">
+        {/* Top bar */}
+        <div className="pmr-topbar">
+          <div className="pmr-topbar-left">
+            <button className="pmr-back-btn" onClick={() => navigate("/patient")}>
+              <Ic.Back /> Back
+            </button>
+            <div className="pmr-patient-avatar">{initials(name)}</div>
+            <div>
+              <div className="pmr-patient-name">{name}</div>
+              <div className="pmr-patient-meta">
+                <span className="pmr-meta-item"><Ic.Id /> ID: {displayId}</span>
+                <span className="pmr-meta-sep" />
+                <span className="pmr-meta-item"><Ic.Calendar /> {fmtDate(localStorage.getItem("patientDateOfBirth"))}</span>
+              </div>
+            </div>
+          </div>
+          <div className="pmr-topbar-badge">Read-Only View</div>
+        </div>
+
+        {/* New Patient Message */}
+        <div className="pmr-layout">
+          <div className="pmr-new-patient-container">
+            <div className="pmr-new-patient-icon">
+              <Ic.Doc />
+            </div>
+            <h2 className="pmr-new-patient-title">No Medical Record Yet</h2>
+            <p className="pmr-new-patient-text">
+              Welcome to our clinic! You don't have a medical record yet.
+            </p>
+            <div className="pmr-new-patient-steps">
+              <div className="pmr-step">
+                <div className="pmr-step-number">1</div>
+                <div className="pmr-step-content">
+                  <h4>Book an Appointment</h4>
+                  <p>Schedule your first appointment with our doctor</p>
+                </div>
+              </div>
+              <div className="pmr-step-arrow">→</div>
+              <div className="pmr-step">
+                <div className="pmr-step-number">2</div>
+                <div className="pmr-step-content">
+                  <h4>Complete Your Visit</h4>
+                  <p>Attend your appointment and complete the examination</p>
+                </div>
+              </div>
+              <div className="pmr-step-arrow">→</div>
+              <div className="pmr-step">
+                <div className="pmr-step-number">3</div>
+                <div className="pmr-step-content">
+                  <h4>Access Your Record</h4>
+                  <p>Your medical record will be available after your visit</p>
+                </div>
+              </div>
+            </div>
+            <div className="pmr-new-patient-action">
+              <button 
+                className="pmr-btn-primary"
+                onClick={() => navigate("/patient/appointments")}
+              >
+                Book an Appointment Now
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const d    = data || getLocalFallback(patientIdentifier);
   const name = d.name || d.patientName || "Patient";
   const PanelComponent = PANEL_MAP[activeTab];
   const recordList     = RECORD_KEY[activeTab] ? (d[RECORD_KEY[activeTab]] || []) : [];
+
+  // Display ID: always prefer P-XXXXXX format
+  const displayId = d.patientIdentifier || patientIdentifier || d.patientId || d.patientID || "—";
 
   return (
     <div className="pmr-page">
@@ -496,7 +642,7 @@ export default function PatientMedicalRecord() {
           <div>
             <div className="pmr-patient-name">{name}</div>
             <div className="pmr-patient-meta">
-              <span className="pmr-meta-item"><Ic.Id /> ID: {d.patientId || d.patientID || patientId || "—"}</span>
+              <span className="pmr-meta-item"><Ic.Id /> ID: {displayId}</span>
               <span className="pmr-meta-sep" />
               <span className="pmr-meta-item"><Ic.Calendar /> {fmtDate(d.birthDate)}</span>
               <span className="pmr-meta-sep" />
@@ -527,8 +673,7 @@ export default function PatientMedicalRecord() {
 
         {/* Content */}
         <div className="pmr-content">
-
-          <PatientInfoBlock d={d} />
+          <PatientInfoBlock d={{ ...d, patientId: displayId }} />
 
           <div className="pmr-tab-bar">
             {TABS.filter(t => t.id !== "patient-info").map(tab => (

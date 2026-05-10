@@ -8,6 +8,9 @@ import {
 import loginBg from "../../assets/register.png";
 import { loginUser } from "../../firebase/auth";
 
+const RADIOLOGY_BASE = import.meta.env.VITE_RADIOLOGY_BASE_URL || (import.meta.env.VITE_RADIOLOGY_API_URL ? import.meta.env.VITE_RADIOLOGY_API_URL.replace(/\/fhir.*$/i, "") : undefined) || "http://localhost:5301";
+const API_URL = RADIOLOGY_BASE.endsWith("/api") ? RADIOLOGY_BASE : `${RADIOLOGY_BASE}/api`;
+
 export default function LoginPage({ setPage, onLogin, showSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loginMethod, setLoginMethod] = useState("email");
@@ -37,41 +40,102 @@ export default function LoginPage({ setPage, onLogin, showSuccess }) {
     }
 
     setLoading(true);
-    const result = await loginUser(formData.email, formData.password);
-    setLoading(false);
 
-    if (result.success) {
-      const firstName = result.userData?.firstName || "";
-      const lastName  = result.userData?.lastName  || "";
-      const fullName  = firstName && lastName
-        ? `${firstName} ${lastName}`
-        : result.user.displayName || result.user.email.split("@")[0];
-      const uid = result.user.uid;
-
-      localStorage.setItem("firebaseToken", result.token);
-      localStorage.setItem("userRole", result.userData?.role || "patient");
-      localStorage.setItem("userName", fullName);
-      localStorage.setItem("userEmail", result.user.email);
-      localStorage.setItem("userId", uid);
-      localStorage.setItem("radiologyPatientName", fullName);
-      localStorage.setItem("radiologyPatientFirstName", firstName);
-      localStorage.setItem("radiologyPatientLastName", lastName);
-      localStorage.setItem("radiologyPatientId", uid);
-      localStorage.setItem("radiologyPatientEmail", result.user.email);
-
-      window.dispatchEvent(new Event("userDataUpdated"));
-      onLogin({ name: fullName, firstName: firstName, lastName: lastName, id: uid, email: result.user.email });
-      showSuccess("Welcome Back!", "home");
-    } else {
-      if (result.code === "auth/user-not-found" || result.code === "auth/invalid-credential") {
-        setErrors({ email: result.error });
-      } else if (result.code === "auth/wrong-password") {
-        setErrors({ password: result.error });
-      } else if (result.code === "auth/too-many-requests") {
-        setErrors({ password: result.error });
+    // Try admin login first (development-only simple auth)
+    try {
+      const adminResp = await fetch(`${API_URL}/adminauth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email, password: formData.password }),
+      });
+      if (adminResp.ok) {
+        const adminData = await adminResp.json();
+        if (adminData && adminData.success) {
+          localStorage.setItem("radiologyAdminLoggedIn", "true");
+          localStorage.setItem("radiologyAdminEmail", adminData.email || formData.email);
+          localStorage.setItem("radiologyAdminRole", adminData.role || "admin");
+          setLoading(false);
+          setPage("admin-dashboard");
+          return;
+        }
       } else {
-        setErrors({ password: result.error });
+        // If backend returned non-ok (e.g., 404/500), allow a development fallback
+        if (formData.email === "yassmin@admin.com" && formData.password === "2392005") {
+          localStorage.setItem("radiologyAdminLoggedIn", "true");
+          localStorage.setItem("radiologyAdminEmail", "yassmin@admin.com");
+          localStorage.setItem("radiologyAdminRole", "admin");
+          setLoading(false);
+          setPage("admin-dashboard");
+          return;
+        }
       }
+    } catch (err) {
+      console.warn("Admin auth attempt failed:", err);
+      // Backend unreachable — allow local seeded admin credentials for development convenience
+      if (formData.email === "yassmin@admin.com" && formData.password === "2392005") {
+        localStorage.setItem("radiologyAdminLoggedIn", "true");
+        localStorage.setItem("radiologyAdminEmail", "yassmin@admin.com");
+        localStorage.setItem("radiologyAdminRole", "admin");
+        setLoading(false);
+        setPage("admin-dashboard");
+        return;
+      }
+    }
+
+    // Fallback to patient (Firebase) login
+    try {
+      const result = await loginUser(formData.email, formData.password);
+      if (result.success) {
+        const firstName = result.userData?.firstName || (result.user.displayName ? result.user.displayName.split(" ")[0] : "");
+        const lastName  = result.userData?.lastName  || (result.user.displayName ? result.user.displayName.split(" ")[1] : "");
+        const fullName  = (firstName || lastName) ? `${firstName} ${lastName}`.trim() : (result.user.displayName || (result.user.email ? result.user.email.split("@")[0] : ""));
+        const uid = result.user.uid;
+
+        // Store tokens and user info consistently
+        localStorage.setItem("authToken", result.token || "");
+        localStorage.setItem("firebaseToken", result.token || "");
+        localStorage.setItem("userRole", result.userData?.role || "patient");
+        localStorage.setItem("userName", fullName);
+        localStorage.setItem("userEmail", result.user.email || formData.email);
+        localStorage.setItem("userId", uid || "");
+        localStorage.setItem("radiologyPatientName", fullName);
+        localStorage.setItem("radiologyPatientFirstName", firstName || "");
+        localStorage.setItem("radiologyPatientLastName", lastName || "");
+        localStorage.setItem("radiologyPatientId", uid || "");
+        localStorage.setItem("radiologyPatientEmail", result.user.email || formData.email);
+        
+        // Store additional patient info if available
+        if (result.userData?.phone) {
+          localStorage.setItem("radiologyPatientPhone", result.userData.phone);
+          localStorage.setItem("userPhone", result.userData.phone);
+        }
+        if (result.userData?.gender) {
+          localStorage.setItem("radiologyPatientGender", result.userData.gender);
+        }
+        if (result.userData?.birthDate) {
+          localStorage.setItem("patientDateOfBirth", result.userData.birthDate);
+        }
+
+        window.dispatchEvent(new Event("userDataUpdated"));
+        onLogin({ name: fullName, firstName: firstName, lastName: lastName, id: uid, email: result.user.email });
+        showSuccess("Welcome Back!", "home");
+      } else {
+        // Map firebase errors to fields
+        if (result.code === "auth/user-not-found" || result.code === "auth/invalid-credential") {
+          setErrors({ email: result.error });
+        } else if (result.code === "auth/wrong-password") {
+          setErrors({ password: result.error });
+        } else if (result.code === "auth/too-many-requests") {
+          setErrors({ password: result.error });
+        } else {
+          setErrors({ password: result.error });
+        }
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setErrors({ password: "Login failed" });
+    } finally {
+      setLoading(false);
     }
   };
 

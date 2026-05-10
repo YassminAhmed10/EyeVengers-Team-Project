@@ -6,16 +6,31 @@ import {
     FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt,
     FaBirthdayCake, FaEdit, FaSave, FaTimes,
     FaGlobe, FaCheck, FaLock, FaBell, FaCog,
-    FaShieldAlt, FaIdCard,
+    FaShieldAlt, FaIdCard, FaCalendarCheck,
 } from 'react-icons/fa';
 
 // ── Read patient data from localStorage (keys saved by SignUpPage) ─────────────
-const readFromStorage = () => ({
-    fullName:    localStorage.getItem('userName')          || localStorage.getItem('patientName') || '',
-    email:       localStorage.getItem('userEmail')         || localStorage.getItem('patientEmail') || '',
-    phone:       localStorage.getItem('patientPhone')      || '',
-    dateOfBirth: localStorage.getItem('patientDateOfBirth')|| '',
-});
+const readFromStorage = () => {
+    // Primary source: direct localStorage keys (set by LoginPage)
+    let phone = localStorage.getItem('patientPhone') || '';
+    
+    // Fallback 1: parse from patient JSON object
+    if (!phone) {
+        try {
+            const patientObj = JSON.parse(localStorage.getItem('patient') || '{}');
+            phone = patientObj.phone || '';
+        } catch (e) {
+            // ignore parse errors
+        }
+    }
+    
+    return {
+        fullName:    localStorage.getItem('userName')          || localStorage.getItem('patientName') || '',
+        email:       localStorage.getItem('userEmail')         || localStorage.getItem('patientEmail') || '',
+        phone:       phone,
+        dateOfBirth: localStorage.getItem('patientDateOfBirth')|| '',
+    };
+};
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 const initials = (name) =>
@@ -35,6 +50,32 @@ const calcAge = (dob) => {
     const diff = Date.now() - new Date(dob).getTime();
     const age  = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
     return isNaN(age) ? null : age;
+};
+
+const formatLastVisit = (dateStr, timeStr) => {
+    if (!dateStr) return null;
+    try {
+        const date = new Date(dateStr);
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+        const day = date.getDate();
+        const month = date.toLocaleDateString('en-US', { month: 'long' });
+        const year = date.getFullYear();
+        
+        const time = timeStr 
+            ? (() => {
+                const parts = timeStr.split(':');
+                let h = parseInt(parts[0], 10);
+                const m = parts[1];
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                h = h % 12 || 12;
+                return `${h}:${m} ${ampm}`;
+            })()
+            : '';
+        
+        return { dayName, day, month, year, time };
+    } catch {
+        return null;
+    }
 };
 
 // ── Tabs ───────────────────────────────────────────────────────────────────────
@@ -86,9 +127,63 @@ export default function PatientProfilePage() {
     const [tab,     setTab]     = useState('personal');
     const [editing, setEditing] = useState(false);
     const [flash,   setFlash]   = useState('');
+    const [lastVisit, setLastVisit] = useState(null);
 
     const [profile, setProfile] = useState(readFromStorage);
     const [draft,   setDraft]   = useState(profile);
+
+    // ── Load fresh data on mount ────────────────────────────────────────────
+    useEffect(() => {
+        console.log('=== PatientProfilePage Mount ===');
+        console.log('localStorage.patientPhone:', localStorage.getItem('patientPhone'));
+        console.log('localStorage.patient:', localStorage.getItem('patient'));
+        const fresh = readFromStorage();
+        console.log('readFromStorage result:', fresh);
+        setProfile(fresh);
+        setDraft(fresh);
+        
+        // Try to fetch from appointments API as a fallback if phone is empty
+        if (!fresh.phone) {
+            const patientId = localStorage.getItem('patientIdentifier');
+            if (patientId) {
+                console.log('Phone is empty, attempting to fetch from API for:', patientId);
+                fetch(`http://localhost:5201/api/appointments/ByPatient/${patientId}`)
+                    .then(r => r.ok ? r.json() : null)
+                    .then(data => {
+                        if (Array.isArray(data) && data[0]?.phone) {
+                            console.log('Found phone from API:', data[0].phone);
+                            const updated = { ...fresh, phone: data[0].phone };
+                            setProfile(updated);
+                            setDraft(updated);
+                            localStorage.setItem('patientPhone', data[0].phone);
+                        }
+                    })
+                    .catch(e => console.error('Error fetching phone from API:', e));
+            }
+        }
+        
+        // Fetch last visit from appointments
+        const patientIdForVisit = localStorage.getItem('patientIdentifier');
+        if (patientIdForVisit) {
+            fetch(`http://localhost:5201/api/appointments/ByPatient/${patientIdForVisit}`)
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    if (Array.isArray(data) && data.length > 0) {
+                        // Find the most recent completed or in-progress appointment
+                        const visits = data.filter(apt => apt.status === 1 || apt.status === 3);
+                        if (visits.length > 0) {
+                            visits.sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate));
+                            const lastApt = visits[0];
+                            setLastVisit({
+                                date: lastApt.appointmentDate,
+                                time: lastApt.appointmentTime,
+                            });
+                        }
+                    }
+                })
+                .catch(e => console.error('Error fetching last visit:', e));
+        }
+    }, []);
 
     // Re-read whenever tab changes (in case another page updated storage)
     useEffect(() => {
@@ -96,6 +191,9 @@ export default function PatientProfilePage() {
         setProfile(fresh);
         setDraft(fresh);
     }, [tab]);
+
+    // ── Read patient ID from localStorage ──────────────────────────────────────
+    const patientId = localStorage.getItem('patientIdentifier') || localStorage.getItem('patientId') || '';
 
     const t   = T[lang] || T.en;
     const isAr = lang === 'ar';
@@ -183,12 +281,47 @@ export default function PatientProfilePage() {
                 <div style={s.hero}>
                     <div style={s.heroInner}>
                         <div style={s.avatar}>{initials(profile.fullName)}</div>
-                        <div>
-                            <h1 style={s.heroName}>{profile.fullName || '—'}</h1>
+                        <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                <h1 style={s.heroName}>{profile.fullName || '—'}</h1>
+                                {patientId && (
+                                    <span style={{
+                                        fontWeight: 'bold',
+                                        fontSize: '16px',
+                                        color: '#fff',
+                                        backgroundColor: '#0D47A1',
+                                        padding: '8px 14px',
+                                        borderRadius: '6px',
+                                        border: '2px solid #fff',
+                                        boxShadow: '0 2px 8px rgba(13, 71, 161, 0.4)',
+                                    }}>
+                                        {patientId}
+                                    </span>
+                                )}
+                            </div>
                             <p style={s.heroSub}>{profile.email || t.noData}</p>
-                            {age && (
-                                <span style={s.ageBadge}>{age} years old</span>
-                            )}
+                            <div style={{ display: 'flex', gap: '16px', marginTop: '8px', flexWrap: 'wrap' }}>
+                                {age && (
+                                    <span style={s.ageBadge}>{age} years old</span>
+                                )}
+                                {lastVisit && formatLastVisit(lastVisit.date, lastVisit.time) && (() => {
+                                    const visit = formatLastVisit(lastVisit.date, lastVisit.time);
+                                    return (
+                                        <span style={{
+                                            fontSize: '12px',
+                                            color: '#fff',
+                                            fontWeight: '500',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                        }}>
+                                            <FaCalendarCheck size={12} />
+                                            Last visit: {visit.dayName}, {visit.day} {visit.month} {visit.year}
+                                            {visit.time && ` at ${visit.time}`}
+                                        </span>
+                                    );
+                                })()}
+                            </div>
                         </div>
                     </div>
                 </div>

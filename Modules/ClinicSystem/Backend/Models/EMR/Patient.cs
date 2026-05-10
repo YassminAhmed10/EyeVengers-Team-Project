@@ -1,10 +1,12 @@
-using EyeClinicAPI.Models.EMR;
+using System;
+using System.Collections.Generic;
 
 namespace EyeClinicAPI.Models.EMR
 {
     public class Patient
     {
         public int Id { get; set; }
+        public string? PatientIdentifier { get; set; }
         public required string FirstName { get; set; }
         public required string LastName { get; set; }
         public DateTime DateOfBirth { get; set; }
@@ -21,5 +23,3 @@ namespace EyeClinicAPI.Models.EMR
         public virtual ICollection<MedicalRecord> MedicalRecords { get; set; } = new List<MedicalRecord>();
     }
 }
-
-

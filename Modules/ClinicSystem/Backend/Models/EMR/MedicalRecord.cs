@@ -15,11 +15,8 @@ namespace EyeClinicAPI.Models.EMR
         public DateTime VisitDate { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
-        public virtual Patient? Patient { get; set; }
         public virtual ICollection<PatientComplaint> PatientComplaints { get; set; } = new List<PatientComplaint>();
         public virtual ICollection<MedicalHistory> MedicalHistories { get; set; } = new List<MedicalHistory>();
-        public virtual ICollection<PatientComplaint> Complaints { get; set; } = new List<PatientComplaint>();
-        public virtual ICollection<MedicalHistory> Histories { get; set; } = new List<MedicalHistory>();
         public virtual ICollection<Investigation> Investigations { get; set; } = new List<Investigation>();
         public virtual ICollection<EyeExamination> EyeExaminations { get; set; } = new List<EyeExamination>();
         public virtual ICollection<Operation> Operations { get; set; } = new List<Operation>();
@@ -28,3 +25,4 @@ namespace EyeClinicAPI.Models.EMR
         public virtual ICollection<Diagnosis> Diagnoses { get; set; } = new List<Diagnosis>();
     }
 }
+

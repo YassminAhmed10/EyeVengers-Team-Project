@@ -13,10 +13,10 @@ const ReceptionistExample = () => {
         textAlign: 'center'
       }}>
         <h1 style={{ margin: '0 0 1rem 0', fontSize: '2rem' }}>
-          ✨ Sidebar الجديد للـ Receptionist ✨
+          New Receptionist Sidebar
         </h1>
         <p style={{ margin: 0, fontSize: '1.1rem', opacity: 0.9 }}>
-          تم إنشاء sidebar متقدم قابل للفتح والإغلاق مع تصميم مطابق لـ doctor sidebar
+          An advanced sidebar has been created with open/close functionality matching the doctor sidebar design
         </p>
       </div>
 
@@ -33,12 +33,12 @@ const ReceptionistExample = () => {
           boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
           border: '1px solid #e2e8f0'
         }}>
-          <h3 style={{ color: '#1e40af', marginBottom: '1rem' }}>🎯 الميزات الجديدة</h3>
+          <h3 style={{ color: '#1e40af', marginBottom: '1rem' }}>New Features</h3>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            <li style={{ marginBottom: '0.5rem' }}>✅ قابل للفتح والإغلاق</li>
-            <li style={{ marginBottom: '0.5rem' }}>✅ تصميم مطابق للـ doctor</li>
-            <li style={{ marginBottom: '0.5rem' }}>✅ أزرار خاصة بالـ receptionist</li>
-            <li style={{ marginBottom: '0.5rem' }}>✅ دعم كامل للموبايل</li>
+            <li style={{ marginBottom: '0.5rem' }}>Collapsible/Expandable</li>
+            <li style={{ marginBottom: '0.5rem' }}>Matching Doctor Design</li>
+            <li style={{ marginBottom: '0.5rem' }}>Receptionist-Specific Buttons</li>
+            <li style={{ marginBottom: '0.5rem' }}>Full Mobile Support</li>
           </ul>
         </div>
 
@@ -49,13 +49,13 @@ const ReceptionistExample = () => {
           boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
           border: '1px solid #e2e8f0'
         }}>
-          <h3 style={{ color: '#059669', marginBottom: '1rem' }}>📋 المكونات الخاصة</h3>
+          <h3 style={{ color: '#059669', marginBottom: '1rem' }}>Special Components</h3>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            <li style={{ marginBottom: '0.5rem' }}>🏠 لوحة التحكم</li>
-            <li style={{ marginBottom: '0.5rem' }}>📅 المواعيد</li>
-            <li style={{ marginBottom: '0.5rem' }}>👤 طلبات المرضى</li>
-            <li style={{ marginBottom: '0.5rem' }}>📊 التقارير</li>
-            <li style={{ marginBottom: '0.5rem' }}>⚙️ الإعدادات</li>
+            <li style={{ marginBottom: '0.5rem' }}>Dashboard</li>
+            <li style={{ marginBottom: '0.5rem' }}>Appointments</li>
+            <li style={{ marginBottom: '0.5rem' }}>Patient Requests</li>
+            <li style={{ marginBottom: '0.5rem' }}>Reports</li>
+            <li style={{ marginBottom: '0.5rem' }}>Settings</li>
           </ul>
         </div>
 

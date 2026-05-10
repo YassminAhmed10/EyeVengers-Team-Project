@@ -11,7 +11,7 @@ export function Navbar({ title, subtitle, connectionText, mode = 'default', back
             <div className="flex flex-wrap items-center justify-between gap-3">
                 {/* Logo and Title */}
                 <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center md:h-12 md:w-12">
+                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-sm md:h-12 md:w-12">
                         <img src={logo} alt="Radiology Center" className="h-full w-full object-contain" />
                     </div>
                     <div className="min-w-0">

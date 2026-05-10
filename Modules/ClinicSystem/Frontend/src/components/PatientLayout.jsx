@@ -6,7 +6,6 @@ import {
 } from 'react-icons/fa';
 import './PatientLayout.css';
 
-
 const BASE_API = import.meta.env?.VITE_API_URL || 'http://localhost:5201/api';
 
 const PatientLayout = ({ children, isHomePage = false }) => {
@@ -67,8 +66,7 @@ const PatientLayout = ({ children, isHomePage = false }) => {
                 if (id) return parseInt(id, 10);
             } catch {}
         }
-        // Force return 1 if nothing found (for testing)
-        return 1;
+        return null;
     };
 
     const getPatientParams = () => {
@@ -87,59 +85,52 @@ const PatientLayout = ({ children, isHomePage = false }) => {
     };
 
     // ── Fetch doctor orders → build notifications ──────────────
-    // في PatientLayout.jsx، عدل fetchOrderNotifs:
+    const fetchOrderNotifs = async () => {
+        const patientId = getPatientId();
+        if (!patientId) { setOrderNotifs([]); setPendingOrdersCount(0); return; }
+        try {
+            const token = localStorage.getItem('token');
+            // Use http in dev to avoid SSL issues on localhost
+            const apiUrl = BASE_API.replace('https://localhost', 'http://localhost');
+            const res   = await fetch(
+                `${apiUrl}/DoctorOrders/MyOrders?patientId=${patientId}`,
+                { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+            );
+            if (!res.ok) { setOrderNotifs([]); setPendingOrdersCount(0); return; }
+            const orders = await res.json();
 
-const fetchOrderNotifs = async () => {
-    const patientId = getPatientId();
-    console.log('Fetching orders for patient ID:', patientId); // للdebug
-    if (!patientId) { setOrderNotifs([]); setPendingOrdersCount(0); return; }
-    try {
-        const token = localStorage.getItem('token');
-        const apiUrl = BASE_API.replace('https://localhost', 'http://localhost');
-        const res   = await fetch(
-            `${apiUrl}/DoctorOrders/MyOrders?patientId=${patientId}`,
-            { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-        );
-        if (!res.ok) { setOrderNotifs([]); setPendingOrdersCount(0); return; }
-        const orders = await res.json();
-        
-        console.log('Orders received:', orders); // للdebug
-        
-        // Only show orders that belong to this specific patient
-        const patientOrders = orders.filter(o => o.patientId === patientId);
-        
-        // Only show pending orders or orders from last 2 days
-        const relevantOrders = patientOrders.filter(o => {
-            const age = (Date.now() - new Date(o.createdAt).getTime()) / (1000 * 60 * 60 * 24);
-            return o.status === 'PendingPatientApproval' || age < 2;
-        });
+            // Only show orders from the last 7 days as notifications
+            const recentOrders = orders.filter(o => {
+                const age = (Date.now() - new Date(o.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+                return age < 7;
+            });
 
-        const pending = patientOrders.filter(o => o.status === 'PendingPatientApproval');
-        setPendingOrdersCount(pending.length);
+            const pending = orders.filter(o => o.status === 'PendingPatientApproval');
+            setPendingOrdersCount(pending.length);
 
-        const TYPE_LABEL = {
-            investigation: '🔬 Radiology Investigation',
-            eyeExam:       '👁️ Eye Exam / Vision',
-            prescription:  '💊 Medication Prescription',
-        };
+            const TYPE_LABEL = {
+                investigation: '🔬 Radiology Investigation',
+                eyeExam:       '👁️ Eye Exam / Vision',
+                prescription:  '💊 Medication Prescription',
+            };
 
-        setOrderNotifs(relevantOrders.map(o => ({
-            id:        o.id,
-            orderId:   o.id,
-            orderType: o.orderType,
-            status:    o.status,
-            message:   o.status === 'PendingPatientApproval'
-                ? `Your doctor sent a new request: ${TYPE_LABEL[o.orderType] || o.orderType}. Action required.`
-                : `Your ${TYPE_LABEL[o.orderType] || o.orderType} request is now ${o.status}.`,
-            date:      o.createdAt,
-            isPending: o.status === 'PendingPatientApproval',
-        })));
-    } catch (err) {
-        console.error('Error fetching order notifications:', err);
-        setOrderNotifs([]);
-        setPendingOrdersCount(0);
-    }
-};
+            setOrderNotifs(recentOrders.map(o => ({
+                id:        o.id,
+                orderId:   o.id,
+                orderType: o.orderType,
+                status:    o.status,
+                message:   o.status === 'PendingPatientApproval'
+                    ? `Your doctor sent a new request: ${TYPE_LABEL[o.orderType] || o.orderType}. Action required.`
+                    : `Your ${TYPE_LABEL[o.orderType] || o.orderType} request is now ${o.status}.`,
+                date:      o.createdAt,
+                isPending: o.status === 'PendingPatientApproval',
+            })));
+        } catch {
+            // API not available yet — fail silently
+            setOrderNotifs([]);
+            setPendingOrdersCount(0);
+        }
+    };
 
     // ── Fetch appointment notifications ────────────────────────
     const fetchNotif = async () => {
@@ -158,29 +149,12 @@ const fetchOrderNotifs = async () => {
                     isAppt:  true,
                 }))
             );
-        } catch (err) {
-            console.error('Error fetching appointment notifications:', err);
-            setNotifications([]);
-        }
+        } catch { setNotifications([]); }
     };
 
     // Combined notifications for the bell
     const allNotifs = [...orderNotifs, ...notifications];
     const totalNotifCount = allNotifs.length;
-
-    // Refresh notifications function to be called from child components
-    const refreshNotifications = () => {
-        fetchNotif();
-        fetchOrderNotifs();
-    };
-
-    // Make refresh function available globally
-    useEffect(() => {
-        window.refreshPatientNotifications = refreshNotifications;
-        return () => {
-            delete window.refreshPatientNotifications;
-        };
-    }, []);
 
     // ── Effects ────────────────────────────────────────────────
     useEffect(() => {
@@ -190,14 +164,6 @@ const fetchOrderNotifs = async () => {
         const e = localStorage.getItem('userEmail');
         if (u) setUserName(u);
         if (e) setUserEmail(e);
-
-        // Force set IDs if missing
-        if (!localStorage.getItem('patientId')) {
-            localStorage.setItem('patientId', '1');
-        }
-        if (!localStorage.getItem('doctorId')) {
-            localStorage.setItem('doctorId', '1');
-        }
 
         fetchNotif();
         fetchOrderNotifs();
@@ -219,8 +185,13 @@ const fetchOrderNotifs = async () => {
     }, [isHomePage]);
 
     const logout = () => {
-        ['authToken','token','userName','userEmail','patientId','userRole','isAuthenticated']
-            .forEach(k => localStorage.removeItem(k));
+        // Clear ALL patient-related data to prevent stale data on next login
+        const keysToRemove = [
+            'authToken','token','userName','userEmail','patientId','patientIdentifier',
+            'medicalRecordId', 'userRole','isAuthenticated','patient','patientName',
+            'patientEmail','patientPhone','patientDateOfBirth','userId','doctorId'
+        ];
+        keysToRemove.forEach(k => localStorage.removeItem(k));
         navigate('/login');
     };
 

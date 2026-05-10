@@ -34,7 +34,7 @@ const radiologyService = {
       const response = await axiosInstance.get(`/investigations/patient/${patientId}`);
       return response.data || [];
     } catch (error) {
-      console.warn(`⚠️ Could not fetch radiology investigations for patient ${patientId}:`, error);
+      console.warn(`[WARNING] Could not fetch radiology investigations for patient ${patientId}:`, error);
       return [];
     }
   },
@@ -49,7 +49,7 @@ const radiologyService = {
       const response = await axiosInstance.get(`/investigations/${investigationId}`);
       return response.data;
     } catch (error) {
-      console.warn(`⚠️ Could not fetch investigation ${investigationId}:`, error);
+      console.warn(`[WARNING] Could not fetch investigation ${investigationId}:`, error);
       return null;
     }
   },
@@ -64,7 +64,7 @@ const radiologyService = {
       const response = await axiosInstance.get(`/reports/patient/${patientId}`);
       return response.data || [];
     } catch (error) {
-      console.warn(`⚠️ Could not fetch radiology reports for patient ${patientId}:`, error);
+      console.warn(`[WARNING] Could not fetch radiology reports for patient ${patientId}:`, error);
       return [];
     }
   },
@@ -78,7 +78,7 @@ const radiologyService = {
       const response = await axiosInstance.get(`/radiology/stats`);
       return response.data;
     } catch (error) {
-      console.warn(`⚠️ Could not fetch radiology stats:`, error);
+      console.warn(`[WARNING] Could not fetch radiology stats:`, error);
       return null;
     }
   },

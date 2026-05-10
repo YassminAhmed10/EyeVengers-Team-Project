@@ -44,6 +44,15 @@ namespace EyeClinicAPI.PatientModule.Controllers
         {
             _context.Patients.Add(patient);
             await _context.SaveChangesAsync();
+            
+            // Generate PatientIdentifier with P- prefix if not already set
+            if (string.IsNullOrWhiteSpace(patient.PatientIdentifier))
+            {
+                patient.PatientIdentifier = "P-" + patient.Id.ToString().PadLeft(6, '0');
+                _context.Patients.Update(patient);
+                await _context.SaveChangesAsync();
+            }
+            
             return CreatedAtAction(nameof(GetPatient), new { id = patient.Id }, patient);
         }
 

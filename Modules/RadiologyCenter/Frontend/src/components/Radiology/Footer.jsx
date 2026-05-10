@@ -16,8 +16,10 @@ export default function Footer({ setPage }) {
                 style={{
                   width: 64,
                   height: 64,
-                  borderRadius: 12,
-                  objectFit: "cover",
+                  borderRadius: 0,
+                  objectFit: "contain",
+                  background: "#fff",
+                  padding: 6,
                   marginBottom: 12,
                 }}
               />
@@ -25,7 +27,7 @@ export default function Footer({ setPage }) {
               <div style={{
                 width: 64,
                 height: 64,
-                borderRadius: 12,
+                borderRadius: 0,
                 background: "linear-gradient(135deg, #1f6bff, #00b8a8)",
                 display: "flex",
                 alignItems: "center",

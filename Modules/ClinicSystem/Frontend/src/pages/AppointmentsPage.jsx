@@ -320,7 +320,7 @@ const AppointmentBooking = () => {
     const insuranceProviders = [
         {
             id: 'allianz',
-            name: '?????? ??? (Allianz Egypt)',
+            name: 'Allianz Egypt',
             discount: 15,
             discountType: 'percentage',
             contact: '+20 2 3539 4000',
@@ -328,7 +328,7 @@ const AppointmentBooking = () => {
         },
         {
             id: 'axa',
-            name: '???? ??? (AXA Egypt)',
+            name: 'AXA Egypt',
             discount: 100,
             discountType: 'fixed',
             contact: '+20 2 3335 5000',
@@ -336,13 +336,29 @@ const AppointmentBooking = () => {
         },
         {
             id: 'misr',
-            name: '??? ??????? (Misr Insurance)',
+            name: 'Misr Insurance',
             discount: 20,
             discountType: 'percentage',
             contact: '+20 2 3337 7000',
             description: '20% discount on consultation fees only'
         }
     ];
+
+    // Helper function to find insurance provider by company name or ID
+    const getInsuranceProviderByName = (companyNameOrId) => {
+        if (!companyNameOrId) return null;
+        const lowerValue = companyNameOrId.toLowerCase().trim();
+        
+        // First try exact ID match
+        const exactMatch = insuranceProviders.find(p => p.id === lowerValue);
+        if (exactMatch) return exactMatch;
+        
+        // Then try name match (case-insensitive)
+        return insuranceProviders.find(p => 
+            p.name.toLowerCase().includes(lowerValue) || 
+            lowerValue.includes(p.name.toLowerCase())
+        );
+    };
 
     // Coverage type options
     const coverageTypes = [
@@ -380,45 +396,53 @@ const AppointmentBooking = () => {
         'No-show': { color: '#9e9e9e', bg: '#f5f5f5', icon: <FaHistory /> }
     };
 
-    const [formData, setFormData] = useState({
-        // Patient Info
-        patientName: '',
-        patientId: 'P-' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0'),
-        phone: '',
-        email: '',
-        dateOfBirth: '',
-        age: '',
-        gender: '',
-        nationalId: '',
-        address: '',
+    const [formData, setFormData] = useState(() => {
+        // Get correct patientId from localStorage instead of generating random one
+        const patientId = localStorage.getItem("patientId") || 
+                         localStorage.getItem("patientIdentifier") || 
+                         localStorage.getItem("PatientId") ||
+                         localStorage.getItem("patientIdentifier");
+        
+        return {
+            // Patient Info
+            patientName: localStorage.getItem("patientName") || localStorage.getItem("userName") || '',
+            patientId: patientId || 'P-' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0'),
+            phone: localStorage.getItem("patientPhone") || '',
+            email: localStorage.getItem("patientEmail") || localStorage.getItem("userEmail") || '',
+            dateOfBirth: localStorage.getItem("patientDateOfBirth") || '',
+            age: '',
+            gender: '',
+            nationalId: '',
+            address: '',
 
-        // Appointment Details
-        appointmentDate: '',
-        appointmentTime: '',
-        reasonForVisit: '',
+            // Appointment Details
+            appointmentDate: '',
+            appointmentTime: '',
+            reasonForVisit: '',
 
-        // Medical History
-        eyeAllergies: [],
-        otherAllergies: '',
-        chronicDiseases: [],
-        currentMedications: '',
-        eyeSurgeries: [],
-        otherEyeSurgeries: '',
-        familyEyeDiseases: [],
-        otherFamilyEyeDiseases: '',
-        visionSymptoms: [],
+            // Medical History
+            eyeAllergies: [],
+            otherAllergies: '',
+            chronicDiseases: [],
+            currentMedications: '',
+            eyeSurgeries: [],
+            otherEyeSurgeries: '',
+            familyEyeDiseases: [],
+            otherFamilyEyeDiseases: '',
+            visionSymptoms: [],
 
-        // Insurance Information
-        insuranceProvider: '',
-        insuranceId: '',
-        policyNumber: '',
-        coveragePercentage: '',
-        coverageType: '',
-        insuranceExpiryDate: '',
-        insuranceContact: '',
-        noInsurance: false,
-        calculatedPrice: 500,
-        finalPrice: 500,
+            // Insurance Information
+            insuranceProvider: '',
+            insuranceId: '',
+            policyNumber: '',
+            coveragePercentage: '',
+            coverageType: '',
+            insuranceExpiryDate: '',
+            insuranceContact: '',
+            noInsurance: false,
+            calculatedPrice: 500,
+            finalPrice: 500,
+        };
     });
 
     // Filtered appointments based on search and filters
@@ -765,7 +789,14 @@ const AppointmentBooking = () => {
         const fetchAppointments = async () => {
             try {
                 setLoading(true);
+                
                 const data = await appointmentsAPI.getAll();
+                
+                console.log(`✓ Fetched ${data?.length || 0} total appointments from API`);
+                
+                // NO PATIENT FILTERING - Receptionist should see all appointments
+                // The tabs will handle filtering by status/type
+                const appointmentsToProcess = data || [];
                 
                 // Transform API data to component format
                 const statusMap = {
@@ -776,7 +807,7 @@ const AppointmentBooking = () => {
                     4: 'No Show'
                 };
                 
-                const transformedAppointments = data.map(apt => {
+                const transformedAppointments = appointmentsToProcess.map(apt => {
                     console.log('Raw appointment from API:', apt);
                     console.log('Status value:', apt.status, 'Type:', typeof apt.status);
                     
@@ -829,8 +860,8 @@ const AppointmentBooking = () => {
         };
 
         fetchAppointments();
-        // Refresh every 30 seconds
-        const interval = setInterval(fetchAppointments, 30000);
+        // Refresh every 5 seconds for faster updates
+        const interval = setInterval(fetchAppointments, 5000);
         return () => clearInterval(interval);
     }, []);
 
@@ -3448,7 +3479,8 @@ const AppointmentBooking = () => {
                             filteredAppointments.map(appointment => {
                                 // appointment.status is already a string ('Upcoming', 'Completed', 'Cancelled')
                                 const statusConfig = statusOptions[appointment.status] || statusOptions.Pending;
-                                const insuranceProvider = insuranceProviders.find(p => p.id === appointment.insuranceProvider);
+                                // Find insurance provider by company name from API
+                                const insuranceProvider = getInsuranceProviderByName(appointment.insuranceProvider);
 
                                 return (
                                     <tr key={appointment.appointmentId} className="appointment-row">
@@ -3482,8 +3514,13 @@ const AppointmentBooking = () => {
                                             <div className="insurance-cell">
                                                 {insuranceProvider ? (
                                                     <>
-                                                        <div className="provider">{insuranceProvider.name.split('(')[0].trim()}</div>
-                                                        <div className="discount">{insuranceProvider.discount}% off</div>
+                                                        <div className="provider">{insuranceProvider.name}</div>
+                                                        <div className="discount">
+                                                            {insuranceProvider.discountType === 'percentage' 
+                                                                ? `${insuranceProvider.discount}% off` 
+                                                                : `${insuranceProvider.discount} EGP off`
+                                                            }
+                                                        </div>
                                                     </>
                                                 ) : (
                                                     <span className="no-insurance">Self Pay</span>

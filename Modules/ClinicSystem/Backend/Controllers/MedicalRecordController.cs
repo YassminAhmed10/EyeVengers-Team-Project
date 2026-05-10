@@ -4,8 +4,8 @@ using EyeClinicAPI.Data;
 using EyeClinicAPI.Models;
 using EyeClinicAPI.Models.EMR;
 using EyeClinicAPI.DTOs;
-
 using System.Text.RegularExpressions;
+using System.Text.Json.Serialization;
 
 namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
 {
@@ -22,22 +22,15 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
             _logger = logger;
         }
 
+        // ── GET patient/{patientId} ───────────────────────────────────────────
         [HttpGet("patient/{patientId}")]
-        public async Task<IActionResult> GetMedicalRecordByPatientId(int patientId)
+        public async Task<IActionResult> GetMedicalRecordByPatientId(string patientId)
         {
             try
             {
-                _logger.LogInformation("Getting medical record for patient ID: {PatientId}", patientId);
-
-                var record = await _context.MedicalRecords
-                    .FirstOrDefaultAsync(m => m.PatientIdentifier == patientId.ToString());
-
+                var record = await FindMedicalRecordByPatientKey(patientId);
                 if (record == null)
-                {
-                    _logger.LogWarning("No medical record found for patient {PatientId}", patientId);
-                    return NotFound(new { message = "Medical record not found" });
-                }
-
+                    return NotFound(new { message = "Medical record not found", patientId });
                 var dto = await MapToDto(record);
                 return Ok(dto);
             }
@@ -48,15 +41,14 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
             }
         }
 
+        // ── GET {id} ──────────────────────────────────────────────────────────
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMedicalRecordById(int id)
         {
             try
             {
                 var record = await _context.MedicalRecords.FindAsync(id);
-                if (record == null)
-                    return NotFound(new { message = "Medical record not found" });
-
+                if (record == null) return NotFound(new { message = "Medical record not found" });
                 var dto = await MapToDto(record);
                 return Ok(dto);
             }
@@ -67,82 +59,193 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
             }
         }
 
+        // ── GET check/{patientId} ─────────────────────────────────────────────
         [HttpGet("check/{patientId}")]
-        public async Task<IActionResult> CheckMedicalRecordExists(int patientId)
+        public async Task<IActionResult> CheckMedicalRecordExists(string patientId)
         {
-            var exists = await _context.MedicalRecords
-                .AnyAsync(m => m.PatientIdentifier == patientId.ToString());
+            if (string.IsNullOrWhiteSpace(patientId))
+                return BadRequest(new { message = "Patient ID is required" });
 
-            return Ok(new { exists = exists });
+            var record = await FindMedicalRecordByPatientKey(patientId);
+            return Ok(new
+            {
+                exists            = record != null,
+                recordId          = record?.Id,
+                patientIdentifier = record?.PatientIdentifier,
+            });
         }
 
-        [HttpGet("patient/{patientId}/history")]
-        public async Task<IActionResult> GetPatientMedicalHistory(int patientId)
+        // ── GET appointment-info/{patientId} ──────────────────────────────────
+        [HttpGet("appointment-info/{patientId}")]
+        public async Task<IActionResult> GetAppointmentInfo(string patientId)
         {
             try
             {
-                var record = await _context.MedicalRecords
-                    .FirstOrDefaultAsync(m => m.PatientIdentifier == patientId.ToString());
+                if (string.IsNullOrWhiteSpace(patientId))
+                    return BadRequest(new { message = "Patient ID is required" });
 
-                if (record == null)
+                var numericId = ExtractNumericId(patientId);
+                Patient? patient = null;
+
+                if (!string.IsNullOrEmpty(numericId))
+                    patient = await _context.Patients.FirstOrDefaultAsync(p => p.Id.ToString() == numericId);
+                if (patient == null)
+                    patient = await _context.Patients.FirstOrDefaultAsync(p => p.Id.ToString() == patientId);
+
+                if (patient != null)
                 {
-                    _logger.LogWarning("No medical record found for patient {PatientId}", patientId);
-                    return NotFound(new { message = "Medical record not found" });
+                    var mr = await _context.MedicalRecords
+                        .Where(m => m.PatientId == patient.Id)
+                        .OrderByDescending(m => m.CreatedAt)
+                        .FirstOrDefaultAsync();
+
+                    return Ok(new
+                    {
+                        patientId              = patient.Id,
+                        patientIdentifier      = mr?.PatientIdentifier,
+                        medicalRecordId        = mr?.Id,
+                        name                   = $"{patient.FirstName} {patient.LastName}".Trim(),
+                        firstName              = patient.FirstName,
+                        lastName               = patient.LastName,
+                        email                  = patient.Email,
+                        phone                  = patient.Phone,
+                        address                = patient.Address,
+                        gender                 = patient.Gender,
+                        birthDate              = patient.DateOfBirth,
+                        age                    = CalcAge(patient.DateOfBirth),
+                        nationalId             = patient.NationalId,
+                        insuranceCompany       = patient.InsuranceCompany,
+                        insuranceId            = patient.InsuranceId,
+                        emergencyContactName   = patient.EmergencyContactName,
+                        emergencyContactPhone  = patient.EmergencyContactPhone,
+                    });
                 }
 
-                var dto = await MapToDto(record);
-                return Ok(dto);
+                var appointment = await _context.Appointments
+                    .Where(a => a.PatientId == patientId || a.PatientId == numericId)
+                    .OrderByDescending(a => a.AppointmentDate)
+                    .FirstOrDefaultAsync();
+
+                if (appointment != null)
+                {
+                    return Ok(new
+                    {
+                        patientId              = appointment.PatientId,
+                        patientIdentifier      = appointment.PatientId,
+                        medicalRecordId        = (int?)null,
+                        name                   = appointment.PatientName,
+                        email                  = appointment.Email,
+                        phone                  = appointment.Phone,
+                        address                = appointment.Address,
+                        gender                 = appointment.PatientGender == PatientGender.Male ? "Male" : appointment.PatientGender == PatientGender.Female ? "Female" : "",
+                        birthDate              = appointment.PatientBirthDate,
+                        age                    = CalcAge(appointment.PatientBirthDate),
+                        nationalId             = appointment.NationalId,
+                        emergencyContactName   = appointment.EmergencyContactName,
+                        emergencyContactPhone  = appointment.EmergencyContactPhone,
+                        // Insurance Info
+                        insuranceCompany       = appointment.InsuranceCompany,
+                        insuranceId            = appointment.InsuranceId,
+                        policyNumber           = appointment.PolicyNumber,
+                        coverage               = appointment.Coverage,
+                        coverageType           = appointment.CoverageType,
+                        insuranceExpiryDate    = appointment.InsuranceExpiryDate,
+                        insuranceContact       = appointment.InsuranceContact,
+                        // Appointment Info
+                        reasonForVisit         = appointment.ReasonForVisit,
+                        appointmentDate        = appointment.AppointmentDate,
+                        appointmentTime        = appointment.AppointmentTime,
+                        finalPrice             = appointment.FinalPrice
+                    });
+                }
+
+                return NotFound(new { message = "Patient information not found" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting patient medical history for {PatientId}", patientId);
-                return StatusCode(500, new { message = "Error retrieving medical history" });
+                _logger.LogError(ex, "Error getting appointment info for patient {PatientId}", patientId);
+                return StatusCode(500, new { message = "Error retrieving appointment information", error = ex.Message });
             }
         }
 
+        // ── GET get-or-create/{patientId} ─────────────────────────────────────
+        [HttpGet("get-or-create/{patientId}")]
+        public async Task<IActionResult> GetOrCreateMedicalRecord(string patientId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(patientId))
+                    return BadRequest(new { exists = false, message = "Patient ID is required" });
+
+                var record = await FindMedicalRecordByPatientKey(patientId);
+                if (record != null)
+                    return Ok(new { exists = true, recordId = record.Id, patientIdentifier = record.PatientIdentifier });
+
+                record = new MedicalRecord { PatientIdentifier = patientId, CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now };
+                _context.MedicalRecords.Add(record);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { exists = true, recordId = record.Id, patientIdentifier = record.PatientIdentifier });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetOrCreateMedicalRecord");
+                return StatusCode(500, new { exists = false, message = ex.Message });
+            }
+        }
+
+        // ── POST create-for-patient ───────────────────────────────────────────
+        [HttpPost("create-for-patient")]
+        public async Task<IActionResult> CreateMedicalRecordForPatient([FromBody] CreateMedicalRecordForPatientRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.PatientId))
+                    return BadRequest(new { success = false, message = "Patient ID is required" });
+
+                var record = await FindMedicalRecordByPatientKey(request.PatientId);
+                if (record != null)
+                    return Ok(new { success = true, recordId = record.Id, patientIdentifier = record.PatientIdentifier });
+
+                record = new MedicalRecord { PatientIdentifier = request.PatientId, CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now };
+                _context.MedicalRecords.Add(record);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, recordId = record.Id, patientIdentifier = record.PatientIdentifier });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating medical record");
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        // ── POST (create) ─────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> CreateMedicalRecord([FromBody] CreateMedicalRecordRequest request)
         {
             try
             {
-                _logger.LogInformation("Creating medical record for patient {PatientId}", request.PatientId);
+                if (request == null)
+                    return BadRequest(new { success = false, message = "Request body is required" });
 
-                if (string.IsNullOrWhiteSpace(request.PatientId))
-                {
-                    return BadRequest(new { message = "PatientId is required" });
-                }
+                var identifier = NormalizePatientKey(request.PatientIdentifier, request.PatientId);
+                if (string.IsNullOrWhiteSpace(identifier))
+                    return BadRequest(new { success = false, message = "PatientId is required" });
 
-                int? patientId = await ResolvePatientId(request.PatientId);
+                var existing = await FindMedicalRecordByPatientKey(identifier);
+                if (existing != null)
+                    return Ok(new { message = "Medical record already exists", id = existing.Id, success = true, recordId = existing.Id, patientIdentifier = existing.PatientIdentifier });
 
-                if (patientId == null)
-                {
-                    _logger.LogWarning("Could not resolve patient ID: {PatientId}", request.PatientId);
-                    return BadRequest(new { message = "Patient not found or invalid PatientId" });
-                }
-
-                var existingRecord = await _context.MedicalRecords
-                    .FirstOrDefaultAsync(m => m.PatientIdentifier == patientId.ToString());
-
-                if (existingRecord != null)
-                {
-                    _logger.LogWarning("Medical record already exists for patient {PatientId}", patientId);
-                    return BadRequest(new { message = "Medical record already exists for this patient" });
-                }
-
-                var record = new MedicalRecord
-                {
-                    PatientIdentifier = patientId.ToString(),
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now
-                };
-
+                var record = new MedicalRecord { PatientIdentifier = identifier, CreatedAt = DateTime.Now, UpdatedAt = DateTime.Now };
                 _context.MedicalRecords.Add(record);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Medical record created with ID {RecordId} for patient {PatientId}", record.Id, patientId);
-
-                var dto = await MapToDto(record);
-                return CreatedAtAction(nameof(GetMedicalRecordById), new { id = record.Id }, dto);
+                return CreatedAtAction(nameof(GetMedicalRecordById), new { id = record.Id }, new
+                {
+                    message = "Medical record created successfully",
+                    id = record.Id, success = true, recordId = record.Id, patientIdentifier = record.PatientIdentifier
+                });
             }
             catch (Exception ex)
             {
@@ -151,230 +254,231 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
             }
         }
 
-        [HttpPost("from-appointment")]
-        public async Task<IActionResult> CreateMedicalRecordFromAppointment([FromBody] CreateMedicalRecordFromAppointmentRequest request)
+        // ── Helpers ───────────────────────────────────────────────────────────
+        private async Task<MedicalRecord?> FindMedicalRecordByPatientKey(string patientKey)
         {
-            try
+            var key = patientKey.Trim();
+            var num = ExtractNumericId(key);
+
+            var match = await _context.MedicalRecords.FirstOrDefaultAsync(m => m.PatientIdentifier == key);
+            if (match != null) return match;
+
+            if (!string.IsNullOrEmpty(num))
             {
-                _logger.LogInformation("Creating medical record from appointment {AppointmentId}", request.AppointmentId);
-
-                var appointment = await _context.Appointments.FindAsync(request.AppointmentId);
-                if (appointment == null)
-                    return NotFound(new { message = "Appointment not found" });
-
-                string? patientId = appointment.PatientId;
-                if (string.IsNullOrEmpty(patientId))
-                {
-                    _logger.LogError("Appointment {AppointmentId} has invalid PatientId", request.AppointmentId);
-                    return BadRequest(new { message = "Appointment has no valid PatientId" });
-                }
-
-                var existingRecord = await _context.MedicalRecords
-                    .FirstOrDefaultAsync(m => m.PatientIdentifier == patientId.ToString());
-
-                if (existingRecord != null)
-                {
-                    _logger.LogInformation("Medical record already exists for patient {PatientId}", patientId);
-                    return Ok(new { message = "Medical record already exists", recordId = existingRecord.Id });
-                }
-
-                var record = new MedicalRecord
-                {
-                    PatientIdentifier = patientId.ToString(),
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now
-                };
-
-                _context.MedicalRecords.Add(record);
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation("Medical record created with ID {RecordId} from appointment {AppointmentId}", record.Id, request.AppointmentId);
-
-                var dto = await MapToDto(record);
-                return Ok(new { message = "Medical record created", record = dto });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating medical record from appointment {AppointmentId}", request.AppointmentId);
-                return StatusCode(500, new { message = "Error creating medical record", error = ex.Message });
-            }
-        }
-
-        [HttpGet("patient-info/from-appointments")]
-        public async Task<IActionResult> GetPatientInfoFromAppointments([FromQuery] string searchValue)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(searchValue))
-                    return BadRequest(new { message = "Search value is required" });
-
-                int? patientId = await ResolvePatientId(searchValue);
-
-                if (patientId == null)
-                {
-                    _logger.LogWarning("Could not find patient for search value: {SearchValue}", searchValue);
-                    return NotFound(new { message = "Patient not found" });
-                }
-
-                var appointments = await _context.Appointments
-                    .Where(a => a.PatientId == patientId.ToString())
-                    .OrderByDescending(a => a.AppointmentDate)
+                var candidates = await _context.MedicalRecords
+                    .Where(m => m.PatientIdentifier != null && m.PatientIdentifier.Contains(num))
                     .ToListAsync();
-
-                if (!appointments.Any())
-                {
-                    return NotFound(new { message = "No appointments found for patient" });
-                }
-
-                var patientInfo = new
-                {
-                    PatientIdentifier = patientId.ToString(),
-                    appointmentCount = appointments.Count,
-                    firstAppointment = appointments.LastOrDefault()?.AppointmentDate,
-                    lastAppointment = appointments.FirstOrDefault()?.AppointmentDate,
-                    appointments = appointments.Select(a => new
-                    {
-                        appointmentId = a.AppointmentId,
-                        date = a.AppointmentDate,
-                        time = a.AppointmentTime,
-                        status = a.Status.ToString(),
-                        doctorId = a.DoctorId
-                    })
-                };
-
-                return Ok(patientInfo);
+                match = candidates.FirstOrDefault(m => ExtractNumericId(m.PatientIdentifier ?? "") == num);
+                if (match != null) return match;
             }
-            catch (Exception ex)
+
+            if (!string.IsNullOrEmpty(num) && int.TryParse(num, out var numericPatientId))
             {
-                _logger.LogError(ex, "Error getting patient info from appointments");
-                return StatusCode(500, new { message = "Error retrieving patient appointments" });
+                match = await _context.MedicalRecords.FirstOrDefaultAsync(m => m.PatientId == numericPatientId);
+                if (match != null) return match;
             }
+
+            return null;
         }
 
-        private async Task<int?> ResolvePatientId(string searchValue)
+        private static string ExtractNumericId(string value)
         {
-            if (string.IsNullOrWhiteSpace(searchValue))
-                return null;
+            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+            return Regex.Replace(value, "[^0-9]", "");
+        }
 
-            if (int.TryParse(searchValue, out var parsedId) && parsedId > 0)
-            {
-                var patientById = await _context.Patients.FindAsync(parsedId);
-                if (patientById != null)
-                {
-                    _logger.LogInformation("Patient found by ID: {PatientId}", parsedId);
-                    return parsedId;
-                }
-            }
+        private static string NormalizePatientKey(string? primary, string? fallback = null)
+        {
+            var p = primary?.Trim();
+            return !string.IsNullOrWhiteSpace(p) ? p : (fallback?.Trim() ?? string.Empty);
+        }
 
-            var emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
-            if (Regex.IsMatch(searchValue, emailPattern))
-            {
-                var patientByEmail = await _context.Patients
-                    .FirstOrDefaultAsync(p => p.Email == searchValue);
-                if (patientByEmail != null)
-                {
-                    _logger.LogInformation("Patient found by email: {Email}", searchValue);
-                    return patientByEmail.Id;
-                }
-            }
-
-            var phonePattern = @"^\+?1?\d{9,15}$";
-            if (Regex.IsMatch(searchValue, phonePattern))
-            {
-                var patientByPhone = await _context.Patients
-                    .FirstOrDefaultAsync(p => p.Phone == searchValue);
-                if (patientByPhone != null)
-                {
-                    _logger.LogInformation("Patient found by phone: {Phone}", searchValue);
-                    return patientByPhone.Id;
-                }
-            }
-
-            var nationalIdPattern = @"^\d{10,14}$";
-            if (Regex.IsMatch(searchValue, nationalIdPattern))
-            {
-                var patientByNationalId = await _context.Patients
-                    .FirstOrDefaultAsync(p => p.NationalId == searchValue);
-                if (patientByNationalId != null)
-                {
-                    _logger.LogInformation("Patient found by national ID: {NationalId}", searchValue);
-                    return patientByNationalId.Id;
-                }
-            }
-
-            _logger.LogWarning("Patient not found for search value: {SearchValue}", searchValue);
-            return null;
+        private static int? CalcAge(DateTime? dob)
+        {
+            if (!dob.HasValue || dob.Value == default) return null;
+            var today = DateTime.Today;
+            var age = today.Year - dob.Value.Year;
+            if (dob.Value.Date > today.AddYears(-age)) age--;
+            return age;
         }
 
         private async Task<MedicalRecordDto> MapToDto(MedicalRecord record)
         {
-            var complaints = await _context.PatientComplaints
-                .Where(c => c.MedicalRecordId == record.Id && !c.IsArchived)
-                .ToListAsync();
+            var complaints       = await _context.PatientComplaints.Where(c => c.MedicalRecordId == record.Id && !c.IsArchived).OrderByDescending(c => c.CreatedAt).ToListAsync();
+            var histories        = await _context.MedicalHistories.Where(h => h.MedicalRecordId == record.Id && !h.IsArchived).OrderByDescending(h => h.CreatedAt).ToListAsync();
+            var investigations   = await _context.Investigations.Where(i => i.MedicalRecordId == record.Id).OrderByDescending(i => i.CreatedAt).ToListAsync();
+            var eyeExaminations  = await _context.EyeExaminations.Where(e => e.MedicalRecordId == record.Id && !e.IsArchived).OrderByDescending(e => e.CreatedAt).ToListAsync();
+            var operations       = await _context.Operations.Where(o => o.MedicalRecordId == record.Id && !o.IsArchived).OrderByDescending(o => o.CreatedAt).ToListAsync();
+            var medicalTestFiles = await _context.MedicalTestFiles.Where(t => t.MedicalRecordId == record.Id).ToListAsync();
+            var prescriptions    = await _context.Prescriptions.Include(p => p.Items).Where(p => p.MedicalRecordId == record.Id).OrderByDescending(p => p.CreatedAt).ToListAsync();
+            var diagnoses        = await _context.Diagnoses.Where(d => d.MedicalRecordId == record.Id).OrderByDescending(d => d.CreatedAt).ToListAsync();
 
-            var histories = await _context.MedicalHistories
-                .Where(h => h.MedicalRecordId == record.Id && !h.IsArchived)
-                .ToListAsync();
+            // ── Patient info: Patients table → Appointments fallback ──────────
+            Patient? patient = null;
+            if (record.PatientId.HasValue)
+                patient = await _context.Patients.FindAsync(record.PatientId.Value);
 
-            var investigations = await _context.Investigations
-                .Where(i => i.MedicalRecordId == record.Id)
-                .ToListAsync();
+            // Also try by PatientIdentifier → Patients.PatientIdentifier
+            if (patient == null && !string.IsNullOrEmpty(record.PatientIdentifier))
+                patient = await _context.Patients
+                    .FirstOrDefaultAsync(p => p.PatientIdentifier == record.PatientIdentifier);
 
-            var eyeExaminations = await _context.EyeExaminations
-                .Where(e => e.MedicalRecordId == record.Id)
-                .ToListAsync();
+            Appointment? appointment = null;
+            if (patient == null && !string.IsNullOrEmpty(record.PatientIdentifier))
+                appointment = await _context.Appointments
+                    .Where(a => a.PatientId == record.PatientIdentifier)
+                    .OrderByDescending(a => a.AppointmentDate)
+                    .FirstOrDefaultAsync();
 
-            var operations = await _context.Operations
-                .Where(o => o.MedicalRecordId == record.Id && !o.IsArchived)
-                .ToListAsync();
+            // ── Derive fields ─────────────────────────────────────────────────
+            DateTime? birthDate = patient?.DateOfBirth ?? appointment?.PatientBirthDate;
+            int? age = CalcAge(birthDate);
 
-            var medicalTestFiles = await _context.MedicalTestFiles
-                .Where(t => t.MedicalRecordId == record.Id)
-                .ToListAsync();
+            string? gender = null;
+            if (patient != null && !string.IsNullOrEmpty(patient.Gender))
+                gender = patient.Gender;
+            else if (appointment != null)
+                gender = appointment.PatientGender == PatientGender.Male ? "Male"
+                       : appointment.PatientGender == PatientGender.Female ? "Female"
+                       : null;
 
-            var prescriptions = await _context.Prescriptions
-                .Include(p => p.Items)
-                .Where(p => p.MedicalRecordId == record.Id)
-                .ToListAsync();
+            string? address = !string.IsNullOrEmpty(patient?.Address)
+                ? patient.Address
+                : appointment?.Address;
 
-            var diagnoses = await _context.Diagnoses
-                .Where(d => d.MedicalRecordId == record.Id)
-                .ToListAsync();
+            string? emergencyName  = patient?.EmergencyContactName  ?? appointment?.EmergencyContactName;
+            string? emergencyPhone = patient?.EmergencyContactPhone ?? appointment?.EmergencyContactPhone;
 
             return new MedicalRecordDto
             {
-                Id = record.Id,
-                PatientId = record.PatientId,
-                CreatedAt = record.CreatedAt,
-                UpdatedAt = record.UpdatedAt ?? DateTime.Now,
-                Complaints = complaints.Select(c => (object)new { c.Id, c.OriginalText, c.TranslatedText }).ToList(),
-                Histories = histories.Select(h => (object)new { h.Id, h.PreviousEye, h.FamilyHistory, h.Allergies }).ToList(),
-                Investigations = investigations.Select(i => (object)new { i.Id, i.SelectedInvestigations }).ToList(),
-                EyeExaminations = eyeExaminations.Select(e => (object)new { e.Id, e.RightEye }).ToList(),
-                Operations = operations.Select(o => (object)new { o.Id, o.Name, o.Date }).ToList(),
-                MedicalTestFiles = medicalTestFiles.Select(t => (object)new { t.Id, t.FileName, t.FileUrl }).ToList(),
-                Prescriptions = prescriptions.Select(p => (object)new { p.Id, p.Notes, ItemCount = p.Items.Count }).ToList(),
-                Diagnoses = diagnoses.Select(d => (object)new { d.Id, d.DiagnosisName, d.Severity }).ToList()
+                Id                = record.Id,
+                PatientId         = record.PatientId,
+                PatientIdentifier = record.PatientIdentifier,
+                CreatedAt         = record.CreatedAt,
+                UpdatedAt         = record.UpdatedAt ?? DateTime.Now,
+
+                Name                  = patient != null ? $"{patient.FirstName} {patient.LastName}".Trim() : appointment?.PatientName ?? "",
+                Age                   = age,
+                Gender                = gender,
+                ContactNumber         = patient?.Phone ?? appointment?.Phone,
+                Email                 = patient?.Email ?? appointment?.Email,
+                Address               = address,
+                BirthDate             = birthDate,
+                NationalId            = patient?.NationalId ?? appointment?.NationalId,
+                InsuranceCompany      = patient?.InsuranceCompany ?? appointment?.InsuranceCompany,
+                InsuranceId           = patient?.InsuranceId ?? appointment?.InsuranceId,
+                PolicyNumber          = appointment?.PolicyNumber,
+                Coverage              = appointment?.Coverage,
+                EmergencyContactName  = emergencyName,
+                EmergencyContactPhone = emergencyPhone,
+                VisitDate = record.VisitDate != default
+                    ? record.VisitDate.ToString("yyyy-MM-dd")
+                    : DateTime.Now.ToString("yyyy-MM-dd"),
+
+                // ── Medical data — full mapping with all fields ───────────────
+                Complaints = complaints.Select(c => (object)new {
+                    id = c.Id, complaint = c.OriginalText ?? c.Complaint ?? "",
+                    originalText = c.OriginalText, translatedText = c.TranslatedText,
+                    createdAt = c.CreatedAt
+                }).ToList(),
+
+                Histories = histories.Select(h => (object)new {
+                    id = h.Id, previousEye = h.PreviousEye, familyHistory = h.FamilyHistory,
+                    allergies = h.Allergies, chronicDiseases = h.ChronicDiseases,
+                    currentMedications = h.CurrentMedications, eyeSurgeries = h.EyeSurgeries,
+                    familyEyeDiseases = h.FamilyEyeDiseases, visionSymptoms = h.VisionSymptoms,
+                    pastMedicalHistory = h.PreviousEye, createdAt = h.CreatedAt
+                }).ToList(),
+
+                Investigations = investigations.Select(i => (object)new {
+                    id = i.Id, medicalRecordId = i.MedicalRecordId,
+                    selectedInvestigations = i.SelectedInvestigations,
+                    notes = i.Notes, result = i.Result ?? "",
+                    createdAt = i.CreatedAt, updatedAt = i.UpdatedAt
+                }).ToList(),
+
+                EyeExaminations = eyeExaminations.Select(e => (object)new {
+                    id = e.Id, medicalRecordId = e.MedicalRecordId,
+                    rightEye = e.RightEye, leftEye = e.LeftEye,
+                    eyePressure = e.EyePressure, pupilReaction = e.PupilReaction,
+                    pupilReactionOther = e.PupilReactionOther,
+                    eyeAlignment = e.EyeAlignment, eyeAlignmentOther = e.EyeAlignmentOther,
+                    eyeMovements = e.EyeMovements, eyeMovementsOther = e.EyeMovementsOther,
+                    anteriorSegment = e.AnteriorSegment, fundusObservation = e.FundusObservation,
+                    posteriorSegment = e.PosteriorSegment ?? "",
+                    visualAcuity = e.VisualAcuity ?? "",
+                    otherNotes = e.OtherNotes, createdAt = e.CreatedAt
+                }).ToList(),
+
+                Operations = operations.Select(o => (object)new {
+                    id = o.Id, name = o.Name ?? o.OperationName,
+                    operationName = o.OperationName ?? o.Name,
+                    date = o.Date, eye = o.Eye ?? "",
+                    surgeon = o.Surgeon ?? "", anesthesia = o.Anesthesia ?? "",
+                    status = o.Status ?? "", complications = o.Complications ?? "",
+                    notes = o.Notes ?? o.SpecialInstructions ?? "",
+                    createdAt = o.CreatedAt
+                }).ToList(),
+
+                MedicalTestFiles = medicalTestFiles.Select(t => (object)new {
+                    id = t.Id, fileName = t.FileName, fileUrl = t.FileUrl,
+                    filePath = t.FilePath ?? "", createdAt = t.CreatedAt
+                }).ToList(),
+
+                Prescriptions = prescriptions.Select(p => (object)new {
+                    id = p.Id, notes = p.Notes, createdAt = p.CreatedAt,
+                    items = p.Items != null
+                        ? p.Items.Select(item => (object)new {
+                            drug = item.Drug, form = item.Form,
+                            dose = item.Dose, customDose = item.CustomDose ?? "",
+                            frequency = item.Frequency, customFrequency = item.CustomFrequency ?? "",
+                            duration = item.Duration ?? "", notes = item.Notes
+                          }).ToList()
+                        : new List<object>()
+                }).ToList(),
+
+                Diagnoses = diagnoses.Select(d => (object)new {
+                    id = d.Id, diagnosisName = d.DiagnosisName,
+                    diagnosis = d.DiagnosisName,
+                    icd10Code = d.ICD10Code ?? "",
+                    severity = d.Severity, status = d.Status ?? "",
+                    notes = d.Notes ?? "", checkupDate = d.CheckupDate,
+                    createdAt = d.CreatedAt
+                }).ToList(),
             };
         }
     }
 
     public class CreateMedicalRecordRequest
     {
-        public string PatientId { get; set; } = "";
+        [JsonPropertyName("patientId")]         public string? PatientId { get; set; }
+        [JsonPropertyName("patientIdentifier")]  public string? PatientIdentifier { get; set; }
     }
 
-    public class CreateMedicalRecordFromAppointmentRequest
-    {
-        public int AppointmentId { get; set; }
-    }
+    public class CreateMedicalRecordForPatientRequest { public string PatientId { get; set; } = ""; }
 
     public class MedicalRecordDto
     {
         public int Id { get; set; }
         public int? PatientId { get; set; }
+        public string? PatientIdentifier { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public string? Name { get; set; }
+        public int? Age { get; set; }
+        public string? Gender { get; set; }
+        public string? ContactNumber { get; set; }
+        public string? Email { get; set; }
+        public string? Address { get; set; }
+        public DateTime? BirthDate { get; set; }
+        public string? NationalId { get; set; }
+        public string? InsuranceCompany { get; set; }
+        public string? InsuranceId { get; set; }
+        public string? PolicyNumber { get; set; }
+        public string? Coverage { get; set; }
+        public string? EmergencyContactName { get; set; }
+        public string? EmergencyContactPhone { get; set; }
+        public string? VisitDate { get; set; }
         public List<object> Complaints { get; set; } = new();
         public List<object> Histories { get; set; } = new();
         public List<object> Investigations { get; set; } = new();
@@ -385,17 +489,3 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
         public List<object> Diagnoses { get; set; } = new();
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

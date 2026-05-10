@@ -1,5 +1,5 @@
 /**
- * 🏥 Medical Eye Images Repository
+ * Medical Eye Images Repository
  * 
  * This file contains URLs to free medical eye images from various sources
  * for use in the EMR (Electronic Medical Record) system.
@@ -32,7 +32,7 @@ export const medicalEyeImages = {
     },
 
     // ========================================
-    // 🔍 OCT (Optical Coherence Tomography)
+    // OCT (Optical Coherence Tomography)
     // ========================================
     oct: {
         normalOCT: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/OCT_scan_normal_macula.jpg/800px-OCT_scan_normal_macula.jpg',
@@ -41,7 +41,7 @@ export const medicalEyeImages = {
     },
 
     // ========================================
-    // 🏥 Eye Examination Equipment
+    // Eye Examination Equipment
     // ========================================
     equipment: {
         slitLamp: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=600',
@@ -100,7 +100,7 @@ export const medicalEyeImages = {
     },
 
     // ========================================
-    // 📊 Visual Field Testing
+    // Visual Field Testing
     // ========================================
     visualField: {
         normalField: 'https://images.unsplash.com/photo-1574022364235-280f75d0e05c?w=600',
@@ -118,7 +118,7 @@ export const medicalEyeImages = {
     },
 
     // ========================================
-    // 🏥 Placeholder Images (for missing data)
+    // Placeholder Images (for missing data)
     // ========================================
     placeholders: {
         noImage: 'https://via.placeholder.com/600x400/1e3a5f/ffffff?text=No+Image+Available',

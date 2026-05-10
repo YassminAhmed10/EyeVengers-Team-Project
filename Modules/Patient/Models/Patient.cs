@@ -13,6 +13,7 @@ namespace EyeClinicAPI.PatientModule.Models
         public required string Email { get; set; }
         public required string Address { get; set; }
         public required string NationalId { get; set; }
+        public string? PatientIdentifier { get; set; }   // ← P-XXXXXX primary display ID
         public required string InsuranceCompany { get; set; }
         public required string InsuranceId { get; set; }
         public required string EmergencyContactName { get; set; }
@@ -21,4 +22,3 @@ namespace EyeClinicAPI.PatientModule.Models
         public virtual ICollection<MedicalRecord> MedicalRecords { get; set; } = new List<MedicalRecord>();
     }
 }
-

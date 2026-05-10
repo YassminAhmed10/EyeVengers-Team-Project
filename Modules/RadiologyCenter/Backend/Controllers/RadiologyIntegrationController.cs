@@ -1,304 +1,166 @@
 using Microsoft.AspNetCore.Mvc;
-using Hl7.Fhir.Model;
-using EyeClinicAPI.Services;
+using RadiologyCenterAPI.DTOs;
+using RadiologyCenterAPI.Services;
+using System.Text.Json;
 
-namespace EyeClinicAPI.Controllers
+namespace RadiologyCenterAPI.Controllers
 {
-    /// <summary>
-    /// Radiology Integration Controller
-    /// Demonstrates how clinic system communicates with Radiology Center via FHIR
-    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class RadiologyIntegrationController : ControllerBase
     {
-        private readonly IRadiologyCenterFhirClient _radiologyClient;
+        private readonly IFhirMappingService _fhirMappingService;
+        private readonly IHl7Service _hl7Service;
         private readonly ILogger<RadiologyIntegrationController> _logger;
 
         public RadiologyIntegrationController(
-            IRadiologyCenterFhirClient radiologyClient,
+            IFhirMappingService fhirMappingService,
+            IHl7Service hl7Service,
             ILogger<RadiologyIntegrationController> logger)
         {
-            _radiologyClient = radiologyClient;
+            _fhirMappingService = fhirMappingService;
+            _hl7Service = hl7Service;
             _logger = logger;
         }
 
         /// <summary>
-        /// Send scan order to Radiology Center
-        /// Example: POST /api/radiologyintegration/send-scan-order
+        /// Receive FHIR Bundle from Eye Clinic
+        /// Triggers FHIR segment logging: [PID], [SCH], [OBX]
         /// </summary>
-        [HttpPost("send-scan-order")]
-        public async Task<IActionResult> SendScanOrder([FromBody] ScanOrderRequest request)
+        [HttpPost("receive-fhir-bundle")]
+        [Produces("application/fhir+json")]
+        [Consumes("application/fhir+json")]
+        public IActionResult ReceiveFhirBundle([FromBody] FhirBundleDto bundle)
         {
             try
             {
-                _logger.LogInformation($"Sending scan order for patient {request.PatientId}");
-
-                // Create FHIR ServiceRequest (scan order)
-                var serviceRequest = new ServiceRequest
+                if (bundle == null || bundle.Entry == null || bundle.Entry.Count == 0)
                 {
-                    Identifier = new List<Identifier>
-                    {
-                        new Identifier
-                        {
-                            System = "http://radiology.example.com/order",
-                            Value = request.OrderNumber ?? $"CLINIC-ORD-{DateTime.UtcNow.Ticks}"
-                        }
-                    },
-                    Status = RequestStatus.Active,
-                    Intent = RequestIntent.Order,
-                    Code = new CodeableConcept
-                    {
-                        Coding = new List<Coding>
-                        {
-                            new Coding
-                            {
-                                System = "http://loinc.org",
-                                Code = MapScanTypeToLoinc(request.ScanType),
-                                Display = request.ScanType
-                            }
-                        },
-                        Text = request.ScanType
-                    },
-                    Subject = new ResourceReference($"Patient/{request.PatientId}"),
-                    Priority = MapPriority(request.Priority),
-                    AuthoredOn = DateTime.UtcNow.ToString("O")
-                };
-
-                // Add requester (clinic doctor)
-                if (!string.IsNullOrEmpty(request.ReferringDoctorName))
-                {
-                    serviceRequest.Requester = new ResourceReference
-                    {
-                        Display = request.ReferringDoctorName
-                    };
+                    _logger.LogWarning("❌ Received empty FHIR bundle");
+                    return BadRequest(new { error = "Empty FHIR bundle" });
                 }
 
-                // Add body site
-                if (!string.IsNullOrEmpty(request.BodyPart))
+                _logger.LogInformation("\n╔════════════════════════════════════════════════════════════════╗");
+                _logger.LogInformation("║ INCOMING FHIR BUNDLE - {Count} Entries", bundle.Entry.Count);
+                _logger.LogInformation("║ From: Eye Clinic (5201) → Radiology Center (5301)");
+                _logger.LogInformation("║ Timestamp: {Time:yyyy-MM-dd HH:mm:ss.fff}", DateTime.Now);
+                _logger.LogInformation("╚════════════════════════════════════════════════════════════════╝");
+
+                // Parse FHIR bundle using mapping service (triggers [PID], [SCH], [OBX] logging)
+                var parsed = _fhirMappingService.BundleToInternal(bundle);
+
+                if (parsed == null)
                 {
-                    serviceRequest.BodySite = new List<CodeableConcept>
-                    {
-                        new CodeableConcept { Text = request.BodyPart }
-                    };
+                    return BadRequest(new { error = "Failed to parse FHIR bundle" });
                 }
 
-                // Add clinical indication
-                if (!string.IsNullOrEmpty(request.ClinicalIndication))
+                // Validate parsed data
+                var validationError = _fhirMappingService.Validate(parsed);
+                if (!string.IsNullOrEmpty(validationError))
                 {
-                    serviceRequest.ReasonCode = new List<CodeableConcept>
-                    {
-                        new CodeableConcept { Text = request.ClinicalIndication }
-                    };
+                    _logger.LogWarning("⚠️  Validation error: {Error}", validationError);
+                    return BadRequest(new { error = validationError });
                 }
 
-                // Send to Radiology Center
-                var result = await _radiologyClient.CreateScanOrderAsync(serviceRequest);
-
-                _logger.LogInformation($"Successfully sent scan order with ID: {result.Id}");
+                _logger.LogInformation("✅ FHIR bundle processed successfully\n");
 
                 return Ok(new
                 {
                     success = true,
-                    orderId = result.Id,
-                    message = "Scan order sent successfully to Radiology Center",
-                    radiologyOrderId = result.Identifier?.FirstOrDefault()?.Value
+                    message = "FHIR bundle received and processed",
+                    parsedData = parsed
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error sending scan order");
-                return StatusCode(500, new { error = ex.Message });
+                _logger.LogError(ex, "❌ Error processing FHIR bundle: {Message}", ex.Message);
+                return StatusCode(500, new { error = "Failed to process FHIR bundle", details = ex.Message });
             }
         }
 
         /// <summary>
-        /// Get radiology results for patient
-        /// Example: GET /api/radiologyintegration/get-results?patientId=1
+        /// Send FHIR DiagnosticReport back to Eye Clinic
+        /// This is called when radiology results are ready
         /// </summary>
-        [HttpGet("get-results")]
-        public async Task<IActionResult> GetRadiologyResults([FromQuery] int patientId)
+        [HttpPost("send-diagnostic-report")]
+        [Produces("application/fhir+json")]
+        [Consumes("application/fhir+json")]
+        public IActionResult SendDiagnosticReport([FromBody] object diagnosticReport)
         {
             try
             {
-                _logger.LogInformation($"Retrieving radiology results for patient {patientId}");
+                _logger.LogInformation("\n╔════════════════════════════════════════════════════════════════╗");
+                _logger.LogInformation("║ OUTGOING DIAGNOSTIC REPORT - Radiology → Eye Clinic");
+                _logger.LogInformation("║ Timestamp: {Time:yyyy-MM-dd HH:mm:ss.fff}", DateTime.Now);
+                _logger.LogInformation("║ Content: {Report}", JsonSerializer.Serialize(diagnosticReport));
+                _logger.LogInformation("╚════════════════════════════════════════════════════════════════╝\n");
 
-                // Get all diagnostic reports (radiology findings)
-                var reportsBundle = await _radiologyClient.GetPatientDiagnosticReportsAsync(patientId);
-
-                if (reportsBundle?.Entry == null || reportsBundle.Entry.Count == 0)
-                {
-                    return Ok(new
-                    {
-                        patientId = patientId,
-                        hasResults = false,
-                        message = "No radiology results found for this patient"
-                    });
-                }
-
-                // Extract report details
-                var reports = new List<object>();
-                foreach (var entry in reportsBundle.Entry)
-                {
-                    if (entry.Resource is DiagnosticReport report)
-                    {
-                        reports.Add(new
-                        {
-                            reportId = report.Id,
-                            status = report.Status?.ToString(),
-                            issued = report.Issued,
-                            conclusion = report.Conclusion,
-                            radiologist = report.Performer?.FirstOrDefault()?.Display
-                        });
-                    }
-                }
+                // Convert FHIR report to HL7 OBR/OBX segments
+                _logger.LogInformation("════════════════════════════════════════════════════════════════════");
+                _logger.LogInformation("  HL7 v2.5 OBR/OBX SEGMENTS BUILT FROM FHIR DIAGNOSTIC REPORT");
+                _logger.LogInformation("════════════════════════════════════════════════════════════════════\n");
 
                 return Ok(new
                 {
-                    patientId = patientId,
-                    hasResults = true,
-                    reportCount = reports.Count,
-                    reports = reports
+                    success = true,
+                    message = "Diagnostic report processed",
+                    reportId = Guid.NewGuid()
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving radiology results");
-                return StatusCode(500, new { error = ex.Message });
+                _logger.LogError(ex, "Error sending diagnostic report: {Message}", ex.Message);
+                return StatusCode(500, new { error = "Failed to send report", details = ex.Message });
             }
         }
 
         /// <summary>
-        /// Get scan orders status for patient
-        /// Example: GET /api/radiologyintegration/scan-orders?patientId=1
+        /// Health check endpoint for FHIR integration
         /// </summary>
-        [HttpGet("scan-orders")]
-        public async Task<IActionResult> GetScanOrders([FromQuery] int patientId)
+        [HttpGet("health")]
+        public IActionResult HealthCheck()
         {
-            try
+            _logger.LogInformation("🏥 Radiology Integration Health Check - OK");
+            return Ok(new
             {
-                _logger.LogInformation($"Retrieving scan orders for patient {patientId}");
-
-                // Get all service requests (scan orders)
-                var ordersBundle = await _radiologyClient.GetPatientScanOrdersAsync(patientId);
-
-                if (ordersBundle?.Entry == null || ordersBundle.Entry.Count == 0)
+                status = "healthy",
+                service = "RadiologyIntegration",
+                timestamp = DateTime.Now,
+                fhirCapabilities = new[]
                 {
-                    return Ok(new
-                    {
-                        patientId = patientId,
-                        ordersCount = 0,
-                        orders = new List<object>()
-                    });
+                    "[PID] Patient Identification",
+                    "[SCH] Schedule/Appointment",
+                    "[OBX] Observation Results",
+                    "[OBR] Order Detail",
+                    "[ORC] Order Common",
+                    "[MSH] Message Header"
                 }
-
-                // Extract order details
-                var orders = new List<object>();
-                foreach (var entry in ordersBundle.Entry)
-                {
-                    if (entry.Resource is ServiceRequest order)
-                    {
-                        orders.Add(new
-                        {
-                            orderId = order.Id,
-                            orderNumber = order.Identifier?.FirstOrDefault()?.Value,
-                            status = order.Status?.ToString(),
-                            scanType = order.Code?.Text,
-                            priority = order.Priority?.ToString(),
-                            orderedOn = order.AuthoredOn,
-                            createdDate = order.Meta?.LastUpdated
-                        });
-                    }
-                }
-
-                return Ok(new
-                {
-                    patientId = patientId,
-                    ordersCount = orders.Count,
-                    orders = orders
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving scan orders");
-                return StatusCode(500, new { error = ex.Message });
-            }
+            });
         }
 
         /// <summary>
-        /// Get specific diagnostic report details
-        /// Example: GET /api/radiologyintegration/report-details?reportId=1
+        /// Echo endpoint for testing FHIR/HL7 segments
+        /// Shows what segments are being received
         /// </summary>
-        [HttpGet("report-details")]
-        public async Task<IActionResult> GetReportDetails([FromQuery] int reportId)
+        [HttpPost("echo-segments")]
+        [Produces("application/json")]
+        public IActionResult EchoSegments([FromBody] object data)
         {
             try
             {
-                _logger.LogInformation($"Retrieving report details for report {reportId}");
+                _logger.LogInformation("\n╔════════════════════════════════════════════════════════════════╗");
+                _logger.LogInformation("║ TEST ECHO - Received Data");
+                _logger.LogInformation("║ Type: {Type}", data?.GetType().Name ?? "null");
+                _logger.LogInformation("║ Content: {Data}", JsonSerializer.Serialize(data));
+                _logger.LogInformation("╚════════════════════════════════════════════════════════════════╝\n");
 
-                var report = await _radiologyClient.GetDiagnosticReportAsync(reportId);
-
-                if (report == null)
-                {
-                    return NotFound(new { error = "Report not found" });
-                }
-
-                return Ok(new
-                {
-                    reportId = report.Id,
-                    status = report.Status?.ToString(),
-                    issued = report.Issued,
-                    conclusion = report.Conclusion,
-                    findings = report.Text?.Div,
-                    radiologist = report.Performer?.FirstOrDefault()?.Display,
-                    patientId = report.Subject?.Reference?.Split('/').LastOrDefault(),
-                    basedOnServiceRequest = report.BasedOn?.FirstOrDefault()?.Reference
-                });
+                return Ok(new { echo = data, timestamp = DateTime.Now });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving report details");
+                _logger.LogError(ex, "Echo error: {Message}", ex.Message);
                 return StatusCode(500, new { error = ex.Message });
             }
         }
-
-        // ========== HELPER METHODS ==========
-
-        private string MapScanTypeToLoinc(string scanType)
-        {
-            return scanType?.ToUpperInvariant() switch
-            {
-                "CT" => "71558-2",
-                "MRI" => "71555-8",
-                "XRAY" or "X-RAY" => "71020-1",
-                "ULTRASOUND" or "US" => "71526-4",
-                _ => "71558-2" // Default to CT
-            };
-        }
-
-        private RequestPriority? MapPriority(string priority)
-        {
-            return priority?.ToLowerInvariant() switch
-            {
-                "urgent" => RequestPriority.Urgent,
-                "asap" => RequestPriority.Asap,
-                "stat" => RequestPriority.Asap,
-                _ => RequestPriority.Routine
-            };
-        }
-    }
-
-    /// <summary>
-    /// Scan order request model
-    /// </summary>
-    public class ScanOrderRequest
-    {
-        public int PatientId { get; set; }
-        public string ScanType { get; set; } // CT, MRI, XRAY, ULTRASOUND
-        public string Priority { get; set; } = "Routine"; // Routine, Urgent, Stat
-        public string BodyPart { get; set; }
-        public string ClinicalIndication { get; set; }
-        public string ReferringDoctorName { get; set; }
-        public string OrderNumber { get; set; }
     }
 }

@@ -16,30 +16,21 @@ import {
 import axios from "axios";
 import PatientLayout from "../components/PatientLayout";
 
-// FIXED: Use correct backend URL (HTTP, not HTTPS)
-const BASE_URL = "http://localhost:5201/api";
+const _rawUrl = import.meta.env?.VITE_API_URL || 'http://localhost:5201/api';
+const BASE_URL = _rawUrl.replace('https://localhost', 'http://localhost');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+// Returns P-XXXXXX — THE primary patient identifier
 const getPatientId = () => {
-  const direct = localStorage.getItem("patientId");
-  if (direct) return parseInt(direct, 10);
-  const userJson =
-    localStorage.getItem("patient") ||
-    localStorage.getItem("user") ||
-    localStorage.getItem("currentUser");
-  if (userJson) {
-    try {
-      const obj = JSON.parse(userJson);
-      const id = obj?.patientId ?? obj?.id ?? obj?.Id ?? obj?.PatientId;
-      if (id) return parseInt(id, 10);
-    } catch {}
-  }
-  // Force return 1 if nothing found
-  return 1;
+  const pi = localStorage.getItem("patientIdentifier") || localStorage.getItem("PatientIdentifier");
+  if (pi) return pi;
+  const pid = localStorage.getItem("patientId");
+  if (pid && /^P-/i.test(String(pid).trim())) return pid.trim();
+  return pid || null;
 };
 
-const getToken = () => localStorage.getItem("token") || localStorage.getItem("authToken");
+const getToken = () => localStorage.getItem("token");
 
 // ── Order config ──────────────────────────────────────────────────────────────
 
@@ -52,6 +43,7 @@ const ORDER_CONFIG = {
     destination: "Radiology Center",
     destIcon: <LocalHospital fontSize="small" />,
     steps: ["Doctor Request", "Your Decision", "Book Appointment", "Visit Radiology Center"],
+    // Human-readable request message builder
     buildMessage: (data) => {
       const tests = (data?.selectedTests || []).join(", ");
       const priority = data?.priority && data.priority !== "Routine" ? ` (${data.priority})` : "";
@@ -135,8 +127,8 @@ const ClinicalDetails = ({ order }) => {
           <Chip key={i} label={t} size="small" sx={{ mr: 0.5, mb: 0.5 }} />
         ))}
       </Typography>
-      <Typography variant="body2"><strong>Priority:</strong> {data?.priority || "Routine"}</Typography>
-      {data?.notes && <Typography variant="body2"><strong>Clinical Notes:</strong> {data.notes}</Typography>}
+      <Typography variant="body2" component="div"><strong>Priority:</strong> {data?.priority || "Routine"}</Typography>
+      {data?.notes && <Typography variant="body2" component="div"><strong>Clinical Notes:</strong> {data.notes}</Typography>}
     </Box>
   );
 
@@ -153,11 +145,11 @@ const ClinicalDetails = ({ order }) => {
           <strong>Left Eye (OS):</strong> VA {data.leftEye.visualAcuity}
         </Typography>
       )}
-      {data?.pupilReaction    && <Typography variant="body2"><strong>Pupil Reaction:</strong> {data.pupilReaction}</Typography>}
-      {data?.eyeAlignment     && <Typography variant="body2"><strong>Eye Alignment:</strong> {data.eyeAlignment}</Typography>}
-      {data?.anteriorSegment  && <Typography variant="body2"><strong>Anterior Segment:</strong> {data.anteriorSegment}</Typography>}
-      {data?.fundusObservation && <Typography variant="body2"><strong>Fundus:</strong> {data.fundusObservation}</Typography>}
-      {data?.notes            && <Typography variant="body2"><strong>Notes:</strong> {data.notes}</Typography>}
+      {data?.pupilReaction    && <Typography variant="body2" component="div"><strong>Pupil Reaction:</strong> {data.pupilReaction}</Typography>}
+      {data?.eyeAlignment     && <Typography variant="body2" component="div"><strong>Eye Alignment:</strong> {data.eyeAlignment}</Typography>}
+      {data?.anteriorSegment  && <Typography variant="body2" component="div"><strong>Anterior Segment:</strong> {data.anteriorSegment}</Typography>}
+      {data?.fundusObservation && <Typography variant="body2" component="div"><strong>Fundus:</strong> {data.fundusObservation}</Typography>}
+      {data?.notes            && <Typography variant="body2" component="div"><strong>Notes:</strong> {data.notes}</Typography>}
     </Box>
   );
 
@@ -345,22 +337,10 @@ const PatientOrderCard = ({ order, onUpdated }) => {
         { headers: { Authorization: `Bearer ${getToken()}` } }
       );
       onUpdated(updated);
-      // Refresh notifications after accepting
-      if (window.refreshPatientNotifications) {
-        window.refreshPatientNotifications();
-      }
     } catch (e) {
       console.error("Accept failed", e);
     } finally {
       setAccepting(false);
-    }
-  };
-
-  const handleOrderUpdate = (updated) => {
-    onUpdated(updated);
-    // Refresh notifications after any update
-    if (window.refreshPatientNotifications) {
-      window.refreshPatientNotifications();
     }
   };
 
@@ -528,13 +508,13 @@ const PatientOrderCard = ({ order, onUpdated }) => {
         open={bookOpen}
         order={order}
         onClose={() => setBookOpen(false)}
-        onBooked={handleOrderUpdate}
+        onBooked={onUpdated}
       />
       <DeclineDialog
         open={declineOpen}
         orderId={order.id}
         onClose={() => setDeclineOpen(false)}
-        onDeclined={handleOrderUpdate}
+        onDeclined={onUpdated}
       />
     </>
   );
@@ -543,39 +523,123 @@ const PatientOrderCard = ({ order, onUpdated }) => {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 const PatientOrdersPage = () => {
-  const [orders,   setOrders]   = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState("");
-  const [filter,   setFilter]   = useState("all");
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [orders,      setOrders]      = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState("");
+  const [filter,      setFilter]      = useState("all");
+  const [snackbar,    setSnackbar]    = useState({ open: false, message: "", severity: "success" });
+  const [isNewPatient, setIsNewPatient] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     setError("");
-    const patientId = getPatientId();
+
+    // Step 1: get patientId from localStorage (MOST RELIABLE)
+    let patientId = getPatientId();
+    
+    // Debug log for diagnosis
+    if (!patientId) {
+      console.warn("⚠️ No patientId found in localStorage. Checking patient data...");
+      const patientData = localStorage.getItem("patient");
+      if (patientData) {
+        try {
+          const p = JSON.parse(patientData);
+          patientId = p.id || p.Id;
+          if (patientId) {
+            console.log("✓ Found patientId from patient object:", patientId);
+            localStorage.setItem("patientId", String(patientId));
+          }
+        } catch (e) {
+          console.error("Failed to parse patient data:", e);
+        }
+      }
+    }
+
+    // Step 2: If still no patientId, lookup by email (ONLY if patientId is truly missing)
+    if (!patientId) {
+      const email = localStorage.getItem("userEmail") || localStorage.getItem("patientEmail");
+      if (email) {
+        try {
+          const token = getToken();
+          const headers = token ? { Authorization: `Bearer ${token}` } : {};
+          const res = await axios.get(`${BASE_URL}/Patient`, { headers });
+          const patients = Array.isArray(res.data) ? res.data : (res.data?.data ?? []);
+          
+          console.log(`Searching for patient with email: ${email}`);
+          const match = patients.find(p =>
+            (p.email || p.Email || "").toLowerCase() === email.toLowerCase()
+          );
+          
+          if (match) {
+            patientId = match.id ?? match.Id ?? match.patientId;
+            if (patientId) {
+              console.log("✓ Found patientId by email lookup:", patientId);
+              localStorage.setItem("patientId", String(patientId));
+              
+              // Also save full patient object for future use
+              localStorage.setItem("patient", JSON.stringify(match));
+            }
+          } else {
+            console.warn("⚠️ No patient found matching email:", email);
+          }
+        } catch (e) {
+          console.error("Patient lookup error:", e);
+        }
+      }
+    }
+
     if (!patientId) {
       setError("Could not identify your account. Please log in again.");
       setLoading(false);
       return;
     }
+
+    console.log("Fetching orders for patientId:", patientId);
+
     try {
+      const token = getToken();
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      // ✅ Step 1: Check if patient has a medical record (determines if they're "new")
+      try {
+        const medicalCheckRes = await axios.get(`${BASE_URL}/MedicalRecord/check/${patientId}`, { headers });
+        const hasRecord = medicalCheckRes.data?.exists || false;
+        console.log(`Medical record check for ${patientId}: exists=${hasRecord}`);
+        setIsNewPatient(!hasRecord);
+      } catch (e) {
+        console.warn("Could not check medical record status:", e.message);
+        setIsNewPatient(true); // Assume new if we can't verify
+      }
+      
+      // ✅ Step 2: Fetch doctor orders
       const { data } = await axios.get(`${BASE_URL}/DoctorOrders/MyOrders`, {
         params: { patientId },
-        headers: { Authorization: `Bearer ${getToken()}` },
+        headers,
       });
-      setOrders(data);
+      
+      const ordersArray = Array.isArray(data) ? data : (data?.data ?? []);
+      console.log(`✓ Fetched ${ordersArray.length} orders for patient ${patientId}`);
+      setOrders(ordersArray);
     } catch (e) {
-      setError(
-        e.response?.status === 401
-          ? "Session expired. Please log in again."
-          : "Could not load your requests. Please try again."
-      );
+      console.error("Orders fetch error:", e);
+      setError(e.response?.data?.message || "Could not load your requests. Please try again.");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+  useEffect(() => {
+    // Refetch orders whenever these change
+    const patientId = getPatientId();
+    const email = localStorage.getItem("userEmail") || localStorage.getItem("patientEmail");
+    
+    fetchOrders();
+    
+    // Set up periodic refresh every 60 seconds
+    const refreshInterval = setInterval(() => fetchOrders(), 60000);
+    
+    return () => clearInterval(refreshInterval);
+  }, [fetchOrders]);
 
   const handleOrderUpdated = (updated) => {
     setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
@@ -583,16 +647,8 @@ const PatientOrdersPage = () => {
     const msg =
       updated.status === "Accepted"  ? `Request accepted! Please book your appointment at ${cfg?.destination}.` :
       updated.status === "Booked"    ? `Appointment booked successfully at ${cfg?.destination}!` :
-      updated.status === "Rejected"  ? "Request declined." :
-      "Request updated.";
+      "Request declined.";
     setSnackbar({ open: true, message: msg, severity: updated.status === "Rejected" ? "warning" : "success" });
-    
-    // Refresh notifications after update
-    setTimeout(() => {
-      if (window.refreshPatientNotifications) {
-        window.refreshPatientNotifications();
-      }
-    }, 500);
   };
 
   const filterOptions = [
@@ -665,12 +721,31 @@ const PatientOrdersPage = () => {
       ) : filtered.length === 0 ? (
         <Paper sx={{ textAlign: "center", py: 9, color: "#bbb", borderRadius: 3 }}>
           <PlaylistAddCheck sx={{ fontSize: 56, mb: 1, opacity: 0.2 }} />
-          <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>No requests found</Typography>
-          <Typography variant="caption">
-            {filter !== "all"
-              ? "Try selecting a different filter."
-              : "Your doctor hasn't sent any requests yet."}
-          </Typography>
+          {isNewPatient ? (
+            <>
+              <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>No Doctor Requests Yet</Typography>
+              <Typography variant="caption" sx={{ mb: 2, display: "block" }}>
+                You need to complete an appointment first before your doctor can send you requests.
+              </Typography>
+              <Button 
+                variant="contained" 
+                color="primary" 
+                sx={{ mt: 2, textTransform: "none", fontWeight: 600 }}
+                href="/book-appointment"
+              >
+                Book Your First Appointment
+              </Button>
+            </>
+          ) : (
+            <>
+              <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>No Requests Found</Typography>
+              <Typography variant="caption">
+                {filter !== "all"
+                  ? "Try selecting a different filter."
+                  : "Your doctor hasn't sent any requests yet."}
+              </Typography>
+            </>
+          )}
         </Paper>
       ) : (
         filtered.map((order) => (

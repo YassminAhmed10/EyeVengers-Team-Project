@@ -171,7 +171,7 @@ public partial class EyeClinicDbContext : DbContext
         modelBuilder.Entity<MedicalRecord>(entity =>
         {
             entity.HasIndex(e => e.PatientId, "IX_MedicalRecords_PatientId");
-            entity.HasOne(d => d.Patient).WithMany().HasForeignKey(d => d.PatientId).OnDelete(DeleteBehavior.Cascade);
+            
         });
 
         modelBuilder.Entity<MedicalTestFile>(entity =>
@@ -207,6 +207,7 @@ public partial class EyeClinicDbContext : DbContext
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
+
 
 
 

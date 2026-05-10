@@ -35,6 +35,28 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
             return Ok(invs);
         }
 
+        // ✅ NEW: GET all investigations for a specific medical record
+        // Frontend calls: GET /api/Investigation/ByRecord/{medicalRecordId}
+        [HttpGet("ByRecord/{medicalRecordId}")]
+        public async Task<IActionResult> GetByMedicalRecord(int medicalRecordId)
+        {
+            var invs = await _context.Investigations
+                .Where(i => i.MedicalRecordId == medicalRecordId)
+                .OrderByDescending(i => i.CreatedAt)
+                .Select(i => new
+                {
+                    id = i.Id,
+                    medicalRecordId = i.MedicalRecordId,
+                    selectedInvestigations = i.SelectedInvestigations,
+                    notes = i.Notes,
+                    createdAt = i.CreatedAt,   // ✅ explicit camelCase
+                    updatedAt = i.UpdatedAt
+                })
+                .ToListAsync();
+
+            return Ok(invs);
+        }
+
         [HttpGet("{id}")]
         public async Task<ActionResult<InvestigationDto>> GetById(int id)
         {
@@ -65,23 +87,22 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
                 MedicalRecordId = request.MedicalRecordId,
                 SelectedInvestigations = request.SelectedInvestigations,
                 Notes = request.Notes,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.Now  // ✅ always set server-side
             };
 
             _context.Investigations.Add(inv);
             await _context.SaveChangesAsync();
 
-            var dto = new InvestigationDto
+            // ✅ Return camelCase so frontend reads createdAt correctly
+            return CreatedAtAction(nameof(GetById), new { id = inv.Id }, new
             {
-                Id = inv.Id,
-                MedicalRecordId = inv.MedicalRecordId,
-                SelectedInvestigations = inv.SelectedInvestigations,
-                Notes = inv.Notes,
-                CreatedAt = inv.CreatedAt,
-                UpdatedAt = inv.UpdatedAt
-            };
-
-            return CreatedAtAction(nameof(GetById), new { id = inv.Id }, dto);
+                id = inv.Id,
+                medicalRecordId = inv.MedicalRecordId,
+                selectedInvestigations = inv.SelectedInvestigations,
+                notes = inv.Notes,
+                createdAt = inv.CreatedAt,
+                updatedAt = inv.UpdatedAt
+            });
         }
 
         [HttpPut("{id}")]
@@ -112,4 +133,3 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
         }
     }
 }
-

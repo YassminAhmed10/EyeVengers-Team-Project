@@ -6,6 +6,7 @@ public static class ModuleBootstrapper
     {
         services
             .AddCoreModule(configuration)
+            .AddIntegrationsModule(configuration)
             ;
         return services;
     }

@@ -4,7 +4,7 @@ import {
   FaHome, FaServicestack, FaUserMd, FaCalendarCheck,
   FaFileAlt, FaEnvelope, FaArrowLeft, FaChevronDown,
   FaHistory, FaClipboardList, FaCog, FaSignOutAlt,
-  FaQuestionCircle, FaGlobe,
+  FaQuestionCircle, FaGlobe, FaBell,
 } from "react-icons/fa";
 import { FiMenu, FiX } from "react-icons/fi";
 import logoSrc from "../../assets/logo.png";
@@ -24,8 +24,9 @@ const CONTENT = {
       { id: "home",     label: "الرئيسية",   icon: <FaHome /> },
       { id: "services", label: "خدماتنا",    icon: <FaServicestack /> },
       { id: "doctors",  label: "أطباؤنا",    icon: <FaUserMd /> },
-      { id: "booking",  label: "حجز موعد",   icon: <FaCalendarCheck /> },
-      { id: "results",  label: "نتائجي",     icon: <FaFileAlt /> },
+      { id: "patient-book-appointment", label: "حجز موعد", icon: <FaCalendarCheck /> },
+      { id: "patient-results",  label: "نتائجي",     icon: <FaFileAlt /> },
+      { id: "patient-notifications",  label: "تنبيهاتي", icon: <FaBell /> },
       { id: "contact",  label: "تواصل معنا", icon: <FaEnvelope /> },
     ],
     login: "دخول", register: "تسجيل", langLabel: "EN",
@@ -40,8 +41,9 @@ const CONTENT = {
       { id: "home",     label: "Home",     icon: <FaHome /> },
       { id: "services", label: "Services", icon: <FaServicestack /> },
       { id: "doctors",  label: "Doctors",  icon: <FaUserMd /> },
-      { id: "booking",  label: "Book",     icon: <FaCalendarCheck /> },
-      { id: "results",  label: "Results",  icon: <FaFileAlt /> },
+      { id: "patient-book-appointment", label: "Book",     icon: <FaCalendarCheck /> },
+      { id: "patient-results",  label: "Results",  icon: <FaFileAlt /> },
+      { id: "patient-notifications",  label: "Notifications",  icon: <FaBell /> },
       { id: "contact",  label: "Contact",  icon: <FaEnvelope /> },
     ],
     login: "Login", register: "Register", langLabel: "ع",
@@ -70,10 +72,10 @@ function Logo({ src, onClick }) {
     >
       {ok && src ? (
         <img src={src} alt="logo" onError={() => setOk(false)}
-          style={{ width: 46, height: 46, borderRadius: 10, objectFit: "cover" }} />
+          style={{ width: 46, height: 46, borderRadius: 0, objectFit: "contain", background: "#fff", padding: 4 }} />
       ) : (
         <div style={{
-          width: 46, height: 46, borderRadius: 10, background: PRIMARY,
+          width: 46, height: 46, borderRadius: 0, background: PRIMARY,
           display: "flex", alignItems: "center", justifyContent: "center",
           color: SURFACE, fontWeight: 800, fontSize: 20,
           fontFamily: "'Plus Jakarta Sans','Cairo',sans-serif", letterSpacing: -1,
@@ -228,6 +230,9 @@ export default function Navbar({ page, setPage, loggedIn }) {
   const [dropdownOpen, setDropdown] = useState(false);
   const [patientName, setPatientName]   = useState("");
   const [patientEmail, setPatientEmail] = useState("");
+  const [adminLogged, setAdminLogged] = useState(() => localStorage.getItem("radiologyAdminLoggedIn") === "true");
+  const [adminEmailState, setAdminEmailState] = useState(() => localStorage.getItem("radiologyAdminEmail") || "");
+  const [fromClinic, setFromClinic] = useState(false);
   const navRef      = useRef(null);
   const dropdownRef = useRef(null);
 
@@ -245,6 +250,12 @@ export default function Navbar({ page, setPage, loggedIn }) {
     const params   = new URLSearchParams(window.location.search);
     const urlName  = params.get("patientName");
     const urlEmail = params.get("patientEmail");
+    const clinicFlag = params.get("fromClinic") || params.get("from") || params.get("fromClinicFlag");
+    const refIsClinic = document.referrer && document.referrer.includes(CLINIC_URL);
+    const fromLocal = localStorage.getItem("radiologyFromClinic") === "true";
+    const isFrom = (clinicFlag === "1" || clinicFlag === "true") || refIsClinic || fromLocal;
+    setFromClinic(!!isFrom);
+    if (isFrom) localStorage.setItem("radiologyFromClinic", "true");
     const name  = urlName  || cleanVal("radiologyPatientName");
     const email = urlEmail || cleanVal("radiologyPatientEmail");
     if (name)  { setPatientName(name);  localStorage.setItem("radiologyPatientName",  name);  }
@@ -257,6 +268,8 @@ export default function Navbar({ page, setPage, loggedIn }) {
     const { name, email } = readUserData();
     setPatientName(name);
     setPatientEmail(email);
+    setAdminLogged(localStorage.getItem("radiologyAdminLoggedIn") === "true");
+    setAdminEmailState(localStorage.getItem("radiologyAdminEmail") || "");
   }, [loggedIn, page]);
 
   // Listen to custom event dispatched after login
@@ -265,6 +278,8 @@ export default function Navbar({ page, setPage, loggedIn }) {
       const { name, email } = readUserData();
       setPatientName(name);
       setPatientEmail(email);
+      setAdminLogged(localStorage.getItem("radiologyAdminLoggedIn") === "true");
+      setAdminEmailState(localStorage.getItem("radiologyAdminEmail") || "");
     };
     window.addEventListener("userDataUpdated", handler);
     window.addEventListener("storage", handler);
@@ -308,6 +323,13 @@ export default function Navbar({ page, setPage, loggedIn }) {
     ].forEach(k => localStorage.removeItem(k));
     setPatientName("");
     setPatientEmail("");
+    setPage("home");
+  };
+
+  const handleAdminLogout = () => {
+    ["radiologyAdminEmail", "radiologyAdminRole", "radiologyAdminLoggedIn"].forEach(k => localStorage.removeItem(k));
+    setAdminLogged(false);
+    setAdminEmailState("");
     setPage("home");
   };
 
@@ -440,7 +462,7 @@ export default function Navbar({ page, setPage, loggedIn }) {
           ))}
         </nav>
 
-        <div className="nb-desktop-end" style={{ marginInlineStart: "auto", display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="nb-desktop-end" style={{ marginInlineStart: "auto", display: "flex", alignItems: "center", gap: 10 }}>
           <motion.button className="nb-lang" onClick={() => setLang(l => l === "ar" ? "en" : "ar")} whileTap={{ scale: 0.93, rotate: 10 }}>
             <FaGlobe size={10} style={{ opacity: 0.6 }} />
             <AnimatePresence mode="wait">
@@ -449,6 +471,7 @@ export default function Navbar({ page, setPage, loggedIn }) {
               </motion.span>
             </AnimatePresence>
           </motion.button>
+         
 
           <div className="nb-sep" />
 
@@ -460,6 +483,12 @@ export default function Navbar({ page, setPage, loggedIn }) {
               isOpen={dropdownOpen} onToggle={() => setDropdown(o => !o)}
               dropdownRef={dropdownRef}
             />
+          ) : adminLogged ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ padding: "6px 10px", borderRadius: 10, background: "rgba(0,0,0,0.04)", fontWeight: 700 }}>{adminEmailState}</div>
+              <motion.button className="nb-solid" onClick={() => setPage("admin-dashboard")} whileTap={{ scale: 0.96 }}>{t.dashboard}</motion.button>
+              <motion.button className="nb-ghost" onClick={handleAdminLogout} whileTap={{ scale: 0.96 }}>{t.logout}</motion.button>
+            </div>
           ) : (
             <>
               <motion.button className="nb-ghost" onClick={() => setPage("login")} whileTap={{ scale: 0.96 }}>{t.login}</motion.button>
@@ -469,12 +498,14 @@ export default function Navbar({ page, setPage, loggedIn }) {
 
           <div className="nb-sep" />
 
-          <motion.button className="nb-back" onClick={handleBackToClinic} whileTap={{ scale: 0.96 }}>
-            <motion.span animate={{ x: [0, -2, 0] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
-              <FaArrowLeft size={10} style={{ transform: isRtl ? "scaleX(-1)" : "none" }} />
-            </motion.span>
-            {t.backToClinic}
-          </motion.button>
+          {fromClinic && (
+            <motion.button className="nb-back" onClick={handleBackToClinic} whileTap={{ scale: 0.96 }}>
+              <motion.span animate={{ x: [0, -2, 0] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
+                <FaArrowLeft size={10} style={{ transform: isRtl ? "scaleX(-1)" : "none" }} />
+              </motion.span>
+              {t.backToClinic}
+            </motion.button>
+          )}
         </div>
 
         <motion.button
@@ -542,7 +573,7 @@ export default function Navbar({ page, setPage, loggedIn }) {
             <div style={{ height: 1, background: "rgba(0,112,184,0.1)", margin: "10px 4px" }} />
 
             <div style={{ display: "flex", gap: 8, padding: "0 4px 4px" }}>
-              {!patientName && (
+              {!patientName && !adminLogged && (
                 <>
                   <button onClick={() => setPage("login")} style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1.5px solid rgba(0,112,184,0.25)", background: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 600, color: "#0070b8", fontFamily: "'Plus Jakarta Sans','Cairo',sans-serif" }}>
                     {t.login}
@@ -552,10 +583,22 @@ export default function Navbar({ page, setPage, loggedIn }) {
                   </button>
                 </>
               )}
-              <button onClick={handleBackToClinic} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "10px 16px", borderRadius: 10, border: "1.5px solid rgba(0,112,184,0.2)", background: "rgba(0,112,184,0.05)", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#0070b8", fontFamily: "'Plus Jakarta Sans','Cairo',sans-serif" }}>
-                <FaArrowLeft size={11} style={{ transform: isRtl ? "scaleX(-1)" : "none" }} />
-                {t.backToClinic}
-              </button>
+              {adminLogged && (
+                <div style={{ display: "flex", gap: 8, width: "100%" }}>
+                  <button onClick={() => setPage("admin-dashboard")} style={{ flex: 1, padding: "10px", borderRadius: 10, border: "none", background: "#0070b8", cursor: "pointer", fontSize: 14, fontWeight: 700, color: "#fff" }}>
+                    {t.dashboard}
+                  </button>
+                  <button onClick={handleAdminLogout} style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1.5px solid rgba(0,112,184,0.25)", background: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 600, color: "#0070b8" }}>
+                    {t.logout}
+                  </button>
+                </div>
+              )}
+              {fromClinic && (
+                <button onClick={handleBackToClinic} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "10px 16px", borderRadius: 10, border: "1.5px solid rgba(0,112,184,0.2)", background: "rgba(0,112,184,0.05)", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#0070b8", fontFamily: "'Plus Jakarta Sans','Cairo',sans-serif" }}>
+                  <FaArrowLeft size={11} style={{ transform: isRtl ? "scaleX(-1)" : "none" }} />
+                  {t.backToClinic}
+                </button>
+              )}
             </div>
           </motion.div>
         )}

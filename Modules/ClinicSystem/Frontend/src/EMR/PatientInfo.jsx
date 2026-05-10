@@ -24,8 +24,14 @@ const PatientInfo = ({ patient, readOnly }) => {
 
     const formatGender = (gender) => {
         if (typeof gender === 'number') return gender === 0 ? "Male" : gender === 1 ? "Female" : "Other";
+        if (typeof gender === 'string' && gender) return gender.charAt(0).toUpperCase() + gender.slice(1);
         return gender || "Not specified";
     };
+
+    // Debug logging
+    React.useEffect(() => {
+        console.log("[PatientInfo] Received patient data:", patient);
+    }, [patient]);
 
     return (
         <Paper elevation={1} sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid #e0e0e0' }}>
@@ -55,6 +61,13 @@ const PatientInfo = ({ patient, readOnly }) => {
 
             <Collapse in={open}>
                 <Box sx={{ p: 2 }}>
+                    {console.log("[PatientInfo] Rendering with patient:", {
+                        name: patient?.name,
+                        age: patient?.age,
+                        gender: patient?.gender,
+                        contactNumber: patient?.contactNumber,
+                        hasEmergencyContact: !!(patient?.emergencyContactName || patient?.emergencyContactPhone)
+                    })}
                     <Grid container spacing={2}>
 
                         {/* Column 1 — Basic Info */}
@@ -98,15 +111,13 @@ const PatientInfo = ({ patient, readOnly }) => {
                                         />
                                     </Grid>
                                 )}
-                                {patient?.nationalId && (
-                                    <Grid size={{ xs: 6 }}>
-                                        <TextField fullWidth label="National ID" size="small"
-                                            value={patient.nationalId}
-                                            InputProps={{ readOnly, startAdornment: <Badge sx={{ mr: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: fieldSx }}
-                                            InputLabelProps={labelSx}
-                                        />
-                                    </Grid>
-                                )}
+                                <Grid size={{ xs: 6 }}>
+                                    <TextField fullWidth label="National ID" size="small"
+                                        value={patient?.nationalId || ""}
+                                        InputProps={{ readOnly, startAdornment: <Badge sx={{ mr: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: fieldSx }}
+                                        InputLabelProps={labelSx}
+                                    />
+                                </Grid>
                             </Grid>
                         </Grid>
 
@@ -149,63 +160,51 @@ const PatientInfo = ({ patient, readOnly }) => {
                                         InputLabelProps={labelSx}
                                     />
                                 </Grid>
-                                {patient?.insuranceId && (
-                                    <Grid size={{ xs: 6 }}>
-                                        <TextField fullWidth label="Insurance ID" size="small"
-                                            value={patient.insuranceId}
-                                            InputProps={{ readOnly, startAdornment: <Badge sx={{ mr: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: fieldSx }}
-                                            InputLabelProps={labelSx}
-                                        />
-                                    </Grid>
-                                )}
-                                {patient?.policyNumber && (
-                                    <Grid size={{ xs: 6 }}>
-                                        <TextField fullWidth label="Policy Number" size="small"
-                                            value={patient.policyNumber}
-                                            InputProps={{ readOnly, startAdornment: <Badge sx={{ mr: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: fieldSx }}
-                                            InputLabelProps={labelSx}
-                                        />
-                                    </Grid>
-                                )}
-                                {patient?.coverage && (
-                                    <Grid size={{ xs: 12 }}>
-                                        <TextField fullWidth label="Coverage" size="small"
-                                            value={`${patient.coverage}%`}
-                                            InputProps={{ readOnly, startAdornment: <LocalHospital sx={{ mr: 1, color: '#1976d2', fontSize: 16 }} />, sx: { ...fieldSx, color: '#1976d2' } }}
-                                            InputLabelProps={labelSx}
-                                        />
-                                    </Grid>
-                                )}
+                                <Grid size={{ xs: 6 }}>
+                                    <TextField fullWidth label="Insurance ID" size="small"
+                                        value={patient?.insuranceId || ""}
+                                        InputProps={{ readOnly, startAdornment: <Badge sx={{ mr: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: fieldSx }}
+                                        InputLabelProps={labelSx}
+                                    />
+                                </Grid>
+                                <Grid size={{ xs: 6 }}>
+                                    <TextField fullWidth label="Policy Number" size="small"
+                                        value={patient?.policyNumber || ""}
+                                        InputProps={{ readOnly, startAdornment: <Badge sx={{ mr: 1, color: '#1e3a5f', fontSize: 16 }} />, sx: fieldSx }}
+                                        InputLabelProps={labelSx}
+                                    />
+                                </Grid>
+                                <Grid size={{ xs: 12 }}>
+                                    <TextField fullWidth label="Coverage" size="small"
+                                        value={patient?.coverage ? `${patient.coverage}%` : ""}
+                                        InputProps={{ readOnly, startAdornment: <LocalHospital sx={{ mr: 1, color: '#1976d2', fontSize: 16 }} />, sx: { ...fieldSx, color: '#1976d2' } }}
+                                        InputLabelProps={labelSx}
+                                    />
+                                </Grid>
                             </Grid>
 
                         </Grid>
 
                         {/* Column 4 — Emergency Contact */}
-                        {(patient?.emergencyContactName || patient?.emergencyContactPhone) && (
-                            <Grid size={{ xs: 12, md: 3 }}>
-                                <SectionLabel icon={<ContactEmergency sx={{ fontSize: 16, color: '#d32f2f' }} />} label="Emergency Contact" />
-                                <Grid container spacing={1}>
-                                    {patient?.emergencyContactName && (
-                                        <Grid size={{ xs: 12 }}>
-                                            <TextField fullWidth label="Emergency Contact Name" size="small"
-                                                value={patient.emergencyContactName}
-                                                InputProps={{ readOnly, startAdornment: <Emergency sx={{ mr: 1, color: '#d32f2f', fontSize: 16 }} />, sx: fieldSx }}
-                                                InputLabelProps={labelSx}
-                                            />
-                                        </Grid>
-                                    )}
-                                    {patient?.emergencyContactPhone && (
-                                        <Grid size={{ xs: 12 }}>
-                                            <TextField fullWidth label="Emergency Phone" size="small"
-                                                value={patient.emergencyContactPhone}
-                                                InputProps={{ readOnly, startAdornment: <Phone sx={{ mr: 1, color: '#d32f2f', fontSize: 16 }} />, sx: { ...fieldSx, color: '#d32f2f' } }}
-                                                InputLabelProps={labelSx}
-                                            />
-                                        </Grid>
-                                    )}
+                        <Grid size={{ xs: 12, md: 3 }}>
+                            <SectionLabel icon={<ContactEmergency sx={{ fontSize: 16, color: '#d32f2f' }} />} label="Emergency Contact" />
+                            <Grid container spacing={1}>
+                                <Grid size={{ xs: 12 }}>
+                                    <TextField fullWidth label="Emergency Contact Name" size="small"
+                                        value={patient?.emergencyContactName || ""}
+                                        InputProps={{ readOnly, startAdornment: <Emergency sx={{ mr: 1, color: '#d32f2f', fontSize: 16 }} />, sx: fieldSx }}
+                                        InputLabelProps={labelSx}
+                                    />
+                                </Grid>
+                                <Grid size={{ xs: 12 }}>
+                                    <TextField fullWidth label="Emergency Phone" size="small"
+                                        value={patient?.emergencyContactPhone || ""}
+                                        InputProps={{ readOnly, startAdornment: <Phone sx={{ mr: 1, color: '#d32f2f', fontSize: 16 }} />, sx: { ...fieldSx, color: '#d32f2f' } }}
+                                        InputLabelProps={labelSx}
+                                    />
                                 </Grid>
                             </Grid>
-                        )}
+                        </Grid>
 
                     </Grid>
                 </Box>

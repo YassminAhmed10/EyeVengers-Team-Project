@@ -10,47 +10,48 @@ namespace EyeClinicAPI.Models.Clinic
         [Key]
         [Column("Id")]
         public int Id { get; set; }
-        
+
+        // PatientIdentifier (P-XXXXXX) — THE primary patient ID
         [Column("PatientId")]
-        public int PatientId { get; set; }
-        
+        [MaxLength(50)]
+        public string PatientId { get; set; } = "";
+
         [Column("MedicalRecordId")]
         public int MedicalRecordId { get; set; }
-        
+
         [Column("DoctorId")]
         public int DoctorId { get; set; }
-        
+
         [Column("OrderType")]
         [MaxLength(50)]
         public string OrderType { get; set; } = "";
-        
+
         [Column("DataJson")]
         public string DataJson { get; set; } = "";
-        
+
         [Column("Status")]
         [MaxLength(50)]
         public string Status { get; set; } = "PendingPatientApproval";
-        
+
         [Column("CreatedAt")]
         public DateTime CreatedAt { get; set; }
-        
+
         [Column("RespondedAt")]
         public DateTime? RespondedAt { get; set; }
-        
+
         [Column("RejectionReason")]
         [MaxLength(500)]
         public string? RejectionReason { get; set; }
-        
+
         [Column("AppointmentDate")]
         public DateTime? AppointmentDate { get; set; }
-        
+
         [Column("AppointmentTime")]
         [MaxLength(10)]
         public string? AppointmentTime { get; set; }
-        
+
         [Column("ExternalSystemConfirmationId")]
         [MaxLength(100)]
         public string? ExternalSystemConfirmationId { get; set; }
     }
 }
-

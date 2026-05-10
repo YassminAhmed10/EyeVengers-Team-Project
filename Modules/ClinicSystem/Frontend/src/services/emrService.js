@@ -2,7 +2,6 @@ import api from './api';
 
 const EMR_BASE_URL = '/MedicalRecord';
 
-// ===== دوال السجل الطبي الرئيسي =====
 export const getAllEMRRecords = async () => {
   try {
     const response = await api.get(`${EMR_BASE_URL}`);
@@ -15,7 +14,7 @@ export const getAllEMRRecords = async () => {
 
 export const checkMedicalRecordExists = async (patientId) => {
   try {
-    const response = await api.get(`${EMR_BASE_URL}/check/${patientId}`);
+    const response = await api.get(`${EMR_BASE_URL}/check/${encodeURIComponent(patientId)}`);
     return response.data;
   } catch (error) {
     console.error('Error checking medical record:', error);
@@ -35,7 +34,7 @@ export const getEMRById = async (id) => {
 
 export const getEMRByPatientId = async (patientId) => {
   try {
-    const response = await api.get(`${EMR_BASE_URL}/patient/${patientId}`);
+    const response = await api.get(`${EMR_BASE_URL}/patient/${encodeURIComponent(patientId)}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching patient EMR records:', error);
@@ -43,10 +42,9 @@ export const getEMRByPatientId = async (patientId) => {
   }
 };
 
-// ===== جلب تاريخ السجلات الطبية للمريض =====
 export const getPatientMedicalHistory = async (patientId) => {
   try {
-    const response = await api.get(`${EMR_BASE_URL}/patient/${patientId}/history`);
+    const response = await api.get(`${EMR_BASE_URL}/patient/${encodeURIComponent(patientId)}/history`);
     return response.data;
   } catch (error) {
     console.error('Error fetching patient medical history:', error);
@@ -54,7 +52,6 @@ export const getPatientMedicalHistory = async (patientId) => {
   }
 };
 
-// ===== جلب سجل طبي محدد بالـ ID =====
 export const getMedicalRecordById = async (recordId) => {
   try {
     const response = await api.get(`${EMR_BASE_URL}/${recordId}`);
@@ -77,13 +74,55 @@ export const createEMR = async (emrData) => {
 
 export const createMedicalRecord = async (patientIdentifier) => {
   try {
-    const body = typeof patientIdentifier === "string"
-      ? { patientIdentifier }
-      : patientIdentifier;
+    const identifier = patientIdentifier?.toString()?.trim();
+    if (!identifier) throw new Error("Patient identifier is required");
+    
+    const body = { PatientIdentifier: identifier };
+    console.log('Creating medical record:', body);
+    
     const response = await api.post(`${EMR_BASE_URL}`, body);
+    const data = response.data;
+    
+    console.log('Create response:', data);
+    
+    return {
+      success: true,
+      recordId: data.id || data.recordId,
+      id: data.id || data.recordId,
+      ...data
+    };
+  } catch (error) {
+    console.error('Error creating medical record:', error);
+    throw error;
+  }
+};
+
+export const getOrCreateMedicalRecord = async (patientId) => {
+  try {
+    const response = await api.get(`${EMR_BASE_URL}/get-or-create/${encodeURIComponent(patientId)}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error in getOrCreateMedicalRecord:', error);
+    throw error;
+  }
+};
+
+export const createMedicalRecordForPatient = async (patientId) => {
+  try {
+    const response = await api.post(`${EMR_BASE_URL}/create-for-patient`, { patientId });
     return response.data;
   } catch (error) {
     console.error('Error creating medical record:', error);
+    throw error;
+  }
+};
+
+export const getPatientMedicalRecord = async (patientId) => {
+  try {
+    const response = await api.get(`${EMR_BASE_URL}/patient/${encodeURIComponent(patientId)}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching patient medical record:', error);
     throw error;
   }
 };
@@ -108,16 +147,6 @@ export const deleteEMR = async (id) => {
   }
 };
 
-export const getPatientMedicalRecord = async (patientId) => {
-  try {
-    const response = await api.get(`${EMR_BASE_URL}/patient/${patientId}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching patient medical record:', error);
-    throw error;
-  }
-};
-
 export const getPatientInfoFromAppointments = async (patientId) => {
   try {
     const response = await api.get(`${EMR_BASE_URL}/appointment-info/${patientId}`);
@@ -128,21 +157,22 @@ export const getPatientInfoFromAppointments = async (patientId) => {
   }
 };
 
-export const createMedicalRecordFromAppointment = async (patientId, patientName, appointmentDate) => {
+export const createMedicalRecordFromAppointment = async (appointmentId) => {
   try {
-    const response = await api.post(`${EMR_BASE_URL}/from-appointment`, {
-      patientId,
-      patientName,
-      appointmentDate: appointmentDate || new Date().toISOString()
-    });
-    return response.data;
+    const response = await api.post(`${EMR_BASE_URL}/from-appointment`, { appointmentId });
+    const data = response.data;
+    return {
+      success: true,
+      recordId: data.recordId || data.id,
+      id: data.recordId || data.id,
+      ...data
+    };
   } catch (error) {
     console.error('Error creating medical record from appointment:', error);
     throw error;
   }
 };
 
-// ===== دوال حفظ الكيانات الفرعية (تستقبل medicalRecordId) =====
 export const saveComplaint = async (medicalRecordId, complaintData) => {
   try {
     const response = await api.post(`/PatientComplaint`, {
@@ -161,7 +191,11 @@ export const saveMedicalHistory = async (medicalRecordId, historyData) => {
   try {
     const response = await api.post(`/MedicalHistory`, {
       medicalRecordId,
-      ...historyData
+      previousEye: historyData.previousEye || "",
+      familyHistory: historyData.familyHistory || "",
+      allergies: historyData.allergies || "",
+      chronicDiseases: historyData.chronicDiseases || "",
+      currentMedications: historyData.currentMedications || ""
     });
     return response.data;
   } catch (error) {
@@ -174,7 +208,10 @@ export const saveInvestigation = async (medicalRecordId, investigationData) => {
   try {
     const response = await api.post(`/Investigation`, {
       medicalRecordId,
-      ...investigationData
+      selectedInvestigations: Array.isArray(investigationData.selectedInvestigations) 
+        ? JSON.stringify(investigationData.selectedInvestigations)
+        : investigationData.selectedInvestigations,
+      notes: investigationData.notes || ""
     });
     return response.data;
   } catch (error) {
@@ -187,7 +224,12 @@ export const saveEyeExamination = async (medicalRecordId, examData) => {
   try {
     const response = await api.post(`/EyeExamination`, {
       medicalRecordId,
-      ...examData
+      rightEye: examData.rightEye || "",
+      leftEye: examData.leftEye || "",
+      eyePressure: examData.eyePressure || "",
+      pupilReaction: examData.pupilReaction || "",
+      anteriorSegment: examData.anteriorSegment || "",
+      fundusObservation: examData.fundusObservation || ""
     });
     return response.data;
   } catch (error) {
@@ -200,7 +242,9 @@ export const saveOperation = async (medicalRecordId, operationData) => {
   try {
     const response = await api.post(`/Operations`, {
       medicalRecordId,
-      ...operationData
+      name: operationData.name || "",
+      date: operationData.date || new Date().toISOString(),
+      notes: operationData.notes || ""
     });
     return response.data;
   } catch (error) {
@@ -213,7 +257,9 @@ export const saveDiagnosis = async (medicalRecordId, diagnosisData) => {
   try {
     const response = await api.post(`/Diagnosis`, {
       medicalRecordId,
-      ...diagnosisData
+      diagnosisName: diagnosisData.diagnosisName || "",
+      severity: diagnosisData.severity || "",
+      notes: diagnosisData.notes || ""
     });
     return response.data;
   } catch (error) {
@@ -224,7 +270,6 @@ export const saveDiagnosis = async (medicalRecordId, diagnosisData) => {
 
 export const savePrescription = async (medicalRecordId, prescriptionData) => {
   try {
-    // prescriptionData should be { notes, items: [{drug, form, dose, customDose, frequency, customFrequency, notes}] }
     const response = await api.post(`/Prescription`, {
       medicalRecordId,
       notes: prescriptionData.notes || "",
@@ -272,7 +317,6 @@ export const deleteFile = async (fileId) => {
   }
 };
 
-// ===== التصدير الموحد =====
 export default {
   getAllEMRRecords,
   checkMedicalRecordExists,
@@ -282,9 +326,11 @@ export default {
   getMedicalRecordById,
   createEMR,
   createMedicalRecord,
+  getOrCreateMedicalRecord,
+  createMedicalRecordForPatient,
+  getPatientMedicalRecord,
   updateEMR,
   deleteEMR,
-  getPatientMedicalRecord,
   getPatientInfoFromAppointments,
   createMedicalRecordFromAppointment,
   saveComplaint,

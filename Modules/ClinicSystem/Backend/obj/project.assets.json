@@ -116,6 +116,22 @@
           }
         }
       },
+      "Hl7.Fhir.ElementModel/4.3.0": {
+        "type": "package",
+        "dependencies": {
+          "Hl7.Fhir.Support": "4.3.0"
+        },
+        "compile": {
+          "lib/net6.0/Hl7.Fhir.ElementModel.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/Hl7.Fhir.ElementModel.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Hl7.Fhir.R4/5.10.0": {
         "type": "package",
         "dependencies": {
@@ -128,6 +144,40 @@
         },
         "runtime": {
           "lib/net8.0/Hl7.Fhir.R4.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Hl7.Fhir.Serialization/4.3.0": {
+        "type": "package",
+        "dependencies": {
+          "Hl7.Fhir.ElementModel": "4.3.0",
+          "Hl7.Fhir.Support": "4.3.0",
+          "Newtonsoft.Json": "13.0.1"
+        },
+        "compile": {
+          "lib/net6.0/Hl7.Fhir.Serialization.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/Hl7.Fhir.Serialization.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Hl7.Fhir.Support/4.3.0": {
+        "type": "package",
+        "dependencies": {
+          "System.Reflection.Emit.Lightweight": "4.7.0"
+        },
+        "compile": {
+          "lib/net6.0/Hl7.Fhir.Support.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/Hl7.Fhir.Support.dll": {
             "related": ".xml"
           }
         }
@@ -1850,6 +1900,25 @@
         "lib/netstandard2.0/Hl7.Fhir.Conformance.xml"
       ]
     },
+    "Hl7.Fhir.ElementModel/4.3.0": {
+      "sha512": "VUXBP+W0/1tBpOzo7KeW7y1CnVxaBjLbruX7QORrlImUXJwWpKU/yd3rkpkyd6RW6V06/cg46/afbFYnH+v0DA==",
+      "type": "package",
+      "path": "hl7.fhir.elementmodel/4.3.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "hl7.fhir.elementmodel.4.3.0.nupkg.sha512",
+        "hl7.fhir.elementmodel.nuspec",
+        "icon-firely-sdk-128.png",
+        "lib/net452/Hl7.Fhir.ElementModel.dll",
+        "lib/net452/Hl7.Fhir.ElementModel.xml",
+        "lib/net6.0/Hl7.Fhir.ElementModel.dll",
+        "lib/net6.0/Hl7.Fhir.ElementModel.xml",
+        "lib/netstandard2.0/Hl7.Fhir.ElementModel.dll",
+        "lib/netstandard2.0/Hl7.Fhir.ElementModel.xml"
+      ]
+    },
     "Hl7.Fhir.R4/5.10.0": {
       "sha512": "RPxpu9YUMJjCgOA7mzFdOTcm8EpR+365qNtFhPYscapr7tAsThJ9ROdJYspLFGOZgxT2auJBFCuga0CrkdTgKw==",
       "type": "package",
@@ -1865,6 +1934,44 @@
         "lib/net8.0/Hl7.Fhir.R4.xml",
         "lib/netstandard2.0/Hl7.Fhir.R4.dll",
         "lib/netstandard2.0/Hl7.Fhir.R4.xml"
+      ]
+    },
+    "Hl7.Fhir.Serialization/4.3.0": {
+      "sha512": "uoCk3ABMIeg9O6ArBTSnhYPbwrhjQ09v+G2PcWIDCMvkA9exf+JQVsZWLJ9JYRRGI/xPqrJs3fsrlWRpRRQFAg==",
+      "type": "package",
+      "path": "hl7.fhir.serialization/4.3.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "hl7.fhir.serialization.4.3.0.nupkg.sha512",
+        "hl7.fhir.serialization.nuspec",
+        "icon-firely-sdk-128.png",
+        "lib/net452/Hl7.Fhir.Serialization.dll",
+        "lib/net452/Hl7.Fhir.Serialization.xml",
+        "lib/net6.0/Hl7.Fhir.Serialization.dll",
+        "lib/net6.0/Hl7.Fhir.Serialization.xml",
+        "lib/netstandard2.0/Hl7.Fhir.Serialization.dll",
+        "lib/netstandard2.0/Hl7.Fhir.Serialization.xml"
+      ]
+    },
+    "Hl7.Fhir.Support/4.3.0": {
+      "sha512": "rJx7g5rH0hngu/9C7JjWm/tb0TDkJa5xYYgI7A9USKg4JAGWE2aQIR/MSDaEh9U1wrfynyC1bwZ0B9Krjc0vLQ==",
+      "type": "package",
+      "path": "hl7.fhir.support/4.3.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "hl7.fhir.support.4.3.0.nupkg.sha512",
+        "hl7.fhir.support.nuspec",
+        "icon-firely-sdk-128.png",
+        "lib/net452/Hl7.Fhir.Support.dll",
+        "lib/net452/Hl7.Fhir.Support.xml",
+        "lib/net6.0/Hl7.Fhir.Support.dll",
+        "lib/net6.0/Hl7.Fhir.Support.xml",
+        "lib/netstandard2.0/Hl7.Fhir.Support.dll",
+        "lib/netstandard2.0/Hl7.Fhir.Support.xml"
       ]
     },
     "Humanizer.Core/2.14.1": {
@@ -4793,6 +4900,7 @@
     "net8.0": [
       "BCrypt.Net-Next >= 4.0.3",
       "Hl7.Fhir.R4 >= 5.10.0",
+      "Hl7.Fhir.Serialization >= 4.3.0",
       "MailKit >= 4.14.1",
       "Microsoft.AspNetCore.Authentication.JwtBearer >= 8.0.11",
       "Microsoft.EntityFrameworkCore.Design >= 8.0.0",
@@ -4866,6 +4974,11 @@
             "version": "[5.10.0, )",
             "versionCentrallyManaged": true
           },
+          "Hl7.Fhir.Serialization": {
+            "target": "Package",
+            "version": "[4.3.0, )",
+            "versionCentrallyManaged": true
+          },
           "MailKit": {
             "target": "Package",
             "version": "[4.14.1, )",
@@ -4919,6 +5032,7 @@
         "centralPackageVersions": {
           "BCrypt.Net-Next": "4.0.3",
           "Hl7.Fhir.R4": "5.10.0",
+          "Hl7.Fhir.Serialization": "4.3.0",
           "MailKit": "4.14.1",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "8.0.11",
           "Microsoft.EntityFrameworkCore.Design": "8.0.0",

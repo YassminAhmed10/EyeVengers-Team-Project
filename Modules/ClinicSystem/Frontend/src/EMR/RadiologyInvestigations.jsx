@@ -20,19 +20,19 @@ const RadiologyInvestigations = ({ patientId, readOnly = false }) => {
           return;
         }
 
-        console.log("📡 Fetching radiology investigations for patient:", patientId);
+        console.log("[FETCH] Fetching radiology investigations for patient:", patientId);
         const data = await radiologyService.getPatientInvestigations(patientId);
         
         if (data && data.length > 0) {
           const formatted = radiologyService.formatInvestigations(data);
-          console.log("✅ Radiology investigations loaded:", formatted);
+          console.log("[SUCCESS] Radiology investigations loaded:", formatted);
           setInvestigations(formatted);
         } else {
           console.log("ℹ️ No radiology investigations found for this patient");
           setInvestigations([]);
         }
       } catch (err) {
-        console.error("❌ Error fetching radiology investigations:", err);
+        console.error("[ERROR] Error fetching radiology investigations:", err);
         setError(`Failed to load radiology data: ${err.message}`);
         setInvestigations([]);
       } finally {
@@ -87,7 +87,7 @@ const RadiologyInvestigations = ({ patientId, readOnly = false }) => {
     <Box>
       <Paper elevation={0} sx={{ mb: 3, p: 2, backgroundColor: '#e3f2fd', borderRadius: 2, border: '1px solid #90caf9' }}>
         <Typography variant="body2" sx={{ color: '#1565c0' }}>
-          <strong>📡 Radiology Center Data:</strong> These investigations were processed by the Radiology Center.
+          <strong>Radiology Center Data:</strong> These investigations were processed by the Radiology Center.
         </Typography>
       </Paper>
 
