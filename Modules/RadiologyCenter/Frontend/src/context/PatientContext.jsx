@@ -19,6 +19,17 @@ export const PatientProvider = ({ children }) => {
     dateOfBirth: null,
   });
 
+  // Entry source tracking: 'clinic_system' or 'radiology_direct'
+  const [entrySource, setEntrySource] = useState('radiology_direct');
+  
+  // Clinic system details
+  const [clinicSystemInfo, setClinicSystemInfo] = useState({
+    name: null,        // e.g., "Eye Clinic", "Eye Center"
+    backUrl: null,     // Return URL to clinic system
+    doctorId: null,    // Doctor who referred (if from doctor order)
+    orderId: null,     // Doctor order ID (if from order)
+  });
+
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -31,7 +42,61 @@ export const PatientProvider = ({ children }) => {
       const incomingPatientEmail = params.get("patientEmail");
       const incomingPatientPhone = params.get("patientPhone");
       const incomingPatientDateOfBirth = params.get("patientDateOfBirth");
-
+      
+      // ===== DETECT ENTRY SOURCE =====
+      // Check for clinic system integration markers
+      const fromClinic = params.get("fromClinic") === "true";
+      const clinicName = params.get("clinicName") || params.get("clinicSystemName");
+      const clinicBackUrl = params.get("clinicBackUrl") || params.get("returnUrl");
+      const doctorId = params.get("doctorId");
+      const orderId = params.get("orderId");
+      
+      // Check for FHIR integration flag
+      const fhirSystemId = params.get("fhirSystemId");
+      const clinicOrderId = params.get("clinicOrderId");
+      
+      // Check token for clinic system claim
+      const token = localStorage.getItem("authToken") || localStorage.getItem("token");
+      let tokenHasClinicSource = false;
+      try {
+        if (token) {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          tokenHasClinicSource = payload.clinicSource === true || payload.fromClinic === true;
+        }
+      } catch (e) {
+        console.warn('[Entry Source] Could not parse token claims');
+      }
+      
+      // Determine entry source
+      const isFromClinic = fromClinic || fhirSystemId || clinicOrderId || tokenHasClinicSource;
+      
+      if (isFromClinic) {
+        setEntrySource('clinic_system');
+        setClinicSystemInfo({
+          name: clinicName || localStorage.getItem("clinicSystemName") || "Clinic System",
+          backUrl: clinicBackUrl || localStorage.getItem("clinicBackUrl"),
+          doctorId: doctorId,
+          orderId: orderId || clinicOrderId
+        });
+        console.log('[Entry Source] Patient from clinic system:', { 
+          clinicName: clinicName || localStorage.getItem("clinicSystemName"),
+          doctorId,
+          orderId 
+        });
+      } else {
+        setEntrySource('radiology_direct');
+        console.log('[Entry Source] Patient direct entry to radiology');
+      }
+      
+      // Persist clinic info to localStorage for session persistence
+      if (isFromClinic) {
+        localStorage.setItem("entrySource", "clinic_system");
+        if (clinicName) localStorage.setItem("clinicSystemName", clinicName);
+        if (clinicBackUrl) localStorage.setItem("clinicBackUrl", clinicBackUrl);
+      } else {
+        localStorage.setItem("entrySource", "radiology_direct");
+      }
+      
       // If we have incoming data (even if some values are empty strings), use it
       if (incomingPatientId !== null || incomingPatientName !== null) {
         const patientData = {
@@ -118,6 +183,10 @@ export const PatientProvider = ({ children }) => {
     updatePatient,
     clearPatient,
     isLoading,
+    entrySource,
+    clinicSystemInfo,
+    setEntrySource,
+    setClinicSystemInfo
   };
 
   return (

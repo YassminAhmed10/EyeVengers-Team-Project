@@ -10,9 +10,20 @@ export function MyDoctorRequestsPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState('All Requests'); // All Requests, Action Required, Accepted, Booked, Declined
+  const [filter, setFilter] = useState('All Requests');
 
-  const patientId = localStorage.getItem('patientId') || 'P-00412';
+  // Get patient ID from localStorage - ensure correct format
+  const getPatientId = () => {
+    let pid = localStorage.getItem('patientId') || localStorage.getItem('PatientIdentifier') || 'P-000035';
+    // Ensure P- prefix
+    if (!pid.startsWith('P-')) {
+      pid = `P-${pid}`;
+    }
+    console.log('[MyDoctorRequestsPage] Patient ID:', pid);
+    return pid;
+  };
+
+  const patientId = getPatientId();
   const patientName = localStorage.getItem('userName') || localStorage.getItem('patientName') || 'Patient';
   const patientEmail = localStorage.getItem('userEmail') || '';
 
@@ -26,6 +37,7 @@ export function MyDoctorRequestsPage() {
       setError(null);
       const response = await axios.get(`${CLINIC_API}/DoctorOrders/MyOrders?patientId=${patientId}`);
       const data = Array.isArray(response.data) ? response.data : [];
+      console.log('[MyDoctorRequestsPage] Orders fetched:', data.length);
       setOrders(data);
     } catch (err) {
       console.error('Error fetching doctor orders:', err);
@@ -44,36 +56,182 @@ export function MyDoctorRequestsPage() {
     return orders;
   };
 
-  const handleBookAtRadiology = (order) => {
-    // Extract order details
-    const orderData = order.dataJson ? JSON.parse(order.dataJson) : {};
-    
-    // Navigate to booking page with order data
-    navigate('/patient/book-from-order', {
-      state: {
-        orderId: order.id,
-        orderType: order.orderType,
-        testName: orderData.testName || orderData.serviceName || 'Radiology Test',
-        testCode: orderData.testCode || '',
-        patientId: patientId,
-        patientName: patientName,
-        patientEmail: patientEmail,
-        orderData: orderData,
+  // Fetch complete patient details from the clinic system
+  const fetchCompletePatientDetails = async () => {
+    try {
+      console.log('[MyDoctorRequestsPage] Fetching complete patient details for ID:', patientId);
+      
+      // Try multiple endpoints to get patient data
+      let patientData = {};
+      
+      // Try by identifier first (P-XXXXX format)
+      try {
+        const response = await axios.get(`${CLINIC_API}/Patient/by-identifier/${patientId}`);
+        if (response.data) {
+          patientData = response.data;
+          console.log('[MyDoctorRequestsPage] Patient data via identifier:', patientData);
+        }
+      } catch (err) {
+        console.warn('[MyDoctorRequestsPage] Could not fetch by identifier, trying by ID');
       }
-    });
+      
+      // Try by numeric ID (extract numbers)
+      if (!patientData || Object.keys(patientData).length === 0) {
+        const numericId = patientId.replace('P-', '');
+        try {
+          const response = await axios.get(`${CLINIC_API}/Patient/${numericId}`);
+          if (response.data) {
+            patientData = response.data;
+            console.log('[MyDoctorRequestsPage] Patient data via numeric ID:', patientData);
+          }
+        } catch (err) {
+          console.warn('[MyDoctorRequestsPage] Could not fetch by numeric ID');
+        }
+      }
+      
+      // Try appointments endpoint as fallback
+      if (!patientData || Object.keys(patientData).length === 0) {
+        try {
+          const response = await axios.get(`${CLINIC_API}/MedicalRecord/appointment-info/${patientId}`);
+          if (response.data) {
+            patientData = response.data;
+            console.log('[MyDoctorRequestsPage] Patient data via appointment-info:', patientData);
+          }
+        } catch (err) {
+          console.warn('[MyDoctorRequestsPage] Could not fetch via appointment-info');
+        }
+      }
+      
+      return patientData;
+    } catch (err) {
+      console.error('[MyDoctorRequestsPage] Error fetching patient details:', err);
+      return {};
+    }
+  };
+
+  const handleBookAtRadiology = async (order) => {
+    try {
+      console.log('[MyDoctorRequestsPage] Starting booking process for order:', order.id);
+      
+      // Fetch complete patient details
+      const patientDetails = await fetchCompletePatientDetails();
+      
+      // Parse order data
+      const orderData = order.dataJson ? JSON.parse(order.dataJson) : {};
+      
+      // Build complete patient information with fallbacks
+      const fullName = patientDetails.name || 
+                       patientDetails.patientName || 
+                       `${patientDetails.firstName || ''} ${patientDetails.lastName || ''}`.trim() || 
+                       patientName;
+      
+      const phone = patientDetails.phone || 
+                    patientDetails.patientPhone || 
+                    patientDetails.contactNumber || 
+                    localStorage.getItem('patientPhone') || 
+                    '';
+      
+      const email = patientDetails.email || 
+                    patientDetails.patientEmail || 
+                    patientEmail;
+      
+      const gender = patientDetails.gender || 
+                     patientDetails.patientGender || 
+                     patientDetails.sex || 
+                     'Not specified';
+      
+      const dateOfBirth = patientDetails.dateOfBirth || 
+                          patientDetails.birthDate || 
+                          patientDetails.dob || 
+                          '';
+      
+      const nationalId = patientDetails.nationalId || 
+                         patientDetails.nationalID || 
+                         patientDetails.ssn || 
+                         '';
+      
+      const address = patientDetails.address || 
+                      patientDetails.patientAddress || 
+                      patientDetails.residentialAddress || 
+                      '';
+      
+      // Get doctor info
+      const doctorName = orderData.doctorName || 'Dr. Referring Physician';
+      const doctorSpecialty = orderData.doctorSpecialty || 'General Medicine';
+      const doctorId = orderData.doctorId || '1';
+      
+      // Get test info
+      const requestedTest = orderData.testName || orderData.serviceName || 'Radiology Test';
+      const orderNotes = orderData.description || orderData.notes || `Referral for ${requestedTest} examination`;
+      const priority = orderData.priority || orderData.urgency || 'Routine';
+      
+      console.log('[MyDoctorRequestsPage] Mapped patient data:', {
+        fullName, phone, email, gender, dateOfBirth, nationalId, address
+      });
+      
+      // Build URL parameters - include ALL fields
+      const params = new URLSearchParams();
+      
+      // Doctor order fields
+      params.append('doctorOrder', 'true');
+      params.append('orderId', order.id);
+      params.append('doctorId', doctorId);
+      params.append('doctorName', doctorName);
+      params.append('doctorSpecialty', doctorSpecialty);
+      params.append('requestedTest', requestedTest);
+      params.append('orderDate', new Date().toISOString().split('T')[0]);
+      params.append('orderNotes', orderNotes);
+      params.append('orderPriority', priority);
+      
+      // Patient fields - CRITICAL: Include all fields
+      params.append('patientId', patientId);
+      params.append('patientName', fullName);
+      params.append('patientPhone', phone);
+      params.append('patientEmail', email);
+      params.append('patientGender', gender);
+      params.append('patientDateOfBirth', dateOfBirth);
+      params.append('patientNationalId', nationalId);
+      params.append('patientAddress', address);
+      
+      // Additional fields for FHIR compliance
+      params.append('externalPatientId', patientId);
+      params.append('referralSource', 'Eye Clinic');
+      params.append('clinicName', 'Eye Clinic');
+      params.append('fromClinic', 'true');
+      params.append('clinicBackUrl', window.location.href);
+      
+      // Insurance fields if available
+      if (patientDetails.insuranceCompany) params.append('insuranceCompany', patientDetails.insuranceCompany);
+      if (patientDetails.insuranceId) params.append('insuranceId', patientDetails.insuranceId);
+      if (patientDetails.policyNumber) params.append('policyNumber', patientDetails.policyNumber);
+      
+      // Emergency contact if available
+      if (patientDetails.emergencyContactName) params.append('emergencyContactName', patientDetails.emergencyContactName);
+      if (patientDetails.emergencyContactPhone) params.append('emergencyContactPhone', patientDetails.emergencyContactPhone);
+      
+      // Open Radiology Center
+      const radiologyURL = `http://localhost:5174/#/patient/book/appointment?${params.toString()}`;
+      console.log('[MyDoctorRequestsPage] Opening Radiology URL with complete data');
+      console.log('[MyDoctorRequestsPage] URL:', radiologyURL);
+      
+      // Open in new tab
+      window.open(radiologyURL, '_blank');
+      
+    } catch (err) {
+      console.error('[MyDoctorRequestsPage] Error:', err);
+      alert('Failed to prepare booking. Please try again.');
+    }
   };
 
   const handleRespondToOrder = async (orderId, action) => {
     try {
-      const response = await axios.patch(
+      await axios.patch(
         `${CLINIC_API}/DoctorOrders/${orderId}/Respond`,
         {
           action: action,
           rejectionReason: action === 'Rejected' ? 'Declined at patient portal' : null
         }
       );
-      
-      // Refresh orders
       fetchDoctorOrders();
     } catch (err) {
       console.error('Error responding to order:', err);
@@ -107,7 +265,6 @@ export function MyDoctorRequestsPage() {
           </p>
         </div>
 
-        {/* Error message */}
         {error && (
           <div style={{
             background: '#fee',
@@ -163,7 +320,7 @@ export function MyDoctorRequestsPage() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {filteredOrders.map((order, idx) => {
+            {filteredOrders.map((order) => {
               const orderData = order.dataJson ? JSON.parse(order.dataJson) : {};
               const statusColors = {
                 'PendingPatientApproval': { bg: '#fef3c7', text: '#d97706', label: 'Action Required' },
@@ -187,9 +344,7 @@ export function MyDoctorRequestsPage() {
                     boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
                   }}
                 >
-                  {/* Left content */}
                   <div style={{ flex: 1 }}>
-                    {/* Title */}
                     <h3 style={{
                       fontSize: '16px',
                       fontWeight: '600',
@@ -199,7 +354,6 @@ export function MyDoctorRequestsPage() {
                       Doctor's Request — {orderData.testName || orderData.serviceName || 'Radiology Investigation'}
                     </h3>
 
-                    {/* Metadata */}
                     <div style={{
                       fontSize: '13px',
                       color: '#666',
@@ -213,7 +367,6 @@ export function MyDoctorRequestsPage() {
                       {orderData.testCode && <span>📊 Code: {orderData.testCode}</span>}
                     </div>
 
-                    {/* Description */}
                     {orderData.description && (
                       <p style={{
                         fontSize: '13px',
@@ -229,7 +382,6 @@ export function MyDoctorRequestsPage() {
                       </p>
                     )}
 
-                    {/* Progress steps */}
                     <div style={{
                       display: 'flex',
                       gap: '24px',
@@ -237,29 +389,19 @@ export function MyDoctorRequestsPage() {
                       marginTop: '12px',
                       color: '#999'
                     }}>
-                      <span style={{ opacity: order.status !== 'PendingPatientApproval' ? 1 : 0.5 }}>
-                        ✓ Doctor Request
-                      </span>
-                      <span style={{ opacity: order.status !== 'PendingPatientApproval' ? 1 : 0.5 }}>
-                        ✓ Your Decision
-                      </span>
-                      <span style={{ opacity: order.status === 'Booked' ? 1 : 0.5 }}>
-                        {order.status === 'Booked' ? '✓' : '○'} Book Appointment
-                      </span>
-                      <span style={{ opacity: order.status === 'Booked' ? 1 : 0.5 }}>
-                        {order.status === 'Booked' ? '✓' : '○'} Visit Radiology Center
-                      </span>
+                      <span style={{ opacity: order.status !== 'PendingPatientApproval' ? 1 : 0.5 }}>✓ Doctor Request</span>
+                      <span style={{ opacity: order.status !== 'PendingPatientApproval' ? 1 : 0.5 }}>✓ Your Decision</span>
+                      <span style={{ opacity: order.status === 'Booked' ? 1 : 0.5 }}>{order.status === 'Booked' ? '✓' : '○'} Book Appointment</span>
+                      <span style={{ opacity: order.status === 'Booked' ? 1 : 0.5 }}>{order.status === 'Booked' ? '✓' : '○'} Visit Radiology Center</span>
                     </div>
                   </div>
 
-                  {/* Right side - Status & Actions */}
                   <div style={{
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '12px',
                     alignItems: 'flex-end'
                   }}>
-                    {/* Status badge */}
                     <div style={{
                       background: statusStyle.bg,
                       color: statusStyle.text,
@@ -271,13 +413,7 @@ export function MyDoctorRequestsPage() {
                       {statusStyle.label}
                     </div>
 
-                    {/* Action buttons */}
-                    <div style={{
-                      display: 'flex',
-                      gap: '8px',
-                      flexDirection: 'column',
-                      width: '100%'
-                    }}>
+                    <div style={{ display: 'flex', gap: '8px', flexDirection: 'column', width: '100%' }}>
                       {order.status === 'PendingPatientApproval' && (
                         <>
                           <button
@@ -290,11 +426,8 @@ export function MyDoctorRequestsPage() {
                               borderRadius: '6px',
                               cursor: 'pointer',
                               fontSize: '12px',
-                              fontWeight: '600',
-                              transition: 'all 0.3s ease'
+                              fontWeight: '600'
                             }}
-                            onMouseOver={(e) => e.target.style.background = '#1d4ed8'}
-                            onMouseOut={(e) => e.target.style.background = '#2563eb'}
                           >
                             Accept
                           </button>
@@ -308,11 +441,8 @@ export function MyDoctorRequestsPage() {
                               borderRadius: '6px',
                               cursor: 'pointer',
                               fontSize: '12px',
-                              fontWeight: '600',
-                              transition: 'all 0.3s ease'
+                              fontWeight: '600'
                             }}
-                            onMouseOver={(e) => e.target.style.background = '#e5e7eb'}
-                            onMouseOut={(e) => e.target.style.background = '#f3f4f6'}
                           >
                             Decline
                           </button>
@@ -330,49 +460,10 @@ export function MyDoctorRequestsPage() {
                             borderRadius: '6px',
                             cursor: 'pointer',
                             fontSize: '13px',
-                            fontWeight: '600',
-                            transition: 'all 0.3s ease'
+                            fontWeight: '600'
                           }}
-                          onMouseOver={(e) => e.target.style.background = '#15803d'}
-                          onMouseOut={(e) => e.target.style.background = '#16a34a'}
                         >
                           📅 BOOK AT RADIOLOGY CENTER
-                        </button>
-                      )}
-
-                      {order.status === 'Booked' && (
-                        <button
-                          disabled
-                          style={{
-                            padding: '10px 18px',
-                            background: '#d1d5db',
-                            color: '#666',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'not-allowed',
-                            fontSize: '13px',
-                            fontWeight: '600'
-                          }}
-                        >
-                          ✓ Appointment Booked
-                        </button>
-                      )}
-
-                      {order.status === 'Rejected' && (
-                        <button
-                          disabled
-                          style={{
-                            padding: '10px 18px',
-                            background: '#fecaca',
-                            color: '#991b1b',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'not-allowed',
-                            fontSize: '13px',
-                            fontWeight: '600'
-                          }}
-                        >
-                          Declined
                         </button>
                       )}
                     </div>

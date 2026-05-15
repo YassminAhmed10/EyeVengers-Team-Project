@@ -263,8 +263,8 @@ namespace RadiologyCenterAPI.Controllers
                     {
                         Start = request.SlotDateTime.Value,
                         End = request.SlotDateTime.Value.AddHours(1),
-                        IsBooked = true,
-                        CreatedAt = DateTime.UtcNow
+                        Status = "booked",
+                        RadiologyServiceId = request.RadiologyServiceId
                     };
                     _context.Slots.Add(slot);
                     await _context.SaveChangesAsync();
@@ -272,6 +272,11 @@ namespace RadiologyCenterAPI.Controllers
                 }
 
                 _context.Appointments.Add(appointment);
+                await _context.SaveChangesAsync();
+
+                appointment.ConfirmationId = appointment.ConfirmationId ?? $"RAD-{appointment.Id:D6}";
+                appointment.UpdatedAt = DateTime.UtcNow;
+                _context.Appointments.Update(appointment);
                 await _context.SaveChangesAsync();
 
                 _logger.LogInformation($"✓ New appointment created - ID: {appointment.Id}, Patient: {patient.FirstName} {patient.LastName}, Service: {request.RadiologyServiceId}, Status: {appointment.Status}");
@@ -328,6 +333,7 @@ namespace RadiologyCenterAPI.Controllers
         public DateTime? AcceptedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
         public DateTime? SlotDateTime { get; set; }
+        public string? ConfirmationId { get; set; }
         public int ResultCount { get; set; }
 
         public AppointmentDto(Appointment a)
@@ -347,6 +353,7 @@ namespace RadiologyCenterAPI.Controllers
             AcceptedAt = a.AcceptedAt;
             CompletedAt = a.CompletedAt;
             SlotDateTime = a.Slot?.Start;
+            ConfirmationId = a.ConfirmationId;
             ResultCount = a.Results?.Count ?? 0;
         }
     }

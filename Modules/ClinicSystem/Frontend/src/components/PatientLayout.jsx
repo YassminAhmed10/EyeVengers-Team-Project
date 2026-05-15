@@ -1,3 +1,4 @@
+// src/components/PatientLayout.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -23,7 +24,7 @@ const PatientLayout = ({ children, isHomePage = false }) => {
 
     // ── External system URLs ───────────────────────────────────
     const radiologyBaseUrl  = import.meta.env.VITE_RADIOLOGY_URL       || 'http://localhost:5174';
-    const radiologyHomePath = import.meta.env.VITE_RADIOLOGY_HOME_PATH || '/patient';
+    const radiologyHomePath = import.meta.env.VITE_RADIOLOGY_HOME_PATH || '/';
     const normalizedRadiologyPath = radiologyHomePath.startsWith('/') ? radiologyHomePath : `/${radiologyHomePath}`;
     const radiologyHomeUrl  = `${radiologyBaseUrl}${normalizedRadiologyPath}`;
     const pharmacyBaseUrl   = import.meta.env.VITE_PHARMACY_URL  || 'http://localhost:5175';
@@ -90,7 +91,6 @@ const PatientLayout = ({ children, isHomePage = false }) => {
         if (!patientId) { setOrderNotifs([]); setPendingOrdersCount(0); return; }
         try {
             const token = localStorage.getItem('token');
-            // Use http in dev to avoid SSL issues on localhost
             const apiUrl = BASE_API.replace('https://localhost', 'http://localhost');
             const res   = await fetch(
                 `${apiUrl}/DoctorOrders/MyOrders?patientId=${patientId}`,
@@ -99,7 +99,6 @@ const PatientLayout = ({ children, isHomePage = false }) => {
             if (!res.ok) { setOrderNotifs([]); setPendingOrdersCount(0); return; }
             const orders = await res.json();
 
-            // Only show orders from the last 7 days as notifications
             const recentOrders = orders.filter(o => {
                 const age = (Date.now() - new Date(o.createdAt).getTime()) / (1000 * 60 * 60 * 24);
                 return age < 7;
@@ -109,9 +108,9 @@ const PatientLayout = ({ children, isHomePage = false }) => {
             setPendingOrdersCount(pending.length);
 
             const TYPE_LABEL = {
-                investigation: '🔬 Radiology Investigation',
-                eyeExam:       '👁️ Eye Exam / Vision',
-                prescription:  '💊 Medication Prescription',
+                investigation: 'Radiology Investigation',
+                eyeExam:       'Eye Exam / Vision',
+                prescription:  'Medication Prescription',
             };
 
             setOrderNotifs(recentOrders.map(o => ({
@@ -126,7 +125,6 @@ const PatientLayout = ({ children, isHomePage = false }) => {
                 isPending: o.status === 'PendingPatientApproval',
             })));
         } catch {
-            // API not available yet — fail silently
             setOrderNotifs([]);
             setPendingOrdersCount(0);
         }
@@ -185,11 +183,13 @@ const PatientLayout = ({ children, isHomePage = false }) => {
     }, [isHomePage]);
 
     const logout = () => {
-        // Clear ALL patient-related data to prevent stale data on next login
         const keysToRemove = [
             'authToken','token','userName','userEmail','patientId','patientIdentifier',
             'medicalRecordId', 'userRole','isAuthenticated','patient','patientName',
-            'patientEmail','patientPhone','patientDateOfBirth','userId','doctorId'
+            'patientEmail','patientPhone','patientDateOfBirth','userId','doctorId',
+            'radiologyPatientName', 'radiologyPatientId', 'radiologyPatientEmail',
+            'radiologyPatientPhone', 'radiologyPatientGender', 'radiologyPatientDateOfBirth',
+            'radiologyPatientNationalId', 'radiologyPatientAddress'
         ];
         keysToRemove.forEach(k => localStorage.removeItem(k));
         navigate('/login');
@@ -277,7 +277,7 @@ const PatientLayout = ({ children, isHomePage = false }) => {
                     {/* Brand */}
                     <a className="ph-brand" href="/patient">
                         <div className="ph-logo-ring">
-                            <img src="/src/images/logo.png" alt="logo" />
+                            <img src="/src/images/logo.png" alt="logo" onError={(e) => { e.target.style.display = 'none'; }} />
                         </div>
                         <span className="ph-brand-text">Dr. Mohab Khairy</span>
                     </a>
@@ -345,7 +345,6 @@ const PatientLayout = ({ children, isHomePage = false }) => {
                                                     }
                                                 }}
                                             >
-                                                {/* icon */}
                                                 <span style={{
                                                     fontSize: '1.1rem', marginTop: 2, flexShrink: 0,
                                                     color: n.isPending ? '#ef4444' : n.isAppt ? '#0d9488' : '#1565c0',

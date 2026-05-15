@@ -26,6 +26,17 @@ namespace RadiologyCenterAPI.DTOs
         public string Phone { get; set; } = "";
         public string Email { get; set; } = "";
         public string Address { get; set; } = "";
+        
+        // ═════════════════════════════════════════════════════════════════
+        // EMR INTEGRATION FIELDS — From ClinicSystem via FHIR
+        // ═════════════════════════════════════════════════════════════════
+        public string NationalId { get; set; } = "";
+        public string InsuranceCompany { get; set; } = "";
+        public string InsuranceId { get; set; } = "";
+        public string InsurancePolicyNumber { get; set; } = "";
+        public string EmergencyContactName { get; set; } = "";
+        public string EmergencyContactPhone { get; set; } = "";
+        public string EmergencyContactRelation { get; set; } = "";
     }
 
     public class ServiceRequestInfo

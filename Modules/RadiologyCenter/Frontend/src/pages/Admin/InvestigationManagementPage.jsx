@@ -1,26 +1,19 @@
 // src/pages/Admin/InvestigationManagementPage.jsx
-// Admin page to manage investigation status
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaHourglassStart, FaClock, FaCheckCircle, FaArrowRight } from 'react-icons/fa';
+import { FaClipboardList, FaMicroscope, FaCheckCircle, FaPlayCircle, FaUndo } from 'react-icons/fa';
 import { appointmentService } from '../../services/appointmentService';
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
-};
+const statusStages = [
+  { value: 'Scheduled', label: 'Scheduled', icon: FaClipboardList, color: '#0068b3' },
+  { value: 'In Progress', label: 'In Progress', icon: FaMicroscope, color: '#f59e0b' },
+  { value: 'Completed', label: 'Completed', icon: FaCheckCircle, color: '#10b981' }
+];
 
-export default function InvestigationManagementPage() {
+export default function InvestigationManagementPage({ setPage }) {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedStatus, setSelectedStatus] = useState('Upcoming');
-
-  const statusStages = [
-    { value: 'Upcoming', label: 'Upcoming', icon: FaHourglassStart, color: '#3b82f6' },
-    { value: 'In Progress', label: 'In Progress', icon: FaClock, color: '#f59e0b' },
-    { value: 'Done', label: 'Done', icon: FaCheckCircle, color: '#10b981' }
-  ];
+  const [selectedStatus, setSelectedStatus] = useState('Scheduled');
 
   useEffect(() => {
     loadAppointments();
@@ -39,256 +32,185 @@ export default function InvestigationManagementPage() {
     const result = await appointmentService.updateInvestigationStatus(appointmentId, newStatus);
     if (result.success) {
       await loadAppointments();
-      alert(`Status updated to ${newStatus}`);
+      alert(`Investigation status updated to ${newStatus}`);
+    } else {
+      alert('Failed to update status');
     }
+  };
+
+  const getNextStatus = (currentStatus) => {
+    if (currentStatus === 'Scheduled') return 'In Progress';
+    if (currentStatus === 'In Progress') return 'Completed';
+    return null;
   };
 
   if (loading) {
     return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
-        <div style={{ fontSize: '18px', color: '#666' }}>Loading investigations...</div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading investigations...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '40px', background: '#f5f7fa', minHeight: '100vh' }}>
-      <motion.div initial="hidden" animate="visible" variants={fadeUp}>
-        <h1 style={{ fontSize: 32, fontWeight: 700, color: '#1a1a2e', marginBottom: 8 }}>
+    <div className="min-h-screen bg-gray-50 p-6 md:p-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-semibold text-ink mb-2">
           Investigation Management
         </h1>
-        <p style={{ color: '#6f86a3', marginBottom: 32 }}>
-          Track and update investigation statuses
+        <p className="text-gray-500">
+          Track and manage radiology investigation status
         </p>
-      </motion.div>
+      </div>
 
       {/* Status Tabs */}
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={fadeUp}
-        transition={{ delay: 0.1 }}
-        style={{
-          display: 'flex',
-          gap: 12,
-          marginBottom: 32,
-          overflowX: 'auto'
-        }}
-      >
+      <div className="flex flex-wrap gap-3 mb-8 bg-white p-2 rounded-xl shadow-sm">
         {statusStages.map((stage) => {
           const Icon = stage.icon;
+          const isActive = selectedStatus === stage.value;
           return (
             <motion.button
               key={stage.value}
               onClick={() => setSelectedStatus(stage.value)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                padding: '12px 24px',
-                background: selectedStatus === stage.value ? stage.color : 'white',
-                border: selectedStatus === stage.value ? 'none' : `1px solid ${stage.color}`,
-                borderRadius: 8,
-                fontSize: 14,
-                fontWeight: 600,
-                color: selectedStatus === stage.value ? 'white' : stage.color,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                transition: 'all 0.3s ease',
-                whiteSpace: 'nowrap'
-              }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`flex-1 min-w-[120px] px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                isActive
+                  ? 'bg-primary text-white shadow-md'
+                  : 'bg-transparent border border-primary text-primary hover:bg-primary/5'
+              }`}
             >
               <Icon size={16} /> {stage.label}
             </motion.button>
           );
         })}
-      </motion.div>
+      </div>
 
       {/* Investigations Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 20 }}>
-        {appointments.map((apt, idx) => (
-          <motion.div
-            key={apt.id}
-            initial="hidden"
-            animate="visible"
-            variants={fadeUp}
-            transition={{ delay: idx * 0.05 }}
-            style={{
-              background: 'white',
-              borderRadius: 16,
-              padding: 24,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-              borderLeft: `4px solid ${statusStages.find(s => s.value === apt.investigationStatus)?.color || '#ccc'}`
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 16 }}>
-              <div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1a1a2e', margin: 0 }}>
-                  {apt.patientName}
-                </h3>
-                <p style={{ fontSize: 13, color: '#6f86a3', margin: '4px 0 0' }}>
-                  {apt.serviceName}
-                </p>
-              </div>
-              <span style={{
-                fontSize: 12,
-                fontWeight: 600,
-                background: '#f0f0f0',
-                color: '#666',
-                padding: '4px 12px',
-                borderRadius: 20
-              }}>
-                ID: {apt.id}
-              </span>
-            </div>
-
-            <div style={{ display: 'grid', gap: 12, marginBottom: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 12, color: '#6f86a3', fontWeight: 500 }}>Current Status:</span>
-                <span style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: statusStages.find(s => s.value === apt.investigationStatus)?.color,
-                  background: statusStages.find(s => s.value === apt.investigationStatus)?.color ? `${statusStages.find(s => s.value === apt.investigationStatus)?.color}15` : '#f0f0f0',
-                  padding: '4px 12px',
-                  borderRadius: 6
-                }}>
-                  {apt.investigationStatus}
-                </span>
-              </div>
-              <div style={{ fontSize: 12, color: '#6f86a3' }}>
-                <strong>Date:</strong> {new Date(apt.slotDateTime).toLocaleDateString()}
-              </div>
-              <div style={{ fontSize: 12, color: '#6f86a3' }}>
-                <strong>Results:</strong> {apt.resultCount} uploaded
-              </div>
-            </div>
-
-            {/* Status Progression */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              marginBottom: 20,
-              padding: '12px',
-              background: '#f8fafc',
-              borderRadius: 8
-            }}>
-              {statusStages.map((stage, idx) => (
-                <div key={stage.value} style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-                  <div style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    background: apt.investigationStatus === stage.value || 
-                                 (apt.investigationStatus === 'Done' && stage.value !== 'Done') ? stage.color : '#e5e7eb',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: 'white'
-                  }}>
-                    {idx + 1}
+      {appointments.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {appointments.map((apt, idx) => {
+            const currentStage = statusStages.find(s => s.value === apt.investigationStatus);
+            const nextStatus = getNextStatus(apt.investigationStatus);
+            
+            return (
+              <motion.div
+                key={apt.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="bg-white rounded-xl shadow-sm border-l-4 overflow-hidden"
+                style={{ borderLeftColor: currentStage?.color || '#9ca3af' }}
+              >
+                <div className="p-5">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="font-semibold text-gray-900 text-lg">
+                        {apt.patientName}
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {apt.serviceName}
+                      </p>
+                    </div>
+                    <span 
+                      className="text-xs font-medium px-3 py-1 rounded-full"
+                      style={{
+                        backgroundColor: `${currentStage?.color}15`,
+                        color: currentStage?.color
+                      }}
+                    >
+                      {apt.investigationStatus}
+                    </span>
                   </div>
-                  {idx < statusStages.length - 1 && (
-                    <div style={{
-                      flex: 1,
-                      height: 2,
-                      background: apt.investigationStatus === 'Done' || 
-                                  (apt.investigationStatus === 'In Progress' && idx < 1) ? stage.color : '#e5e7eb'
-                    }} />
+
+                  <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-xs text-gray-500">Appointment Date</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        {new Date(apt.slotDateTime).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-gray-500">Results</span>
+                      <span className="text-sm font-medium text-success">
+                        {apt.resultCount || 0} uploaded
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Status Progression Indicator */}
+                  <div className="flex items-center justify-between mb-5">
+                    {statusStages.map((stage, idx) => {
+                      const isCompleted = apt.investigationStatus === 'Completed' || 
+                                        (apt.investigationStatus === 'In Progress' && stage.value === 'Scheduled') ||
+                                        (apt.investigationStatus === stage.value);
+                      const isCurrent = apt.investigationStatus === stage.value;
+                      const Icon = stage.icon;
+                      
+                      return (
+                        <div key={stage.value} className="flex-1 text-center">
+                          <div 
+                            className={`w-10 h-10 mx-auto rounded-full flex items-center justify-center transition-all ${
+                              isCompleted 
+                                ? 'bg-primary text-white' 
+                                : 'bg-gray-200 text-gray-400'
+                            } ${isCurrent ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
+                          >
+                            <Icon size={16} />
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2 hidden sm:block">
+                            {stage.label}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Action Buttons */}
+                  {nextStatus && (
+                    <motion.button
+                      onClick={() => handleStatusChange(apt.id, nextStatus)}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full py-2.5 rounded-lg font-medium text-white flex items-center justify-center gap-2 mb-2 transition-colors"
+                      style={{ backgroundColor: currentStage?.color }}
+                    >
+                      {apt.investigationStatus === 'Scheduled' && <FaPlayCircle size={14} />}
+                      {apt.investigationStatus === 'In Progress' && <FaCheckCircle size={14} />}
+                      {nextStatus === 'In Progress' ? 'Start Investigation' : 'Mark as Completed'}
+                    </motion.button>
+                  )}
+
+                  {apt.investigationStatus === 'In Progress' && (
+                    <motion.button
+                      onClick={() => handleStatusChange(apt.id, 'Scheduled')}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full py-2.5 rounded-lg font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <FaUndo size={14} /> Revert to Scheduled
+                    </motion.button>
+                  )}
+
+                  {apt.investigationStatus === 'Completed' && (
+                    <div className="w-full py-2.5 rounded-lg font-medium text-success bg-success/10 text-center">
+                      Investigation Complete
+                    </div>
                   )}
                 </div>
-              ))}
-            </div>
-
-            {/* Action Buttons */}
-            <div style={{ display: 'grid', gap: 8 }}>
-              {apt.investigationStatus !== 'Done' && (
-                <motion.button
-                  onClick={() => {
-                    const nextStatus = apt.investigationStatus === 'Upcoming' ? 'In Progress' : 'Done';
-                    handleStatusChange(apt.id, nextStatus);
-                  }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  style={{
-                    padding: '10px',
-                    background: '#1f6bff',
-                    border: 'none',
-                    borderRadius: 8,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: 'white',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6
-                  }}
-                >
-                  <FaArrowRight size={12} />
-                  {apt.investigationStatus === 'Upcoming' ? 'Start Investigation' : 'Complete Investigation'}
-                </motion.button>
-              )}
-
-              {apt.investigationStatus === 'In Progress' && (
-                <motion.button
-                  onClick={() => handleStatusChange(apt.id, 'Upcoming')}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  style={{
-                    padding: '10px',
-                    background: '#f3f4f6',
-                    border: '1px solid #d1d5db',
-                    borderRadius: 8,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: '#666',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Revert to Upcoming
-                </motion.button>
-              )}
-
-              {apt.investigationStatus === 'Done' && (
-                <div style={{
-                  padding: '10px',
-                  background: '#d1fae5',
-                  borderRadius: 8,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: '#065f46',
-                  textAlign: 'center'
-                }}>
-                  ✓ Investigation Complete
-                </div>
-              )}
-            </div>
-          </motion.div>
-        ))}
-
-        {appointments.length === 0 && (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeUp}
-            style={{
-              gridColumn: '1 / -1',
-              textAlign: 'center',
-              padding: '60px 40px',
-              background: 'white',
-              borderRadius: 16,
-              color: '#6f86a3'
-            }}
-          >
-            <p style={{ fontSize: 16 }}>No investigations with status: {selectedStatus}</p>
-          </motion.div>
-        )}
-      </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="text-center py-16 bg-white rounded-xl shadow-sm">
+          <FaClipboardList size={48} className="mx-auto text-gray-300 mb-4" />
+          <p className="text-gray-500">No investigations with status: {selectedStatus}</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -207,6 +207,8 @@ class FhirIntegrationService {
                 birthDate: patient.dateOfBirth || patient.DateOfBirth || '',
                 gender: patient.gender || patient.Gender || '',
                 address: patient.address || patient.Address || '',
+                patientId: patient.id || patient.Id,
+                patientIdentifier: patient.identifier || patient.Identifier || patient.id || patient.Id,
                 resourceId: patient.id || patient.Id,
             };
         }
@@ -215,6 +217,9 @@ class FhirIntegrationService {
         const name = patient.name?.[0] || {};
         const telecom = patient.telecom || [];
         const address = patient.address?.[0] || {};
+        
+        // Extract patient identifier from FHIR identifier array (P-000035 format)
+        const identifier = patient.identifier?.[0]?.value || patient.identifier || patient.id;
 
         return {
             firstName: name.given?.[0] || '',
@@ -224,6 +229,8 @@ class FhirIntegrationService {
             birthDate: patient.birthDate || '',
             gender: patient.gender || '',
             address: address.text || '',
+            patientId: patient.id,
+            patientIdentifier: identifier,
             resourceId: patient.id,
         };
     }

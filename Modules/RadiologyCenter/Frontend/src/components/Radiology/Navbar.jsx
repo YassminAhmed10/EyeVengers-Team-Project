@@ -1,3 +1,4 @@
+// components/Radiology/Navbar.jsx
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import {
@@ -26,12 +27,11 @@ const CONTENT = {
       { id: "doctors",  label: "أطباؤنا",    icon: <FaUserMd /> },
       { id: "patient-book-appointment", label: "حجز موعد", icon: <FaCalendarCheck /> },
       { id: "patient-results",  label: "نتائجي",     icon: <FaFileAlt /> },
-      { id: "patient-notifications",  label: "تنبيهاتي", icon: <FaBell /> },
       { id: "contact",  label: "تواصل معنا", icon: <FaEnvelope /> },
     ],
     login: "دخول", register: "تسجيل", langLabel: "EN",
     backToClinic: "العودة للعيادة",
-    dashboard: "لوحة التحكم", appointments: "مواعيدي",
+    profile: "الملف الشخصي", appointments: "مواعيدي",
     reports: "تقاريري", settings: "الإعدادات",
     help: "مساعدة", logout: "تسجيل الخروج",
   },
@@ -43,12 +43,11 @@ const CONTENT = {
       { id: "doctors",  label: "Doctors",  icon: <FaUserMd /> },
       { id: "patient-book-appointment", label: "Book",     icon: <FaCalendarCheck /> },
       { id: "patient-results",  label: "Results",  icon: <FaFileAlt /> },
-      { id: "patient-notifications",  label: "Notifications",  icon: <FaBell /> },
       { id: "contact",  label: "Contact",  icon: <FaEnvelope /> },
     ],
     login: "Login", register: "Register", langLabel: "ع",
     backToClinic: "Back to Clinic",
-    dashboard: "Dashboard", appointments: "Appointments",
+    profile: "Profile", appointments: "Appointments",
     reports: "Reports", settings: "Settings",
     help: "Help", logout: "Logout",
   },
@@ -89,11 +88,9 @@ function ProfileDropdown({ patientName, patientEmail, getUserInitials, onNavigat
   const t = CONTENT[lang];
   const isRtl = t.dir === "rtl";
   const items = [
-    { id: "dashboard",    label: t.dashboard,    icon: <FaUserMd />,         path: "profile"  },
-    { id: "appointments", label: t.appointments, icon: <FaHistory />,        path: "booking"  },
-    { id: "reports",      label: t.reports,      icon: <FaClipboardList />,  path: "results"  },
-    { id: "settings",     label: t.settings,     icon: <FaCog />,            path: "profile"  },
-    { id: "help",         label: t.help,         icon: <FaQuestionCircle />, path: "contact"  },
+    { id: "profile",      label: t.profile,      icon: <FaUserMd />,        path: "profile" },
+    { id: "appointments", label: t.appointments, icon: <FaHistory />,       path: "patient-appointments" },
+    { id: "settings",     label: t.settings,     icon: <FaCog />,           path: "settings" },
   ];
 
   const displayName = patientName && patientName !== "undefined" ? patientName : "User";
@@ -138,8 +135,10 @@ function ProfileDropdown({ patientName, patientEmail, getUserInitials, onNavigat
             style={{
               position: "absolute",
               top: "calc(100% + 12px)",
-              [isRtl ? "right" : "left"]: 0,
+              right: isRtl ? "auto" : 0,
+              left: isRtl ? 0 : "auto",
               minWidth: 220,
+              maxWidth: "calc(100vw - 24px)",
               background: SURFACE,
               borderRadius: 14,
               boxShadow: `0 12px 40px ${P_MEDIUM}, 0 2px 8px ${P_BORDER}`,
@@ -228,11 +227,19 @@ export default function Navbar({ page, setPage, loggedIn }) {
   const [mobileOpen, setMobile]     = useState(false);
   const [scrolled, setScrolled]     = useState(false);
   const [dropdownOpen, setDropdown] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const raw = localStorage.getItem('radiologyNotifications');
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  });
   const [patientName, setPatientName]   = useState("");
   const [patientEmail, setPatientEmail] = useState("");
   const [adminLogged, setAdminLogged] = useState(() => localStorage.getItem("radiologyAdminLoggedIn") === "true");
   const [adminEmailState, setAdminEmailState] = useState(() => localStorage.getItem("radiologyAdminEmail") || "");
   const [fromClinic, setFromClinic] = useState(false);
+  const [clinicBackUrl, setClinicBackUrl] = useState("");
   const navRef      = useRef(null);
   const dropdownRef = useRef(null);
 
@@ -245,22 +252,88 @@ export default function Navbar({ page, setPage, loggedIn }) {
     email: cleanVal("radiologyPatientEmail"),
   });
 
-  // Read from URL params or localStorage on mount
+  // Helper to parse hash parameters
+  const getHashParams = () => {
+    const hash = window.location.hash;
+    if (hash.includes('?')) {
+      const searchParamsString = hash.split('?')[1];
+      return new URLSearchParams(searchParamsString);
+    }
+    return new URLSearchParams();
+  };
+
+  // Read from URL params, hash params, or localStorage on mount
   useEffect(() => {
-    const params   = new URLSearchParams(window.location.search);
-    const urlName  = params.get("patientName");
-    const urlEmail = params.get("patientEmail");
-    const clinicFlag = params.get("fromClinic") || params.get("from") || params.get("fromClinicFlag");
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.location.hash;
+    const hashParams = getHashParams();
+    
+    console.log('[Navbar] Reading source parameters...');
+    console.log('[Navbar] URL params:', Object.fromEntries(params.entries()));
+    console.log('[Navbar] Hash params:', Object.fromEntries(hashParams.entries()));
+    
+    // Check for clinic source from URL parameters
+    let clinicFlag = params.get("fromClinic") || params.get("from") || params.get("fromClinicFlag");
+    
+    // Also check hash parameters for clinic source
+    if (!clinicFlag) {
+      clinicFlag = hashParams.get("fromClinic") || hashParams.get("from");
+    }
+    
+    // Check if coming from clinic system via referrer
     const refIsClinic = document.referrer && document.referrer.includes(CLINIC_URL);
     const fromLocal = localStorage.getItem("radiologyFromClinic") === "true";
     const isFrom = (clinicFlag === "1" || clinicFlag === "true") || refIsClinic || fromLocal;
+    
+    console.log('[Navbar] isFromClinic:', isFrom);
+    console.log('[Navbar] clinicFlag:', clinicFlag);
+    console.log('[Navbar] refIsClinic:', refIsClinic);
+    console.log('[Navbar] fromLocal:', fromLocal);
+    
     setFromClinic(!!isFrom);
-    if (isFrom) localStorage.setItem("radiologyFromClinic", "true");
-    const name  = urlName  || cleanVal("radiologyPatientName");
-    const email = urlEmail || cleanVal("radiologyPatientEmail");
-    if (name)  { setPatientName(name);  localStorage.setItem("radiologyPatientName",  name);  }
-    if (email) { setPatientEmail(email); localStorage.setItem("radiologyPatientEmail", email); }
-    if (urlName || urlEmail) window.history.replaceState({}, "", window.location.pathname);
+    if (isFrom) {
+      localStorage.setItem("radiologyFromClinic", "true");
+      
+      // Get clinic back URL from parameters
+      let backUrl = params.get("clinicBackUrl") || hashParams.get("clinicBackUrl");
+      if (backUrl) {
+        setClinicBackUrl(decodeURIComponent(backUrl));
+        console.log('[Navbar] Clinic back URL:', decodeURIComponent(backUrl));
+      } else {
+        setClinicBackUrl(CLINIC_URL);
+      }
+    }
+    
+    // Read patient data from URL/hash parameters
+    const urlName = params.get("patientName");
+    const urlEmail = params.get("patientEmail");
+    
+    const hashName = hashParams.get("patientName");
+    const hashEmail = hashParams.get("patientEmail");
+    
+    const name = hashName || urlName || cleanVal("radiologyPatientName");
+    const email = hashEmail || urlEmail || cleanVal("radiologyPatientEmail");
+    
+    console.log('[Navbar] Patient name from source:', name);
+    console.log('[Navbar] Patient email from source:', email);
+    
+    if (name)  { 
+      setPatientName(name);  
+      localStorage.setItem("radiologyPatientName", name);  
+    }
+    if (email) { 
+      setPatientEmail(email); 
+      localStorage.setItem("radiologyPatientEmail", email); 
+    }
+    
+    // Clean up URL after reading (remove query params from URL bar)
+    if (urlName || urlEmail || hashName || hashEmail) {
+      // Don't remove hash params as they're needed for the page
+      // Only remove from the actual URL bar
+      if (window.location.search) {
+        window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+      }
+    }
   }, []);
 
   // Re-read when loggedIn or page changes
@@ -310,19 +383,28 @@ export default function Navbar({ page, setPage, loggedIn }) {
   }, [lang, t.dir]);
 
   const handleBackToClinic = () => {
+    // Use stored clinic back URL or default
+    const targetUrl = clinicBackUrl || CLINIC_URL;
+    console.log('[Navbar] Returning to clinic:', targetUrl);
+    
+    // Preserve patient context
     const p = new URLSearchParams();
     if (patientName)  p.append("patientName",  patientName);
     if (patientEmail) p.append("patientEmail", patientEmail);
-    window.location.href = `${CLINIC_URL}/patient${p.toString() ? "?" + p : ""}`;
+    
+    const finalUrl = `${targetUrl}${p.toString() ? "?" + p : ""}`;
+    window.location.href = finalUrl;
   };
 
   const handleLogout = () => {
     [
       "radiologyPatientName", "radiologyPatientId", "radiologyPatientEmail",
       "firebaseToken", "userRole", "userName", "userEmail", "userId",
+      "radiologyFromClinic",
     ].forEach(k => localStorage.removeItem(k));
     setPatientName("");
     setPatientEmail("");
+    setFromClinic(false);
     setPage("home");
   };
 
@@ -462,7 +544,7 @@ export default function Navbar({ page, setPage, loggedIn }) {
           ))}
         </nav>
 
-          <div className="nb-desktop-end" style={{ marginInlineStart: "auto", display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="nb-desktop-end" style={{ marginInlineStart: "auto", display: "flex", alignItems: "center", gap: 10 }}>
           <motion.button className="nb-lang" onClick={() => setLang(l => l === "ar" ? "en" : "ar")} whileTap={{ scale: 0.93, rotate: 10 }}>
             <FaGlobe size={10} style={{ opacity: 0.6 }} />
             <AnimatePresence mode="wait">
@@ -471,18 +553,84 @@ export default function Navbar({ page, setPage, loggedIn }) {
               </motion.span>
             </AnimatePresence>
           </motion.button>
-         
 
           <div className="nb-sep" />
 
           {patientName ? (
-            <ProfileDropdown
-              patientName={patientName} patientEmail={patientEmail}
-              getUserInitials={getUserInitials} onNavigate={setPage}
-              onLogout={handleLogout} lang={lang}
-              isOpen={dropdownOpen} onToggle={() => setDropdown(o => !o)}
-              dropdownRef={dropdownRef}
-            />
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ position: "relative" }}>
+                <motion.button
+                  onClick={() => setNotifOpen(o => !o)}
+                  whileTap={{ scale: 0.96 }}
+                  style={{
+                    width: 40, height: 40, borderRadius: 12, background: "rgba(0,112,184,0.06)",
+                    border: "1.5px solid rgba(0,112,184,0.18)", cursor: "pointer", display: "flex",
+                    alignItems: "center", justifyContent: "center", position: "relative"
+                  }}
+                  aria-label="Notifications"
+                >
+                  <FaBell size={16} style={{ color: '#0070b8' }} />
+                  {notifications.length > 0 && (
+                    <span style={{ position: 'absolute', top: -3, right: -3, minWidth: 16, height: 16, padding: '0 4px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ef4444', color: '#fff', fontSize: 10, borderRadius: 999 }}>
+                      {notifications.length}
+                    </span>
+                  )}
+                </motion.button>
+                <AnimatePresence>
+                  {notifOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                      style={{
+                        position: 'absolute',
+                        top: 'calc(100% + 8px)',
+                        right: 0,
+                        left: 'auto',
+                        minWidth: 260,
+                        maxWidth: 'calc(100vw - 24px)',
+                        background: '#fff',
+                        borderRadius: 12,
+                        boxShadow: `0 12px 40px ${P_MEDIUM}`,
+                        border: `1px solid ${P_BORDER}`,
+                        zIndex: 1200,
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <div style={{ padding: 12, borderBottom: `1px solid ${P_BORDER}`, fontWeight: 700 }}>Notifications</div>
+                      <div style={{ maxHeight: 260, overflowY: 'auto' }}>
+                        {notifications.length === 0 ? (
+                          <div style={{ padding: 14, color: TEXT_MUTE }}>No new notifications</div>
+                        ) : (
+                          notifications.slice(0, 6).map((n, i) => (
+                            <div key={i} style={{ padding: 12, borderBottom: `1px solid ${P_BORDER}`, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                              <div style={{ width: 8, height: 8, borderRadius: 8, background: '#0070b8', marginTop: 6 }} />
+                              <div style={{ fontSize: 13 }}>{n.title || 'Notification'}</div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, padding: 10, borderTop: `1px solid ${P_BORDER}` }}>
+                        <button style={{ flex: 1, padding: 8, borderRadius: 8, border: 'none', background: '#f3f4f6', cursor: 'pointer' }} onClick={() => { setNotifications([]); localStorage.removeItem('radiologyNotifications'); setNotifOpen(false); }}>
+                          Clear
+                        </button>
+                        <button style={{ flex: 1, padding: 8, borderRadius: 8, border: 'none', background: '#0070b8', color: '#fff', cursor: 'pointer' }} onClick={() => { setNotifOpen(false); setPage('patient-notifications'); }}>
+                          View All
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <ProfileDropdown
+                patientName={patientName} patientEmail={patientEmail}
+                getUserInitials={getUserInitials} onNavigate={setPage}
+                onLogout={handleLogout} lang={lang}
+                isOpen={dropdownOpen} onToggle={() => setDropdown(o => !o)}
+                dropdownRef={dropdownRef}
+              />
+            </div>
           ) : adminLogged ? (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ padding: "6px 10px", borderRadius: 10, background: "rgba(0,0,0,0.04)", fontWeight: 700 }}>{adminEmailState}</div>
@@ -498,6 +646,7 @@ export default function Navbar({ page, setPage, loggedIn }) {
 
           <div className="nb-sep" />
 
+          {/* Back to Clinic Button - Shows when coming from clinic system */}
           {fromClinic && (
             <motion.button className="nb-back" onClick={handleBackToClinic} whileTap={{ scale: 0.96 }}>
               <motion.span animate={{ x: [0, -2, 0] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>

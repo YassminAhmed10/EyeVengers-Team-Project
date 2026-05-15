@@ -13,6 +13,7 @@ namespace RadiologyCenterAPI.Services
         Task<Appointment?> GetByIdAsync(int id);
         Task CancelAsync(int id);
         Task<List<Appointment>> GetPatientAppointmentsAsync(string patientIdentifier);
+        Task UpdatePatientFromFhirAsync(Patient existingPatient, PatientInfo fhirPatientData);
     }
 
     public class AppointmentService : IAppointmentService
@@ -107,12 +108,31 @@ namespace RadiologyCenterAPI.Services
                         BirthDate = req.Patient.BirthDate,
                         Phone = req.Patient.Phone,
                         Email = req.Patient.Email,
-                        Address = req.Patient.Address
+                        Address = req.Patient.Address,
+                        // ═════════════════════════════════════════════════════════════════
+                        // EMR FIELDS from ClinicSystem — CRITICAL: These must be saved!
+                        // ═════════════════════════════════════════════════════════════════
+                        NationalId = req.Patient.NationalId ?? "",
+                        InsuranceCompany = req.Patient.InsuranceCompany ?? "",
+                        InsuranceId = req.Patient.InsuranceId ?? "",
+                        InsurancePolicyNumber = req.Patient.InsurancePolicyNumber ?? "",
+                        EmergencyContactName = req.Patient.EmergencyContactName ?? "",
+                        EmergencyContactPhone = req.Patient.EmergencyContactPhone ?? "",
+                        EmergencyContactRelation = req.Patient.EmergencyContactRelation ?? "",
+                        CreatedAt = DateTime.UtcNow
                     };
                     _context.Patients.Add(patient);
                     await _context.SaveChangesAsync();
+                    
+                    // Log the saved patient data
+                    _logger?.LogInformation(
+                        "[BookAppointment] Created patient from FHIR: Id={PatientId}, National={National}, Insurance={Insurance}, Emergency={Emergency}",
+                        patient.Id, patient.NationalId, patient.InsuranceCompany, patient.EmergencyContactName);
+                }                else
+                {
+                    // Patient already exists: update their EMR data (may have changed in Clinic System)
+                    await UpdatePatientFromFhirAsync(patient, req.Patient);
                 }
-
                 var slot = await _context.Slots
                     .FirstOrDefaultAsync(s =>
                         s.RadiologyServiceId == service.Id &&
@@ -224,6 +244,127 @@ namespace RadiologyCenterAPI.Services
             }
             
             await _context.SaveChangesAsync();
+        }
+
+        // ═════════════════════════════════════════════════════════════════
+        // UPDATE EXISTING PATIENT WITH EMR DATA FROM FHIR
+        // ═════════════════════════════════════════════════════════════════
+        /// <summary>
+        /// Update patient with EMR data from FHIR Bundle (when patient already exists)
+        /// This handles the case where patient info is updated in the Clinic System
+        /// </summary>
+        public async Task UpdatePatientFromFhirAsync(Patient existingPatient, PatientInfo fhirPatientData)
+        {
+            if (existingPatient == null) return;
+            
+            try
+            {
+                bool hasChanges = false;
+                
+                // Update basic fields if provided and different
+                if (!string.IsNullOrEmpty(fhirPatientData.FirstName) && existingPatient.FirstName != fhirPatientData.FirstName)
+                {
+                    existingPatient.FirstName = fhirPatientData.FirstName;
+                    hasChanges = true;
+                }
+                
+                if (!string.IsNullOrEmpty(fhirPatientData.LastName) && existingPatient.LastName != fhirPatientData.LastName)
+                {
+                    existingPatient.LastName = fhirPatientData.LastName;
+                    hasChanges = true;
+                }
+                
+                if (!string.IsNullOrEmpty(fhirPatientData.Gender) && existingPatient.Gender != fhirPatientData.Gender)
+                {
+                    existingPatient.Gender = fhirPatientData.Gender;
+                    hasChanges = true;
+                }
+                
+                if (fhirPatientData.BirthDate.HasValue && existingPatient.BirthDate != fhirPatientData.BirthDate)
+                {
+                    existingPatient.BirthDate = fhirPatientData.BirthDate;
+                    hasChanges = true;
+                }
+                
+                if (!string.IsNullOrEmpty(fhirPatientData.Phone) && existingPatient.Phone != fhirPatientData.Phone)
+                {
+                    existingPatient.Phone = fhirPatientData.Phone;
+                    hasChanges = true;
+                }
+                
+                if (!string.IsNullOrEmpty(fhirPatientData.Email) && existingPatient.Email != fhirPatientData.Email)
+                {
+                    existingPatient.Email = fhirPatientData.Email;
+                    hasChanges = true;
+                }
+                
+                if (!string.IsNullOrEmpty(fhirPatientData.Address) && existingPatient.Address != fhirPatientData.Address)
+                {
+                    existingPatient.Address = fhirPatientData.Address;
+                    hasChanges = true;
+                }
+                
+                // ═════════════════════════════════════════════════════════════════
+                // EMR FIELDS - These are critical and must be synchronized
+                // ═════════════════════════════════════════════════════════════════
+                if (!string.IsNullOrEmpty(fhirPatientData.NationalId) && existingPatient.NationalId != fhirPatientData.NationalId)
+                {
+                    existingPatient.NationalId = fhirPatientData.NationalId;
+                    hasChanges = true;
+                }
+                
+                if (!string.IsNullOrEmpty(fhirPatientData.InsuranceCompany) && existingPatient.InsuranceCompany != fhirPatientData.InsuranceCompany)
+                {
+                    existingPatient.InsuranceCompany = fhirPatientData.InsuranceCompany;
+                    hasChanges = true;
+                }
+                
+                if (!string.IsNullOrEmpty(fhirPatientData.InsuranceId) && existingPatient.InsuranceId != fhirPatientData.InsuranceId)
+                {
+                    existingPatient.InsuranceId = fhirPatientData.InsuranceId;
+                    hasChanges = true;
+                }
+                
+                if (!string.IsNullOrEmpty(fhirPatientData.InsurancePolicyNumber) && existingPatient.InsurancePolicyNumber != fhirPatientData.InsurancePolicyNumber)
+                {
+                    existingPatient.InsurancePolicyNumber = fhirPatientData.InsurancePolicyNumber;
+                    hasChanges = true;
+                }
+                
+                if (!string.IsNullOrEmpty(fhirPatientData.EmergencyContactName) && existingPatient.EmergencyContactName != fhirPatientData.EmergencyContactName)
+                {
+                    existingPatient.EmergencyContactName = fhirPatientData.EmergencyContactName;
+                    hasChanges = true;
+                }
+                
+                if (!string.IsNullOrEmpty(fhirPatientData.EmergencyContactPhone) && existingPatient.EmergencyContactPhone != fhirPatientData.EmergencyContactPhone)
+                {
+                    existingPatient.EmergencyContactPhone = fhirPatientData.EmergencyContactPhone;
+                    hasChanges = true;
+                }
+                
+                if (!string.IsNullOrEmpty(fhirPatientData.EmergencyContactRelation) && existingPatient.EmergencyContactRelation != fhirPatientData.EmergencyContactRelation)
+                {
+                    existingPatient.EmergencyContactRelation = fhirPatientData.EmergencyContactRelation;
+                    hasChanges = true;
+                }
+                
+                if (hasChanges)
+                {
+                    existingPatient.UpdatedAt = DateTime.UtcNow;
+                    _context.Patients.Update(existingPatient);
+                    await _context.SaveChangesAsync();
+                    
+                    _logger?.LogInformation(
+                        "[UpdatePatientFromFhir] Updated patient {PatientId}: National={National}, Insurance={Insurance}, Emergency={Emergency}",
+                        existingPatient.Id, existingPatient.NationalId, existingPatient.InsuranceCompany, existingPatient.EmergencyContactName);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "[UpdatePatientFromFhir] Error updating patient {PatientId}", existingPatient.Id);
+                throw;
+            }
         }
     }
 

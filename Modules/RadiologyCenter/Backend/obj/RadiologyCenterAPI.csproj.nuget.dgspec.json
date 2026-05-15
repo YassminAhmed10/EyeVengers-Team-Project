@@ -77,6 +77,21 @@
               "version": "[8.0.0, )",
               "versionCentrallyManaged": true
             },
+            "Microsoft.EntityFrameworkCore.Sqlite": {
+              "target": "Package",
+              "version": "[8.0.0, )",
+              "versionCentrallyManaged": true
+            },
+            "Microsoft.EntityFrameworkCore.Sqlite.Core": {
+              "target": "Package",
+              "version": "[8.0.0, )",
+              "versionCentrallyManaged": true
+            },
+            "Microsoft.EntityFrameworkCore.Sqlite.Design": {
+              "target": "Package",
+              "version": "[1.1.6, )",
+              "versionCentrallyManaged": true
+            },
             "Newtonsoft.Json": {
               "target": "Package",
               "version": "[13.0.4, )",
@@ -93,6 +108,9 @@
             "Hl7.Fhir.Serialization": "4.3.0",
             "Microsoft.EntityFrameworkCore": "8.0.0",
             "Microsoft.EntityFrameworkCore.Design": "8.0.0",
+            "Microsoft.EntityFrameworkCore.Sqlite": "8.0.0",
+            "Microsoft.EntityFrameworkCore.Sqlite.Core": "8.0.0",
+            "Microsoft.EntityFrameworkCore.Sqlite.Design": "1.1.6",
             "Microsoft.EntityFrameworkCore.SqlServer": "8.0.0",
             "Newtonsoft.Json": "13.0.4",
             "Swashbuckle.AspNetCore": "10.1.7"

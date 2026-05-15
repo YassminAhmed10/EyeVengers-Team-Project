@@ -250,7 +250,7 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
             return Ok(new { exists });
         }
 
-        // ✅ Helper method to create medical record automatically
+        // ✅ Helper method to create medical record automatically - FIXED with VisitDate
         private async Task<int?> CreateMedicalRecordForPatient(string patientId, string? patientName = null)
         {
             try
@@ -279,11 +279,25 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
                     _logger.LogInformation("Found patient in Patients table with ID: {PatientId}", resolvedPatientId);
                 }
                 
-                // Create new medical record
+                // ✅ Get the latest appointment for this patient to set VisitDate
+                var latestAppointment = await _context.Appointments
+                    .Where(a => a.PatientId == patientId)
+                    .OrderByDescending(a => a.AppointmentDate)
+                    .FirstOrDefaultAsync();
+                
+                // Set VisitDate - use latest appointment date or current date
+                DateTime visitDate = DateTime.Now;
+                if (latestAppointment != null && latestAppointment.AppointmentDate != default)
+                {
+                    visitDate = latestAppointment.AppointmentDate;
+                }
+                
+                // Create new medical record with VisitDate set
                 var medicalRecord = new MedicalRecord
                 {
                     PatientIdentifier = patientId,
                     PatientId = resolvedPatientId,
+                    VisitDate = visitDate,  // ✅ CRITICAL FIX: Set VisitDate
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -291,7 +305,8 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
                 _context.MedicalRecords.Add(medicalRecord);
                 await _context.SaveChangesAsync();
                 
-                _logger.LogInformation("✅ Medical record created successfully for patient {PatientId} with ID: {RecordId}", patientId, medicalRecord.Id);
+                _logger.LogInformation("✅ Medical record created successfully for patient {PatientId} with ID: {RecordId}, VisitDate: {VisitDate}", 
+                    patientId, medicalRecord.Id, medicalRecord.VisitDate);
                 
                 return medicalRecord.Id;
             }

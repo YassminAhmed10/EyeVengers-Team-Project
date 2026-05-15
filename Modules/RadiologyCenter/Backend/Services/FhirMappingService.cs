@@ -108,6 +108,89 @@ namespace RadiologyCenterAPI.Services
 
                 if (root.TryGetProperty("birthDate", out var bd) && DateTime.TryParse(bd.GetString(), out var bdDate))
                     info.BirthDate = bdDate;
+
+                // ═════════════════════════════════════════════════════════════════════════════
+                // EMR FIELD EXTRACTION — National ID, Insurance, Emergency Contact
+                // ═════════════════════════════════════════════════════════════════════════════
+                
+                // Extract phone and email from telecom
+                if (root.TryGetProperty("telecom", out var telecoms) && telecoms.GetArrayLength() > 0)
+                {
+                    foreach (var telecom in telecoms.EnumerateArray())
+                    {
+                        if (telecom.TryGetProperty("system", out var system) && telecom.TryGetProperty("value", out var value))
+                        {
+                            var systemStr = system.GetString();
+                            var valueStr = value.GetString() ?? "";
+                            
+                            if (systemStr == "phone") info.Phone = valueStr;
+                            else if (systemStr == "email") info.Email = valueStr;
+                        }
+                    }
+                }
+
+                // Extract address
+                if (root.TryGetProperty("address", out var addresses) && addresses.GetArrayLength() > 0)
+                {
+                    var addr = addresses[0];
+                    if (addr.TryGetProperty("text", out var text))
+                        info.Address = text.GetString() ?? "";
+                }
+
+                // Extract NationalId from extensions (custom extension: nationalId)
+                if (root.TryGetProperty("extension", out var extensions) && extensions.GetArrayLength() > 0)
+                {
+                    foreach (var ext in extensions.EnumerateArray())
+                    {
+                        if (ext.TryGetProperty("url", out var url) && ext.TryGetProperty("valueString", out var valStr))
+                        {
+                            var urlStr = url.GetString() ?? "";
+                            var valStrVal = valStr.GetString() ?? "";
+                            
+                            if (urlStr.Contains("nationalId", StringComparison.OrdinalIgnoreCase))
+                                info.NationalId = valStrVal;
+                            else if (urlStr.Contains("insuranceCompany", StringComparison.OrdinalIgnoreCase))
+                                info.InsuranceCompany = valStrVal;
+                            else if (urlStr.Contains("insuranceId", StringComparison.OrdinalIgnoreCase))
+                                info.InsuranceId = valStrVal;
+                            else if (urlStr.Contains("policyNumber", StringComparison.OrdinalIgnoreCase))
+                                info.InsurancePolicyNumber = valStrVal;
+                            else if (urlStr.Contains("emergencyContactName", StringComparison.OrdinalIgnoreCase))
+                                info.EmergencyContactName = valStrVal;
+                            else if (urlStr.Contains("emergencyContactPhone", StringComparison.OrdinalIgnoreCase))
+                                info.EmergencyContactPhone = valStrVal;
+                            else if (urlStr.Contains("emergencyContactRelation", StringComparison.OrdinalIgnoreCase))
+                                info.EmergencyContactRelation = valStrVal;
+                        }
+                    }
+                }
+
+                // Also try to extract from resource properties (if passed as direct properties)
+                if (root.TryGetProperty("nationalId", out var natId))
+                    info.NationalId = natId.GetString() ?? "";
+                
+                if (root.TryGetProperty("insuranceCompany", out var insCo))
+                    info.InsuranceCompany = insCo.GetString() ?? "";
+                
+                if (root.TryGetProperty("insuranceId", out var insId))
+                    info.InsuranceId = insId.GetString() ?? "";
+                
+                if (root.TryGetProperty("insurancePolicyNumber", out var polNum))
+                    info.InsurancePolicyNumber = polNum.GetString() ?? "";
+                
+                if (root.TryGetProperty("emergencyContactName", out var ecName))
+                    info.EmergencyContactName = ecName.GetString() ?? "";
+                
+                if (root.TryGetProperty("emergencyContactPhone", out var ecPhone))
+                    info.EmergencyContactPhone = ecPhone.GetString() ?? "";
+                
+                if (root.TryGetProperty("emergencyContactRelation", out var ecRel))
+                    info.EmergencyContactRelation = ecRel.GetString() ?? "";
+
+                // Log extracted fields
+                _logger?.LogInformation(
+                    "[ParsePatient] Extracted EMR fields: NationalId={NationalId}, InsuranceCompany={InsuranceCompany}, InsuranceId={InsuranceId}, EmergencyContact={EmergencyContact}",
+                    info.NationalId, info.InsuranceCompany, info.InsuranceId, info.EmergencyContactName);
             }
             catch (Exception ex)
             {

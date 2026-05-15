@@ -21,20 +21,31 @@ builder.Logging.AddSimpleConsole(options =>
 builder.Logging.AddDebug();
 builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
+// ✅ Use SQLite with proper configuration
 builder.Services.AddDbContext<RadiologyDbContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqliteOptions => sqliteOptions.MigrationsAssembly("RadiologyCenterAPI")));
 
+// Core services
 builder.Services.AddScoped<IFhirMappingService, FhirMappingService>();
 builder.Services.AddScoped<IHl7Service, Hl7Service>();
 builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<IPatientIdentifierService, PatientIdentifierService>();
+
+// Appointment approval workflow services
+builder.Services.AddScoped<IAppointmentApprovalService, AppointmentApprovalService>();
+builder.Services.AddScoped<IInvestigationWorkflowService, InvestigationWorkflowService>();
+builder.Services.AddScoped<IStatusSynchronizationService, StatusSynchronizationService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// CORS — allow all origins for development, including 5173, 5174, etc.
+// CORS — allow all origins for development
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -49,12 +60,13 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// STARTUP BANNER — Shows Radiology + FHIR/HL7 Integration
+// STARTUP BANNER
 // ═══════════════════════════════════════════════════════════════════════════════
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
 logger.LogInformation("\n" + new string('═', 80));
 logger.LogInformation("  RADIOLOGY CENTER FHIR/HL7 SERVICE STARTING");
 logger.LogInformation("  Environment: {Environment}", app.Environment.EnvironmentName);
+logger.LogInformation("  Using: SQLite Database");
 logger.LogInformation("  FHIR Segments will be logged to console below");
 logger.LogInformation("  Look for: [PID], [SCH], [OBX], [ORM^O01], [ACK^O01]");
 logger.LogInformation(new string('═', 80) + "\n");
@@ -65,18 +77,27 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// CORS must come BEFORE Authorization
 app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
 
-// Auto-create DB
+// Auto-create DB with SQLite
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<RadiologyDbContext>();
-    db.Database.EnsureCreated();
+    
+    try
+    {
+        // Ensure the database is created
+        db.Database.EnsureCreated();
+        logger.LogInformation("✓ SQLite database created at: RadiologyCenter.db");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Failed to create database");
+    }
 
-    // Seed a development admin account if it doesn't exist
+    // Seed admin user
     try
     {
         if (!db.AdminUsers.Any(u => u.Email == "yassmin@admin.com"))
@@ -89,12 +110,12 @@ using (var scope = app.Services.CreateScope())
                 CreatedAt = DateTime.UtcNow
             });
             db.SaveChanges();
-            logger.LogInformation("Seeded admin user: yassmin@admin.com (password: 2392005)");
+            logger.LogInformation("✓ Seeded admin user: yassmin@admin.com (password: 2392005)");
         }
     }
     catch (Exception ex)
     {
-        logger.LogWarning(ex, "Failed to seed admin user");
+        logger.LogWarning(ex, "⚠ Failed to seed admin user");
     }
 }
 

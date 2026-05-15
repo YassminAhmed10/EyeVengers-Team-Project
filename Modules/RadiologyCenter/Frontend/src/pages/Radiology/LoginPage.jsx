@@ -1,364 +1,226 @@
 // src/pages/Radiology/LoginPage.jsx
-import { motion } from "framer-motion";
-import { useState } from "react";
-import {
-  FaEnvelope, FaLock, FaEye, FaEyeSlash,
-  FaArrowRight, FaHospitalUser, FaMobileAlt, FaIdCard
-} from "react-icons/fa";
-import loginBg from "../../assets/register.png";
-import { loginUser } from "../../firebase/auth";
+// No Firebase — simple local auth with backend API fallback
 
-const RADIOLOGY_BASE = import.meta.env.VITE_RADIOLOGY_BASE_URL || (import.meta.env.VITE_RADIOLOGY_API_URL ? import.meta.env.VITE_RADIOLOGY_API_URL.replace(/\/fhir.*$/i, "") : undefined) || "http://localhost:5301";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaArrowRight, FaHospitalUser } from "react-icons/fa";
+import loginBg from "../../assets/register.png";
+
+const RADIOLOGY_BASE = import.meta.env.VITE_RADIOLOGY_BASE_URL || "http://localhost:5301";
 const API_URL = RADIOLOGY_BASE.endsWith("/api") ? RADIOLOGY_BASE : `${RADIOLOGY_BASE}/api`;
+
+// Generate RAD- patient ID and persist it
+function getOrCreateRadId() {
+  const stored = localStorage.getItem("radiologyPatientId");
+  if (stored && stored.startsWith("RAD-")) return stored;
+  const id = `RAD-${Math.floor(1000 + Math.random() * 9000)}`;
+  localStorage.setItem("radiologyPatientId", id);
+  return id;
+}
 
 export default function LoginPage({ setPage, onLogin, showSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
-  const [loginMethod, setLoginMethod] = useState("email");
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ email: "", phone: "", patientId: "", password: "" });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
+  const change = (e) => {
+    setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+    setErrors(prev => ({ ...prev, [e.target.name]: "" }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const newErrors = {};
-    if (loginMethod === "email" && !formData.email) newErrors.email = "Email is required";
-    else if (loginMethod === "phone" && !formData.phone) newErrors.phone = "Phone number is required";
-    else if (loginMethod === "patientId" && !formData.patientId) newErrors.patientId = "Patient ID is required";
-    if (!formData.password) newErrors.password = "Password is required";
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
+  const validate = () => {
+    const e = {};
+    if (!form.email)    e.email    = "Email is required";
+    if (!form.password) e.password = "Password is required";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
 
-    if (loginMethod !== "email") {
-      setErrors({ [loginMethod]: "Only email login is supported currently" });
+  const handleSubmit = async (ev) => {
+    ev.preventDefault();
+    if (!validate()) return;
+    setLoading(true);
+
+    // ── 1. Try admin login ─────────────────────────────────────────────────
+    try {
+      const res = await fetch(`${API_URL}/adminauth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email, password: form.password }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.success) {
+          localStorage.setItem("radiologyAdminLoggedIn", "true");
+          localStorage.setItem("radiologyAdminEmail", data.email || form.email);
+          setLoading(false);
+          setPage("admin-dashboard");
+          return;
+        }
+      }
+    } catch { /* backend down */ }
+
+    // Hardcoded admin fallback (dev only)
+    const ADMIN_ACCOUNTS = [
+      { email: "yassmin@admin.com", password: "2392005" },
+      { email: "admin@radiology.com", password: "admin123" },
+    ];
+    if (ADMIN_ACCOUNTS.some(a => a.email === form.email && a.password === form.password)) {
+      localStorage.setItem("radiologyAdminLoggedIn", "true");
+      localStorage.setItem("radiologyAdminEmail", form.email);
+      setLoading(false);
+      setPage("admin-dashboard");
       return;
     }
 
-    setLoading(true);
-
-    // Try admin login first (development-only simple auth)
+    // ── 2. Try patient login from backend ─────────────────────────────────
     try {
-      const adminResp = await fetch(`${API_URL}/adminauth/login`, {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email, password: formData.password }),
+        body: JSON.stringify({ email: form.email, password: form.password }),
       });
-      if (adminResp.ok) {
-        const adminData = await adminResp.json();
-        if (adminData && adminData.success) {
-          localStorage.setItem("radiologyAdminLoggedIn", "true");
-          localStorage.setItem("radiologyAdminEmail", adminData.email || formData.email);
-          localStorage.setItem("radiologyAdminRole", adminData.role || "admin");
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.token || data?.success) {
+          const radId = data.radiologyPatientId || getOrCreateRadId();
+          const name  = data.name || data.displayName || form.email.split("@")[0];
+          persistPatient({ name, email: form.email, radId, token: data.token || "" });
+          onLogin({ name, email: form.email });
+          showSuccess?.("Welcome back!", "home");
           setLoading(false);
-          setPage("admin-dashboard");
-          return;
-        }
-      } else {
-        // If backend returned non-ok (e.g., 404/500), allow a development fallback
-        if (formData.email === "yassmin@admin.com" && formData.password === "2392005") {
-          localStorage.setItem("radiologyAdminLoggedIn", "true");
-          localStorage.setItem("radiologyAdminEmail", "yassmin@admin.com");
-          localStorage.setItem("radiologyAdminRole", "admin");
-          setLoading(false);
-          setPage("admin-dashboard");
           return;
         }
       }
-    } catch (err) {
-      console.warn("Admin auth attempt failed:", err);
-      // Backend unreachable — allow local seeded admin credentials for development convenience
-      if (formData.email === "yassmin@admin.com" && formData.password === "2392005") {
-        localStorage.setItem("radiologyAdminLoggedIn", "true");
-        localStorage.setItem("radiologyAdminEmail", "yassmin@admin.com");
-        localStorage.setItem("radiologyAdminRole", "admin");
-        setLoading(false);
-        setPage("admin-dashboard");
-        return;
-      }
-    }
+    } catch { /* backend down */ }
 
-    // Fallback to patient (Firebase) login
-    try {
-      const result = await loginUser(formData.email, formData.password);
-      if (result.success) {
-        const firstName = result.userData?.firstName || (result.user.displayName ? result.user.displayName.split(" ")[0] : "");
-        const lastName  = result.userData?.lastName  || (result.user.displayName ? result.user.displayName.split(" ")[1] : "");
-        const fullName  = (firstName || lastName) ? `${firstName} ${lastName}`.trim() : (result.user.displayName || (result.user.email ? result.user.email.split("@")[0] : ""));
-        const uid = result.user.uid;
-
-        // Store tokens and user info consistently
-        localStorage.setItem("authToken", result.token || "");
-        localStorage.setItem("firebaseToken", result.token || "");
-        localStorage.setItem("userRole", result.userData?.role || "patient");
-        localStorage.setItem("userName", fullName);
-        localStorage.setItem("userEmail", result.user.email || formData.email);
-        localStorage.setItem("userId", uid || "");
-        localStorage.setItem("radiologyPatientName", fullName);
-        localStorage.setItem("radiologyPatientFirstName", firstName || "");
-        localStorage.setItem("radiologyPatientLastName", lastName || "");
-        localStorage.setItem("radiologyPatientId", uid || "");
-        localStorage.setItem("radiologyPatientEmail", result.user.email || formData.email);
-        
-        // Store additional patient info if available
-        if (result.userData?.phone) {
-          localStorage.setItem("radiologyPatientPhone", result.userData.phone);
-          localStorage.setItem("userPhone", result.userData.phone);
-        }
-        if (result.userData?.gender) {
-          localStorage.setItem("radiologyPatientGender", result.userData.gender);
-        }
-        if (result.userData?.birthDate) {
-          localStorage.setItem("patientDateOfBirth", result.userData.birthDate);
-        }
-
-        window.dispatchEvent(new Event("userDataUpdated"));
-        onLogin({ name: fullName, firstName: firstName, lastName: lastName, id: uid, email: result.user.email });
-        showSuccess("Welcome Back!", "home");
-      } else {
-        // Map firebase errors to fields
-        if (result.code === "auth/user-not-found" || result.code === "auth/invalid-credential") {
-          setErrors({ email: result.error });
-        } else if (result.code === "auth/wrong-password") {
-          setErrors({ password: result.error });
-        } else if (result.code === "auth/too-many-requests") {
-          setErrors({ password: result.error });
-        } else {
-          setErrors({ password: result.error });
-        }
-      }
-    } catch (err) {
-      console.error("Login error:", err);
-      setErrors({ password: "Login failed" });
-    } finally {
+    // ── 3. Local patient account (stored on register) ─────────────────────
+    const localAccounts = JSON.parse(localStorage.getItem("localPatientAccounts") || "[]");
+    const match = localAccounts.find(a => a.email === form.email && a.password === form.password);
+    if (match) {
+      persistPatient({ name: match.name, email: match.email, radId: match.radId, token: "" });
+      onLogin({ name: match.name, email: match.email });
+      showSuccess?.("Welcome back!", "home");
       setLoading(false);
+      return;
     }
+
+    // ── 4. Fail ───────────────────────────────────────────────────────────
+    setErrors({ password: "Invalid email or password. Please try again." });
+    setLoading(false);
   };
 
-  const fadeRight = { 
-    hidden: { opacity: 0, x: 50 }, 
-    visible: { opacity: 1, x: 0, transition: { duration: 0.6, delay: 0.2 } } 
+  const persistPatient = ({ name, email, radId, token }) => {
+    localStorage.setItem("radiologyPatientName", name);
+    localStorage.setItem("radiologyPatientEmail", email);
+    localStorage.setItem("userEmail", email);
+    localStorage.setItem("radiologyPatientId", radId);
+    if (token) localStorage.setItem("authToken", token);
+    window.dispatchEvent(new Event("userDataUpdated"));
   };
 
-  const loginMethods = [
-    { id: "email",     label: "Email",      icon: <FaEnvelope />,  placeholder: "your@email.com"    },
-    { id: "phone",     label: "Phone",      icon: <FaMobileAlt />, placeholder: "+20 123 456 7890"  },
-    { id: "patientId", label: "Patient ID", icon: <FaIdCard />,    placeholder: "PAT-2024-XXXX"     },
-  ];
+  const handleGuest = () => {
+    const radId = getOrCreateRadId();
+    persistPatient({ name: "Guest User", email: "", radId, token: "" });
+    onLogin({ name: "Guest User", email: "" });
+    setPage("home");
+  };
 
   return (
-    <div style={{ 
-      minHeight: "100vh", 
-      display: "flex", 
-      alignItems: "center", 
-      justifyContent: "center",
-      backgroundImage: `url(${loginBg})`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-      backgroundRepeat: "no-repeat",
-      position: "relative",
-    }}>
-      {/* Dark overlay */}
-      <div style={{ 
-        position: "absolute", 
-        inset: 0, 
-        background: "linear-gradient(135deg, rgba(11,26,52,0.7), rgba(31,107,255,0.5))" 
-      }} />
+    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center",
+      backgroundImage:`url(${loginBg})`, backgroundSize:"cover", backgroundPosition:"center", position:"relative" }}>
+      <div style={{ position:"absolute", inset:0, background:"linear-gradient(135deg,rgba(11,26,52,0.7),rgba(31,107,255,0.5))" }}/>
 
-      {/* Form Card - Centered on top of image */}
-      <motion.div 
-        initial="hidden" 
-        animate="visible" 
-        variants={fadeRight} 
-        style={{
-          width: "100%",
-          maxWidth: 480,
-          background: "white",
-          borderRadius: 24,
-          boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
-          overflow: "hidden",
-          position: "relative",
-          zIndex: 2,
-          margin: "20px",
-        }}
-      >
-        <div style={{ padding: "48px 40px" }}>
-          <div style={{ marginBottom: 32, textAlign: "center" }}>
-            <h2 style={{ fontSize: 28, fontWeight: 800, color: "#0b1a34", marginBottom: 8, fontFamily: "'Outfit', sans-serif" }}>
-              Welcome Back
-            </h2>
-            <p style={{ fontSize: 14, color: "#6f86a3" }}>
-              Sign in to access your medical records and results
-            </p>
-          </div>
+      <motion.div initial={{ opacity:0, y:30 }} animate={{ opacity:1, y:0 }}
+        style={{ width:"100%", maxWidth:480, background:"white", borderRadius:24,
+          boxShadow:"0 20px 60px rgba(0,0,0,0.3)", overflow:"hidden",
+          position:"relative", zIndex:2, margin:"20px" }}>
+        <div style={{ padding:"48px 40px" }}>
 
-          {/* Login method tabs */}
-          <div style={{ display: "flex", gap: 10, background: "#f8fafc", padding: 6, borderRadius: 60, marginBottom: 28 }}>
-            {loginMethods.map((method) => (
-              <motion.button 
-                key={method.id} 
-                whileHover={{ scale: 1.02 }} 
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setLoginMethod(method.id)}
-                style={{
-                  flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  padding: "10px 12px",
-                  background: loginMethod === method.id ? "linear-gradient(135deg, #1f6bff, #00b8a8)" : "transparent",
-                  color: loginMethod === method.id ? "white" : "#6f86a3",
-                  border: "none", borderRadius: 50, fontSize: 12, fontWeight: 600,
-                  cursor: "pointer", transition: "all 0.2s ease",
-                }}>
-                {method.icon}{method.label}
-              </motion.button>
-            ))}
+          <div style={{ marginBottom:32, textAlign:"center" }}>
+            <h2 style={{ fontSize:28, fontWeight:800, color:"#0b1a34", marginBottom:8 }}>Welcome Back</h2>
+            <p style={{ fontSize:14, color:"#6f86a3" }}>Sign in to access your radiology records</p>
           </div>
 
           <form onSubmit={handleSubmit}>
-            {/* Identifier field */}
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#0b1a34", marginBottom: 8 }}>
-                {loginMethod === "email" ? "Email Address" : loginMethod === "phone" ? "Phone Number" : "Patient ID"}
-              </label>
-              <div style={{ position: "relative" }}>
-                <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#adb5bd" }}>
-                  {loginMethod === "email" ? <FaEnvelope size={16} /> : loginMethod === "phone" ? <FaMobileAlt size={16} /> : <FaIdCard size={16} />}
-                </div>
-                <input 
-                  type={loginMethod === "email" ? "email" : "text"}
-                  name={loginMethod} 
-                  value={formData[loginMethod]} 
-                  onChange={handleChange}
-                  style={{ 
-                    width: "100%", padding: "12px 16px 12px 42px", 
-                    border: `2px solid ${errors[loginMethod] ? "#dc3545" : "#e0e0e0"}`, 
-                    borderRadius: 12, fontSize: 14, outline: "none", 
-                    transition: "all 0.2s ease", boxSizing: "border-box" 
-                  }}
-                  placeholder={loginMethods.find(m => m.id === loginMethod).placeholder}
-                  onFocus={(e) => e.target.style.borderColor = "#1f6bff"}
-                  onBlur={(e) => { if (!errors[loginMethod]) e.target.style.borderColor = "#e0e0e0"; }}
-                />
+            {/* Email */}
+            <div style={{ marginBottom:20 }}>
+              <label style={{ display:"block", fontSize:13, fontWeight:600, color:"#0b1a34", marginBottom:8 }}>Email Address</label>
+              <div style={{ position:"relative" }}>
+                <FaEnvelope style={{ position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", color:"#adb5bd" }} size={16}/>
+                <input type="email" name="email" value={form.email} onChange={change}
+                  placeholder="you@email.com"
+                  style={{ width:"100%", padding:"12px 16px 12px 42px",
+                    border:`2px solid ${errors.email?"#dc3545":"#e0e0e0"}`,
+                    borderRadius:12, fontSize:14, outline:"none", boxSizing:"border-box" }}
+                  onFocus={e=>e.target.style.borderColor="#1f6bff"}
+                  onBlur={e=>{ if(!errors.email) e.target.style.borderColor="#e0e0e0"; }}/>
               </div>
-              {errors[loginMethod] && <span style={{ fontSize: 11, color: "#dc3545", marginTop: 6, display: "block" }}>{errors[loginMethod]}</span>}
+              {errors.email && <span style={{ fontSize:11, color:"#dc3545", marginTop:4, display:"block" }}>{errors.email}</span>}
             </div>
 
-            {/* Password field */}
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#0b1a34", marginBottom: 8 }}>Password</label>
-              <div style={{ position: "relative" }}>
-                <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#adb5bd" }}>
-                  <FaLock size={16} />
-                </div>
-                <input 
-                  type={showPassword ? "text" : "password"}
-                  name="password" 
-                  value={formData.password} 
-                  onChange={handleChange}
-                  style={{ 
-                    width: "100%", padding: "12px 45px 12px 42px", 
-                    border: `2px solid ${errors.password ? "#dc3545" : "#e0e0e0"}`, 
-                    borderRadius: 12, fontSize: 14, outline: "none", 
-                    transition: "all 0.2s ease", boxSizing: "border-box" 
-                  }}
+            {/* Password */}
+            <div style={{ marginBottom:24 }}>
+              <label style={{ display:"block", fontSize:13, fontWeight:600, color:"#0b1a34", marginBottom:8 }}>Password</label>
+              <div style={{ position:"relative" }}>
+                <FaLock style={{ position:"absolute", left:14, top:"50%", transform:"translateY(-50%)", color:"#adb5bd" }} size={16}/>
+                <input type={showPassword?"text":"password"} name="password" value={form.password} onChange={change}
                   placeholder="Enter your password"
-                  onFocus={(e) => e.target.style.borderColor = "#1f6bff"}
-                  onBlur={(e) => { if (!errors.password) e.target.style.borderColor = "#e0e0e0"; }}
-                />
-                <button 
-                  type="button" 
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{ 
-                    position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", 
-                    background: "none", border: "none", cursor: "pointer", color: "#adb5bd" 
-                  }}>
-                  {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                  style={{ width:"100%", padding:"12px 45px 12px 42px",
+                    border:`2px solid ${errors.password?"#dc3545":"#e0e0e0"}`,
+                    borderRadius:12, fontSize:14, outline:"none", boxSizing:"border-box" }}
+                  onFocus={e=>e.target.style.borderColor="#1f6bff"}
+                  onBlur={e=>{ if(!errors.password) e.target.style.borderColor="#e0e0e0"; }}/>
+                <button type="button" onClick={()=>setShowPassword(!showPassword)}
+                  style={{ position:"absolute", right:14, top:"50%", transform:"translateY(-50%)",
+                    background:"none", border:"none", cursor:"pointer", color:"#adb5bd" }}>
+                  {showPassword ? <FaEyeSlash size={16}/> : <FaEye size={16}/>}
                 </button>
               </div>
-              {errors.password && <span style={{ fontSize: 11, color: "#dc3545", marginTop: 6, display: "block" }}>{errors.password}</span>}
+              {errors.password && <span style={{ fontSize:11, color:"#dc3545", marginTop:4, display:"block" }}>{errors.password}</span>}
             </div>
 
-            {/* Forgot password */}
-            <div style={{ textAlign: "right", marginBottom: 28 }}>
-              <motion.a 
-                whileHover={{ color: "#1f6bff" }}
-                onClick={() => alert("Password reset link sent to your email")}
-                style={{ fontSize: 12, color: "#6f86a3", cursor: "pointer", textDecoration: "none" }}>
-                Forgot Password?
-              </motion.a>
-            </div>
-
-            {/* Sign In button */}
-            <motion.button 
-              type="submit"
-              whileHover={!loading ? { scale: 1.02, y: -2 } : {}}
-              whileTap={!loading ? { scale: 0.98 } : {}}
-              disabled={loading}
-              style={{
-                width: "100%", padding: "14px",
-                background: loading ? "#a0b4d6" : "linear-gradient(135deg, #1f6bff, #00b8a8)",
-                color: "white", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 700,
-                cursor: loading ? "not-allowed" : "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                gap: 10, marginBottom: 20, transition: "all 0.3s ease",
-              }}>
-              {loading ? (
-                <>
-                  <span style={{ width: 18, height: 18, border: "2px solid rgba(255,255,255,0.4)", borderTop: "2px solid white", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }} />
-                  Signing In...
-                </>
-              ) : (<>Sign In <FaArrowRight size={14} /></>)}
+            {/* Submit */}
+            <motion.button type="submit" disabled={loading}
+              whileHover={!loading?{scale:1.02,y:-2}:{}} whileTap={!loading?{scale:0.98}:{}}
+              style={{ width:"100%", padding:"14px",
+                background:loading?"#a0b4d6":"linear-gradient(135deg,#1f6bff,#00b8a8)",
+                color:"white", border:"none", borderRadius:12, fontSize:15, fontWeight:700,
+                cursor:loading?"not-allowed":"pointer", display:"flex", alignItems:"center",
+                justifyContent:"center", gap:10, marginBottom:16 }}>
+              {loading ? "Signing in…" : <><span>Sign In</span><FaArrowRight size={14}/></>}
             </motion.button>
 
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-
-            {/* OR divider */}
-            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
-              <div style={{ flex: 1, height: 1, background: "#e0e0e0" }} />
-              <span style={{ fontSize: 12, color: "#adb5bd" }}>OR</span>
-              <div style={{ flex: 1, height: 1, background: "#e0e0e0" }} />
+            {/* Divider */}
+            <div style={{ display:"flex", alignItems:"center", gap:16, marginBottom:16 }}>
+              <div style={{ flex:1, height:1, background:"#e0e0e0" }}/>
+              <span style={{ fontSize:12, color:"#adb5bd" }}>OR</span>
+              <div style={{ flex:1, height:1, background:"#e0e0e0" }}/>
             </div>
 
-            {/* Guest button */}
-            <motion.button 
-              whileHover={{ scale: 1.02 }} 
-              whileTap={{ scale: 0.98 }} 
-              type="button"
-              onClick={() => {
-                localStorage.setItem("radiologyPatientName", "Guest User");
-                localStorage.setItem("radiologyPatientId", "guest");
-                window.dispatchEvent(new Event("userDataUpdated"));
-                onLogin({ name: "Guest User", id: "guest", email: "" });
-                setPage("results");
-              }}
-              style={{
-                width: "100%", padding: "14px", background: "white", color: "#1f6bff",
-                border: "2px solid #1f6bff", borderRadius: 12, fontSize: 15, fontWeight: 700,
-                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                gap: 10, marginBottom: 20, transition: "all 0.3s ease",
-              }}>
-              <FaHospitalUser size={16} />
-              Continue as Guest
+            {/* Guest */}
+            <motion.button type="button" onClick={handleGuest}
+              whileHover={{scale:1.02}} whileTap={{scale:0.98}}
+              style={{ width:"100%", padding:"14px", background:"white", color:"#1f6bff",
+                border:"2px solid #1f6bff", borderRadius:12, fontSize:15, fontWeight:700,
+                cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center",
+                gap:10, marginBottom:20 }}>
+              <FaHospitalUser size={16}/> Continue as Guest
             </motion.button>
 
             {/* Register link */}
-            <div style={{ textAlign: "center" }}>
-              <span style={{ fontSize: 13, color: "#6f86a3" }}>Don't have an account? </span>
-              <motion.a 
-                whileHover={{ color: "#1f6bff" }} 
-                onClick={() => setPage("register")}
-                style={{ color: "#1f6bff", fontWeight: 600, fontSize: 13, cursor: "pointer", textDecoration: "none" }}>
+            <div style={{ textAlign:"center" }}>
+              <span style={{ fontSize:13, color:"#6f86a3" }}>Don't have an account? </span>
+              <span onClick={()=>setPage("register")}
+                style={{ color:"#1f6bff", fontWeight:600, fontSize:13, cursor:"pointer" }}>
                 Create Account
-              </motion.a>
+              </span>
             </div>
           </form>
 
-          {/* Footer */}
-          <div style={{ marginTop: 32, paddingTop: 20, borderTop: "1px solid #e0e0e0", textAlign: "center" }}>
-            <p style={{ fontSize: 11, color: "#adb5bd" }}>Secured by Nile Radiology Center • HIPAA Compliant</p>
+          <div style={{ marginTop:28, paddingTop:20, borderTop:"1px solid #e0e0e0", textAlign:"center" }}>
+            <p style={{ fontSize:11, color:"#adb5bd" }}>Nile Radiology Center • Secured</p>
           </div>
         </div>
       </motion.div>

@@ -18,14 +18,13 @@ namespace RadiologyCenterAPI.Data
         public DbSet<RadiologyReport> RadiologyReports { get; set; }
         public DbSet<RadiologyResult> RadiologyResults { get; set; }
         public DbSet<Notification> Notifications { get; set; }
-        public DbSet<Models.AdminUser> AdminUsers { get; set; }
+        public DbSet<AdminUser> AdminUsers { get; set; }
         public DbSet<PatientStats> PatientStats { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure Patient
             modelBuilder.Entity<Patient>(entity =>
             {
                 entity.HasIndex(e => e.Identifier).IsUnique();
@@ -37,23 +36,21 @@ namespace RadiologyCenterAPI.Data
                 entity.Property(e => e.Email).HasMaxLength(100);
             });
 
-            // Configure RadiologyService
             modelBuilder.Entity<RadiologyService>(entity =>
             {
                 entity.HasIndex(e => e.Code).IsUnique();
                 entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Display).IsRequired().HasMaxLength(200);
                 entity.Property(e => e.Modality).HasMaxLength(50);
+                entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
             });
 
-            // Configure Slot
             modelBuilder.Entity<Slot>(entity =>
             {
                 entity.HasIndex(e => new { e.RadiologyServiceId, e.Start });
                 entity.Property(e => e.Status).HasMaxLength(20);
             });
 
-            // Configure Appointment
             modelBuilder.Entity<Appointment>(entity =>
             {
                 entity.HasIndex(e => e.PatientId);
@@ -63,19 +60,10 @@ namespace RadiologyCenterAPI.Data
                 entity.Property(e => e.Status).HasMaxLength(50);
                 entity.Property(e => e.Priority).HasMaxLength(20);
                 entity.Property(e => e.ConfirmationId).HasMaxLength(100);
+                entity.Property(e => e.InvestigationStatus).HasMaxLength(50);
             });
 
-            // Configure RadiologyReport
-            modelBuilder.Entity<RadiologyReport>(entity =>
-            {
-                entity.HasIndex(e => e.AppointmentId);
-                entity.Property(e => e.ReportText).HasColumnType("nvarchar(max)");
-                entity.Property(e => e.Findings).HasColumnType("nvarchar(max)");
-                entity.Property(e => e.Conclusion).HasColumnType("nvarchar(max)");
-            });
-
-            // Configure AdminUser (simple development admin account)
-            modelBuilder.Entity<Models.AdminUser>(entity =>
+            modelBuilder.Entity<AdminUser>(entity =>
             {
                 entity.HasIndex(e => e.Email).IsUnique();
                 entity.Property(e => e.Email).IsRequired().HasMaxLength(200);

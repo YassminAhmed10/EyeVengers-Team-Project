@@ -19,9 +19,6 @@ namespace EyeClinicAPI.Controllers
             _logger = logger;
         }
 
-        /// <summary>
-        /// Get all available radiology services from Radiology Center
-        /// </summary>
         [HttpGet("services")]
         public async Task<IActionResult> GetServices()
         {
@@ -42,9 +39,6 @@ namespace EyeClinicAPI.Controllers
             }
         }
 
-        /// <summary>
-        /// Get available slots for a service on a specific date
-        /// </summary>
         [HttpGet("slots")]
         public async Task<IActionResult> GetAvailableSlots([FromQuery] string service, [FromQuery] string date)
         {
@@ -70,9 +64,6 @@ namespace EyeClinicAPI.Controllers
             }
         }
 
-        /// <summary>
-        /// Book a radiology appointment
-        /// </summary>
         [HttpPost("book")]
         public async Task<IActionResult> BookAppointment([FromBody] BookRadiologyAppointmentRequest request)
         {
@@ -103,9 +94,6 @@ namespace EyeClinicAPI.Controllers
             }
         }
 
-        /// <summary>
-        /// Get appointment status
-        /// </summary>
         [HttpGet("appointments/{appointmentId}")]
         public async Task<IActionResult> GetAppointmentStatus(int appointmentId)
         {
@@ -130,9 +118,6 @@ namespace EyeClinicAPI.Controllers
             }
         }
 
-        /// <summary>
-        /// Cancel a booked appointment
-        /// </summary>
         [HttpPost("appointments/{appointmentId}/cancel")]
         public async Task<IActionResult> CancelAppointment(int appointmentId)
         {
@@ -158,9 +143,6 @@ namespace EyeClinicAPI.Controllers
         }
     }
 
-    /// <summary>
-    /// Request DTO for booking a radiology appointment from the clinic system
-    /// </summary>
     public class BookRadiologyAppointmentRequest
     {
         public int OrderId { get; set; }
@@ -169,5 +151,13 @@ namespace EyeClinicAPI.Controllers
         public string? ServiceCode { get; set; }
         public string? ServiceDisplay { get; set; }
         public string Priority { get; set; } = "routine";
+        public string? PatientId { get; set; }
+        public string? PatientName { get; set; }
+        public string? PatientPhone { get; set; }
+        public string? PatientEmail { get; set; }
+        public string? PatientGender { get; set; }
+        public string? PatientDateOfBirth { get; set; }
+        public string? PatientNationalId { get; set; }
+        public string? PatientAddress { get; set; }
     }
 }

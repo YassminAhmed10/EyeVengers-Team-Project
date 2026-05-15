@@ -1,6 +1,6 @@
+// src/pages/Radiology/ServicesPage.jsx
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
 
 // Import local images
 import mriImage from "../../assets/MRI-1-768x576.jpg";
@@ -47,7 +47,7 @@ const SERVICES_DATA = {
       features: ["Instant digital results", "Low radiation dose", "Bone & chest imaging", "Portable options available"],
     },
     {
-      id: 11,
+      id: 10,
       name: "Specular Microscopy",
       specialty: "Endothelial Cell Count",
       desc: "Evaluate corneal endothelial cell health and density. Critical for cataract surgery planning and corneal health assessment.",
@@ -150,7 +150,7 @@ const SERVICES_DATA = {
       features: ["Posterior segment", "Retinal detachment", "Tumor assessment", "Foreign body detection"],
     },
     {
-      id: 10,
+      id: 11,
       name: "Corneal Topography",
       specialty: "Corneal Mapping",
       desc: "3D map of corneal surface for diagnosing keratoconus, planning refractive surgery, and fitting contact lenses.",
@@ -230,7 +230,7 @@ const SERVICES_DATA = {
       features: ["نتائج فورية", "جرعة منخفضة", "العظام والصدر", "أجهزة محمولة"],
     },
     {
-      id: 11,
+      id: 10,
       name: "ميكروسكوب الخلايا",
       specialty: "خلية البطانة",
       desc: "تقييم صحة الخلايا البطانية للقرنية وكثافتها قبل جراحات المياه البيضاء.",
@@ -330,7 +330,7 @@ const SERVICES_DATA = {
       features: ["القطاع الخلفي", "انفصال الشبكية", "تقييم الأورام", "كشف الأجسام الغريبة"],
     },
     {
-      id: 10,
+      id: 11,
       name: "تخطيط القرنية",
       specialty: "خريطة القرنية",
       desc: "تخطيط ثلاثي الأبعاد لسطح القرنية لتشخيص القرنية المخروطية والتخطيط لجراحات الليزك.",
@@ -403,6 +403,19 @@ export default function ServicesPage({ setPage, onSelectService }) {
   const services = SERVICES_DATA[lang];
   const dir = lang === "ar" ? "rtl" : "ltr";
 
+  const persistSelectedService = (service) => {
+    localStorage.setItem('selectedServiceId', service.id);
+    localStorage.setItem('selectedServiceName', service.name);
+    localStorage.setItem('selectedServiceNameAr', service.nameAr || service.name);
+    localStorage.setItem('selectedServiceSpecialty', service.specialty);
+    localStorage.setItem('selectedServiceRange', service.range);
+    localStorage.setItem('selectedServiceColor', service.color);
+    localStorage.setItem('selectedServiceDuration', service.duration);
+    localStorage.setItem('selectedServiceImage', service.image);
+    localStorage.setItem('selectedServiceDesc', service.desc);
+    localStorage.setItem('selectedServiceFeatures', JSON.stringify(service.features || []));
+  };
+
   const content = {
     en: {
       title: "Our Medical Services",
@@ -421,29 +434,22 @@ export default function ServicesPage({ setPage, onSelectService }) {
   };
 
   const t = content[lang];
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
 
   const handleBookNow = (service) => {
+    console.log('[ServicesPage] Booking service:', service);
+    console.log('[ServicesPage] Service image:', service.image);
+    console.log('[ServicesPage] Service color:', service.color);
+    persistSelectedService(service);
+    
+    // Call the onSelectService prop if provided
     if (onSelectService) {
       onSelectService(service);
     }
-    // update URL search params so BookingPage can auto-select the service when opened directly
-    try {
-      setSearchParams({
-        serviceName: service?.name ?? "",
-        serviceId: service?.id ? String(service.id) : "",
-        serviceRange: service?.range ?? ""
-      });
-    } catch (e) {
-      const params = new URLSearchParams();
-      if (service?.name) params.set("serviceName", service.name);
-      if (service?.id) params.set("serviceId", String(service.id));
-      if (service?.range) params.set("serviceRange", service.range);
-      navigate(`?${params.toString()}`, { replace: false });
+    
+    // Also update the page state if setPage is provided
+    if (setPage) {
+      setPage("patient-book-appointment");
     }
-
-    setPage("booking");
   };
 
   const getCategoryColor = (service) => {
@@ -469,7 +475,7 @@ export default function ServicesPage({ setPage, onSelectService }) {
         overflow: "hidden",
       }}>
         <div style={{ width: "100%", margin: 0, padding: "0 80px", position: "relative", zIndex: 2, boxSizing: "border-box" }}>
-            <motion.div
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -520,7 +526,6 @@ export default function ServicesPage({ setPage, onSelectService }) {
                   position: "relative",
                 }}
               >
-                {/* icons removed per UX request */}
                 <img
                   src={service.image}
                   alt={service.name}
@@ -531,16 +536,6 @@ export default function ServicesPage({ setPage, onSelectService }) {
                     transition: "transform 0.5s ease",
                   }}
                 />
-                <div style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  padding: "30px 20px 20px",
-                  background: "linear-gradient(to top, rgba(0,0,0,0.7), transparent)",
-                }}>
-                  {/* price overlay removed — price shown in content area above button */}
-                </div>
               </motion.div>
 
               {/* Content Section */}
@@ -719,7 +714,21 @@ export default function ServicesPage({ setPage, onSelectService }) {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => setPage("booking")}
+          onClick={() => {
+            [
+              'selectedServiceId',
+              'selectedServiceName',
+              'selectedServiceNameAr',
+              'selectedServiceSpecialty',
+              'selectedServiceRange',
+              'selectedServiceColor',
+              'selectedServiceDuration',
+              'selectedServiceImage',
+              'selectedServiceDesc',
+              'selectedServiceFeatures',
+            ].forEach((key) => localStorage.removeItem(key));
+            if (setPage) setPage("patient-book-appointment");
+          }}
           style={{
             background: "white",
             color: "#1f6bff",

@@ -1,12 +1,15 @@
 ﻿using RadiologyCenterAPI.Data;
 using RadiologyCenterAPI.DTOs;
 using RadiologyCenterAPI.Models;
+using System;
+using System.Threading.Tasks;
 
 namespace RadiologyCenterAPI.Services
 {
     public interface IAuditService
     {
         Task LogAsync(AuditLogEntry entry);
+        Task LogActionAsync(string action, string? patientId = null, int? appointmentId = null, string? userId = null, string? hl7MessageId = null, string? details = null);
     }
 
     public class AuditService : IAuditService
@@ -50,6 +53,46 @@ namespace RadiologyCenterAPI.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to write audit log for {Action}", entry.Action);
+            }
+        }
+
+        /// <summary>
+        /// Log an action with simplified parameters
+        /// </summary>
+        public async Task LogActionAsync(
+            string action, 
+            string? patientId = null, 
+            int? appointmentId = null, 
+            string? userId = null, 
+            string? hl7MessageId = null, 
+            string? details = null)
+        {
+            try
+            {
+                var ctx = _httpContextAccessor.HttpContext;
+                var ip = ctx?.Connection?.RemoteIpAddress?.ToString();
+                var contextUserId = userId ?? ctx?.User?.Identity?.Name;
+
+                var auditLog = new AuditLog
+                {
+                    Action = action,
+                    PatientIdentifier = patientId,
+                    AppointmentId = appointmentId,
+                    Hl7MessageId = hl7MessageId,
+                    UserId = contextUserId,
+                    IpAddress = ip,
+                    Timestamp = DateTime.UtcNow,
+                    Details = details
+                };
+
+                _context.AuditLogs.Add(auditLog);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Audit log created: {action} for appointment {appointmentId}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to write audit log for {action}");
             }
         }
     }

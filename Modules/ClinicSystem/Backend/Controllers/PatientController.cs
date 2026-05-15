@@ -1,125 +1,264 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.EntityFrameworkCore;
-using EyeClinicAPI.Data;
-using EyeClinicAPI.Models.EMR;
-using PatientModel = EyeClinicAPI.Models.EMR.Patient;
-using System.Text.Json;
-namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
+using RadiologyCenterAPI.Data;
+using RadiologyCenterAPI.Models;
+
+namespace RadiologyCenterAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [EnableCors("AllowAll")]
     public class PatientController : ControllerBase
     {
-        private readonly EyeClinicDbContext _context;
+        private readonly RadiologyDbContext _db;
         private readonly ILogger<PatientController> _logger;
 
-        public PatientController(EyeClinicDbContext context, ILogger<PatientController> logger)
+        // FIXED: Removed IPatientIdentifierService dependency
+        public PatientController(RadiologyDbContext db, ILogger<PatientController> logger)
         {
-            _context = context;
+            _db = db;
             _logger = logger;
         }
 
-        // GET: api/Patient
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
+        [HttpPost("register")]
+        public async Task<ActionResult<PatientRegistrationResponse>> Register([FromBody] PatientRegistrationRequest req)
         {
-            var patients = await _context.Patients.ToListAsync();
-            return Ok(patients);
-        }
-
-        // GET: api/Patient/5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var patient = await _context.Patients.FindAsync(id);
-            if (patient == null) return NotFound(new { message = "Patient not found" });
-            return Ok(patient);
-        }
-
-        // GET: api/Patient/search?query=email
-        [HttpGet("search")]
-        public async Task<IActionResult> Search([FromQuery] string query)
-        {
-            if (string.IsNullOrWhiteSpace(query))
-                return BadRequest(new { message = "Query is required" });
-
-            var patients = await _context.Patients
-                .Where(p => p.Email.Contains(query) ||
-                            p.FirstName.Contains(query) ||
-                            p.LastName.Contains(query) ||
-                            (p.FirstName + " " + p.LastName).Contains(query))
-                .ToListAsync();
-
-            // ═══════════════════════════════════════════════════════════════════════════════
-            // LOG FHIR PATIENT DATA — Eye Clinic sending to Radiology
-            // ═══════════════════════════════════════════════════════════════════════════════
-            if (patients.Count > 0)
+            try
             {
-                _logger.LogInformation("\n╔════════════════════════════════════════════════════════════════╗");
-                _logger.LogInformation("║ [PID] PATIENT IDENTIFICATION SEGMENT - Outgoing");
-                _logger.LogInformation("║ Direction: → OUT (Eye Clinic → Radiology Center)");
-                _logger.LogInformation("║ Timestamp: {Time:yyyy-MM-dd HH:mm:ss.fff}", DateTime.Now);
-                _logger.LogInformation("║ Query: {Query}", query);
-                _logger.LogInformation("║ Patients Found: {Count}", patients.Count);
-                
-                foreach (var p in patients)
+                if (req == null || string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.FirstName))
                 {
-                    _logger.LogInformation("║ Patient ID: {Id} | Name: {Name}", p.Id, $"{p.FirstName} {p.LastName}");
+                    return BadRequest(new { error = "Email and FirstName are required" });
                 }
+
+                var existing = await _db.Patients.FirstOrDefaultAsync(p => p.Email == req.Email);
+                if (existing != null)
+                {
+                    return BadRequest(new { error = "Patient with this email already exists" });
+                }
+
+                var radId = $"RAD-{new Random().Next(10000, 99999)}";
                 
-                _logger.LogInformation("╚════════════════════════════════════════════════════════════════╝");
-                _logger.LogDebug("║ Payload:\n{Payload}", JsonSerializer.Serialize(patients));
+                while (await _db.Patients.AnyAsync(p => p.Identifier == radId))
+                {
+                    radId = $"RAD-{new Random().Next(10000, 99999)}";
+                }
+
+                var patient = new Patient
+                {
+                    Identifier = radId,
+                    FirstName = req.FirstName,
+                    LastName = req.LastName ?? "",
+                    Email = req.Email,
+                    Phone = req.Phone ?? "",
+                    Gender = req.Gender ?? "",
+                    Address = req.Address ?? "",
+                    NationalId = req.NationalId ?? "",
+                    InsuranceCompany = req.InsuranceCompany ?? "",
+                    InsuranceId = req.InsuranceId ?? "",
+                    InsurancePolicyNumber = req.InsurancePolicyNumber ?? "",
+                    EmergencyContactName = req.EmergencyContactName ?? "",
+                    EmergencyContactPhone = req.EmergencyContactPhone ?? "",
+                    EmergencyContactRelation = req.EmergencyContactRelation ?? "",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _db.Patients.Add(patient);
+                await _db.SaveChangesAsync();
+
+                _logger.LogInformation($"Patient registered: {patient.Email} with ID: {patient.Identifier}");
+
+                return Ok(new PatientRegistrationResponse
+                {
+                    success = true,
+                    message = "Patient registered successfully",
+                    patientId = patient.Id,
+                    identifier = patient.Identifier,
+                    email = patient.Email,
+                    firstName = patient.FirstName,
+                    lastName = patient.LastName,
+                    phone = patient.Phone
+                });
             }
-
-            return Ok(patients);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error registering patient");
+                return StatusCode(500, new { error = "Failed to register patient", details = ex.Message });
+            }
         }
 
-        // GET: api/Patient/by-email/{email}
         [HttpGet("by-email/{email}")]
-        public async Task<IActionResult> GetByEmail(string email)
+        public async Task<ActionResult<PatientDto>> GetByEmail(string email)
         {
-            var patient = await _context.Patients
-                .FirstOrDefaultAsync(p => p.Email == email);
-            if (patient == null) return NotFound(new { message = "Patient not found" });
-            return Ok(patient);
+            try
+            {
+                var patient = await _db.Patients.FirstOrDefaultAsync(p => p.Email == email);
+                if (patient == null)
+                    return NotFound(new { error = "Patient not found" });
+
+                return Ok(MapToDto(patient));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching patient");
+                return StatusCode(500, new { error = "Failed to fetch patient", details = ex.Message });
+            }
         }
 
-        // POST: api/Patient
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] PatientModel patient)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<PatientDto>> GetById(int id)
         {
-            if (patient == null) return BadRequest(new { message = "Patient data is required" });
-            _context.Patients.Add(patient);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetById), new { id = patient.Id }, patient);
+            try
+            {
+                var patient = await _db.Patients.FindAsync(id);
+                if (patient == null)
+                    return NotFound(new { error = "Patient not found" });
+
+                return Ok(MapToDto(patient));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching patient");
+                return StatusCode(500, new { error = "Failed to fetch patient", details = ex.Message });
+            }
         }
 
-        // PUT: api/Patient/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] PatientModel updated)
+        [HttpGet("by-identifier/{identifier}")]
+        public async Task<ActionResult<PatientDto>> GetByIdentifier(string identifier)
         {
-            var patient = await _context.Patients.FindAsync(id);
-            if (patient == null) return NotFound(new { message = "Patient not found" });
+            try
+            {
+                if (string.IsNullOrWhiteSpace(identifier))
+                    return BadRequest(new { error = "Identifier is required" });
 
-            patient.FirstName = updated.FirstName ?? patient.FirstName;
-            patient.LastName = updated.LastName ?? patient.LastName;
-            patient.Email = updated.Email ?? patient.Email;
-            patient.Phone = updated.Phone ?? patient.Phone;
-            patient.Address = updated.Address ?? patient.Address;
+                var patient = await _db.Patients.FirstOrDefaultAsync(p => p.Identifier == identifier);
+                if (patient == null)
+                    return NotFound(new { error = $"Patient with identifier {identifier} not found" });
 
-            await _context.SaveChangesAsync();
-            return Ok(patient);
+                return Ok(MapToDto(patient));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error fetching patient by identifier");
+                return StatusCode(500, new { error = "Failed to fetch patient", details = ex.Message });
+            }
         }
 
-        // DELETE: api/Patient/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        [HttpPut("{id}/phone")]
+        public async Task<ActionResult<PatientDto>> UpdatePhone(int id, [FromBody] UpdatePhoneRequest req)
         {
-            var patient = await _context.Patients.FindAsync(id);
-            if (patient == null) return NotFound(new { message = "Patient not found" });
-            _context.Patients.Remove(patient);
-            await _context.SaveChangesAsync();
-            return Ok(new { message = "Patient deleted" });
+            try
+            {
+                var patient = await _db.Patients.FindAsync(id);
+                if (patient == null)
+                    return NotFound(new { error = "Patient not found" });
+
+                patient.Phone = req.Phone;
+                _db.Patients.Update(patient);
+                await _db.SaveChangesAsync();
+
+                return Ok(MapToDto(patient));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating patient phone");
+                return StatusCode(500, new { error = "Failed to update phone", details = ex.Message });
+            }
         }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<PatientDto>>> GetAllPatients()
+        {
+            try
+            {
+                var patients = await _db.Patients
+                    .OrderByDescending(p => p.CreatedAt)
+                    .ToListAsync();
+
+                return Ok(patients.Select(MapToDto));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching all patients");
+                return StatusCode(500, new { error = "Failed to fetch patients", details = ex.Message });
+            }
+        }
+
+        private PatientDto MapToDto(Patient p)
+        {
+            return new PatientDto
+            {
+                id = p.Id,
+                identifier = p.Identifier,
+                firstName = p.FirstName,
+                lastName = p.LastName,
+                email = p.Email,
+                phone = p.Phone,
+                gender = p.Gender,
+                address = p.Address,
+                birthDate = p.BirthDate?.ToString("yyyy-MM-dd") ?? "",
+                nationalId = p.NationalId ?? "",
+                insuranceCompany = p.InsuranceCompany ?? "",
+                insuranceId = p.InsuranceId ?? "",
+                insurancePolicyNumber = p.InsurancePolicyNumber ?? "",
+                emergencyContactName = p.EmergencyContactName ?? "",
+                emergencyContactPhone = p.EmergencyContactPhone ?? "",
+                emergencyContactRelation = p.EmergencyContactRelation ?? ""
+            };
+        }
+    }
+
+    public class PatientRegistrationRequest
+    {
+        public string FirstName { get; set; } = "";
+        public string? LastName { get; set; }
+        public string Email { get; set; } = "";
+        public string? Phone { get; set; }
+        public string? Gender { get; set; }
+        public string? Address { get; set; }
+        public string? NationalId { get; set; }
+        public string? InsuranceCompany { get; set; }
+        public string? InsuranceId { get; set; }
+        public string? InsurancePolicyNumber { get; set; }
+        public string? EmergencyContactName { get; set; }
+        public string? EmergencyContactPhone { get; set; }
+        public string? EmergencyContactRelation { get; set; }
+    }
+
+    public class PatientRegistrationResponse
+    {
+        public bool success { get; set; }
+        public string message { get; set; } = "";
+        public int patientId { get; set; }
+        public string identifier { get; set; } = "";
+        public string email { get; set; } = "";
+        public string firstName { get; set; } = "";
+        public string lastName { get; set; } = "";
+        public string phone { get; set; } = "";
+    }
+
+    public class PatientDto
+    {
+        public int id { get; set; }
+        public string identifier { get; set; } = "";
+        public string firstName { get; set; } = "";
+        public string lastName { get; set; } = "";
+        public string email { get; set; } = "";
+        public string phone { get; set; } = "";
+        public string gender { get; set; } = "";
+        public string address { get; set; } = "";
+        public string birthDate { get; set; } = "";
+        public string nationalId { get; set; } = "";
+        public string insuranceCompany { get; set; } = "";
+        public string insuranceId { get; set; } = "";
+        public string insurancePolicyNumber { get; set; } = "";
+        public string emergencyContactName { get; set; } = "";
+        public string emergencyContactPhone { get; set; } = "";
+        public string emergencyContactRelation { get; set; } = "";
+    }
+
+    public class UpdatePhoneRequest
+    {
+        public string Phone { get; set; } = "";
     }
 }

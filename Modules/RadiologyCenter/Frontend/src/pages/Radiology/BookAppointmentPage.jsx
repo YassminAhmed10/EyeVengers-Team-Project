@@ -1,683 +1,602 @@
 // src/pages/Radiology/BookAppointmentPage.jsx
-// Patient page to book radiology appointments
+// Simplified layout: horizontal carousel → two columns (calendar | patient info + confirm)
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import axios from 'axios';
 import { motion } from 'framer-motion';
-import { FaCalendar, FaClock, FaStethoscope, FaCheckCircle, FaArrowRight, FaUser, FaEnvelope, FaPhone, FaIdCard } from 'react-icons/fa';
-import { appointmentService } from '../../services/appointmentService';
+import {
+  FaCheckCircle, FaChevronLeft, FaChevronRight, FaUser, FaEnvelope,
+  FaPhone, FaIdCard, FaVenusMars, FaHome, FaLock, FaRegClock,
+  FaCloudDownloadAlt, FaBirthdayCake,
+} from 'react-icons/fa';
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+import mriImage            from '../../assets/MRI-1-768x576.jpg';
+import ctImage             from '../../assets/ct scan.webp';
+import ultrasoundImage     from '../../assets/Ultrasound.jpg';
+import xrayImage           from '../../assets/X_Ray.jpg';
+import octImage            from '../../assets/OCTttest.webp';
+import visualFieldImage    from '../../assets/Visual-field-test.jpg';
+import cornealTopographyImage  from '../../assets/Corneal Topography.jpg';
+import specularMicroscopyImage from '../../assets/Specular Microscopy.jpg';
+import cbcImage            from '../../assets/CBCtest.avif';
+import bloodSugarImage     from '../../assets/bloodSuger.jpg';
+import ergImage            from '../../assets/Electroretinography (ERG).webp';
+import eogImage            from '../../assets/Electrooculography (EOG).webp';
+import geneticImage        from '../../assets/Genetic Testing.png';
+
+const RADIOLOGY_API = import.meta.env.VITE_RADIOLOGY_API || 'http://localhost:5202/api';
+
+// ── RAD- ID: always read from localStorage ─────────────────────────────────────
+const getRadId = () => {
+  const s = localStorage.getItem('radiologyPatientId');
+  if (s && s.startsWith('RAD-')) return s;
+  const id = `RAD-${Math.floor(1000 + Math.random() * 9000)}`;
+  localStorage.setItem('radiologyPatientId', id);
+  return id;
 };
 
-export default function BookAppointmentPage() {
-  const [services, setServices] = useState([
-    { id: 1, name: 'Chest X-Ray', description: 'X-ray imaging of the chest' },
-    { id: 2, name: 'CT Scan', description: 'Computed tomography scan' },
-    { id: 3, name: 'MRI Scan', description: 'Magnetic resonance imaging' },
-    { id: 4, name: 'Ultrasound', description: 'Ultrasound imaging' },
-    { id: 5, name: 'Mammography', description: 'Breast imaging' },
-    { id: 6, name: 'Dental X-Ray', description: 'Dental radiography' }
-  ]);
+const ALL_SERVICES = [
+  { id:1,  name:'CBC',                specialty:'Complete Blood Count',         price:'250 LE',  image:cbcImage,                duration:15, color:'#ef4444' },
+  { id:2,  name:'Blood Sugar',        specialty:'Glucose Testing',              price:'120 LE',  image:bloodSugarImage,         duration:10, color:'#f59e0b' },
+  { id:3,  name:'CT Scan',            specialty:'Computed Tomography',          price:'1800 LE', image:ctImage,                 duration:45, color:'#00b8a8' },
+  { id:4,  name:'MRI Scan',           specialty:'Magnetic Resonance Imaging',   price:'3500 LE', image:mriImage,                duration:60, color:'#1f6bff' },
+  { id:5,  name:'X-Ray',              specialty:'Digital Radiography',          price:'350 LE',  image:xrayImage,               duration:20, color:'#28a745' },
+  { id:6,  name:'OCT',                specialty:'Optical Coherence Tomography', price:'900 LE',  image:octImage,                duration:20, color:'#8b5cf6' },
+  { id:7,  name:'Visual Field Test',  specialty:'Perimetry',                    price:'800 LE',  image:visualFieldImage,        duration:25, color:'#8b5cf6' },
+  { id:8,  name:'Ultrasound',         specialty:'Ocular Ultrasound',            price:'600 LE',  image:ultrasoundImage,         duration:30, color:'#14b8a6' },
+  { id:9,  name:'Corneal Topography', specialty:'Corneal Mapping',              price:'1000 LE', image:cornealTopographyImage,  duration:20, color:'#06b6d4' },
+  { id:10, name:'Specular Microscopy',specialty:'Endothelial Cell Count',       price:'950 LE',  image:specularMicroscopyImage, duration:15, color:'#06b6d4' },
+  { id:11, name:'ERG',                specialty:'Electroretinography',          price:'3000 LE', image:ergImage,                duration:45, color:'#f97316' },
+  { id:12, name:'EOG',                specialty:'Electrooculography',           price:'2500 LE', image:eogImage,                duration:40, color:'#f97316' },
+  { id:13, name:'Genetic Testing',    specialty:'Ocular Genetics',              price:'7000 LE', image:geneticImage,            duration:30, color:'#a855f7' },
+];
 
-  const [selectedService, setSelectedService] = useState(null);
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTime, setSelectedTime] = useState('');
-  const [notes, setNotes] = useState('');
-  const [step, setStep] = useState(1); // 1: Service, 2: DateTime, 3: Confirmation
-  const [loading, setLoading] = useState(false);
-  const [appointmentId, setAppointmentId] = useState(null);
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
 
-  // Get patient info from localStorage - with proper fallbacks
-  const patientId = localStorage.getItem('radiologyPatientId') || '';
-  const patientFirstName = localStorage.getItem('radiologyPatientFirstName') || '';
-  const patientLastName = localStorage.getItem('radiologyPatientLastName') || '';
-  const patientName = patientFirstName && patientLastName ? `${patientFirstName} ${patientLastName}` : (localStorage.getItem('radiologyPatientName') || 'Guest Patient');
-  const patientEmail = localStorage.getItem('radiologyPatientEmail') || 'Not provided';
-  const patientPhone = localStorage.getItem('radiologyPatientPhone') || 'Not provided';
-  const patientGender = localStorage.getItem('radiologyPatientGender') || 'Not specified';
-  const patientAddress = localStorage.getItem('radiologyPatientAddress') || 'Not provided';
-  const patientAge = localStorage.getItem('patientDateOfBirth') ? new Date().getFullYear() - new Date(localStorage.getItem('patientDateOfBirth')).getFullYear() : (localStorage.getItem('radiologyPatientAge') || 'N/A');
+const calcAge = (dob) => {
+  if (!dob) return null;
+  const t = new Date(), b = new Date(dob);
+  let a = t.getFullYear() - b.getFullYear();
+  if (t.getMonth() - b.getMonth() < 0 || (t.getMonth() === b.getMonth() && t.getDate() < b.getDate())) a--;
+  return a > 0 ? a : null;
+};
+const fmtTime = (t) => {
+  if (!t) return '';
+  const [h, m] = t.split(':'); const hr = parseInt(h);
+  return `${hr % 12 || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`;
+};
+const genRef = () => {
+  const L = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', N = '0123456789';
+  return `${L[~~(Math.random()*26)]}${L[~~(Math.random()*26)]}${N[~~(Math.random()*10)]}${N[~~(Math.random()*10)]}${N[~~(Math.random()*10)]}${N[~~(Math.random()*10)]}`;
+};
+const getHashParams = () => {
+  const h = window.location.hash;
+  return new URLSearchParams(h.includes('?') ? h.split('?')[1] : window.location.search);
+};
+const getDays = (date) => {
+  const y = date.getFullYear(), m = date.getMonth();
+  const days = [];
+  for (let i = 0; i < new Date(y, m, 1).getDay(); i++) days.push(null);
+  for (let d = 1; d <= new Date(y, m+1, 0).getDate(); d++) days.push(new Date(y, m, d));
+  return days;
+};
 
-  // Generate available time slots
-  const timeSlots = [
-    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-    '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'
+// ── Input styles ──────────────────────────────────────────────────────────────
+const INP = { width:'100%', padding:'10px 12px', border:'1.5px solid #d1d5db', borderRadius:8,
+  fontSize:13, background:'white', color:'#111827', outline:'none', boxSizing:'border-box' };
+const INP_E = { ...INP, border:'1.5px solid #dc2626' };
+const INP_R = { ...INP, background:'#f3f4f6', color:'#6b7280', cursor:'not-allowed' };
+
+// ── PatientForm (owns its own state) ─────────────────────────────────────────
+function PatientForm({ init, readOnly, onChange, onValid }) {
+  const [f, setF] = useState({
+    name: init?.name||'', phone: init?.phone||'', email: init?.email||'',
+    nationalId: init?.nationalId||'', dateOfBirth: init?.dateOfBirth||'',
+    gender: init?.gender||'', address: init?.address||'',
+  });
+  const [touched, setT] = useState({});
+  const prev = useRef(readOnly);
+
+  useEffect(() => {
+    if (!prev.current && readOnly && init) {
+      const n = { name:init.name||'', phone:init.phone||'', email:init.email||'',
+        nationalId:init.nationalId||'', dateOfBirth:init.dateOfBirth||'',
+        gender:init.gender||'', address:init.address||'' };
+      setF(n);
+      Object.entries(n).forEach(([k,v]) => onChange?.(k,v));
+    }
+    prev.current = readOnly;
+  }, [readOnly]);
+
+  const errs = useMemo(() => {
+    if (readOnly) return {};
+    const e = {};
+    if (!f.name||f.name.trim().length<2)            e.name       = 'Min 2 characters';
+    if (!f.phone||!/^[0-9\-\+\(\)\s]{7,}$/.test(f.phone)) e.phone = 'Invalid phone';
+    if (!f.email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = 'Invalid email';
+    if (!f.nationalId||f.nationalId.trim().length<5) e.nationalId = 'Required';
+    if (!f.dateOfBirth)                              e.dateOfBirth= 'Required';
+    if (!f.gender)                                   e.gender     = 'Required';
+    if (!f.address||f.address.trim().length<3)       e.address    = 'Required';
+    return e;
+  }, [f, readOnly]);
+
+  useEffect(() => { onValid?.(readOnly || Object.keys(errs).length===0); }, [errs, readOnly]);
+
+  const ch = (e) => {
+    const {name,value} = e.target;
+    setT(t=>({...t,[name]:true}));
+    setF(p=>({...p,[name]:value}));
+    onChange?.(name,value);
+  };
+  const bl = (e) => setT(t=>({...t,[e.target.name]:true}));
+  const age = calcAge(f.dateOfBirth);
+
+  const text_fields = [
+    {name:'name',        label:'Full Name',     type:'text',  Icon:FaUser,         ph:'Your full name',    req:true},
+    {name:'phone',       label:'Phone',         type:'tel',   Icon:FaPhone,        ph:'+20 1XX XXXX XXX',  req:true},
+    {name:'email',       label:'Email',         type:'email', Icon:FaEnvelope,     ph:'you@email.com',     req:true},
+    {name:'nationalId',  label:'National ID',   type:'text',  Icon:FaIdCard,       ph:'14 digits',         req:true, max:14},
+    {name:'dateOfBirth', label:'Date of Birth', type:'date',  Icon:FaBirthdayCake, req:true},
   ];
 
-  // Get minimum date (tomorrow)
-  const getMinDate = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
-  };
-
-  const handleBookAppointment = async () => {
-    if (!selectedService || !selectedDate || !selectedTime || !patientId) {
-      alert('Please fill in all required fields');
-      return;
-    }
-
-    setLoading(true);
-    const slotDateTime = new Date(`${selectedDate}T${selectedTime}`);
-
-    // Save/Update patient data to localStorage for profile page
-    localStorage.setItem('radiologyPatientFirstName', patientFirstName);
-    localStorage.setItem('radiologyPatientLastName', patientLastName);
-    localStorage.setItem('radiologyPatientEmail', patientEmail);
-    localStorage.setItem('radiologyPatientPhone', patientPhone);
-    localStorage.setItem('radiologyPatientGender', patientGender);
-    localStorage.setItem('radiologyPatientAddress', patientAddress);
-    
-    // Convert age to birthDate if available (use patientAge if it's already a number)
-    if (typeof patientAge === 'number' && patientAge > 0) {
-      const birthDate = new Date();
-      birthDate.setFullYear(birthDate.getFullYear() - patientAge);
-      localStorage.setItem('patientDateOfBirth', birthDate.toISOString().split('T')[0]);
-    }
-
-    const result = await appointmentService.createAppointment({
-      patientId,
-      patientName,
-      patientEmail,
-      patientPhone,
-      patientAge: typeof patientAge === 'number' ? patientAge : (patientAge !== 'N/A' ? parseInt(patientAge) : null),
-      patientGender,
-      radiologyServiceId: selectedService.id,
-      slotDateTime: slotDateTime.toISOString(),
-      priority: 'Normal',
-      requestingDoctor: 'Self-Referral',
-      notes: notes || 'No additional notes',
-      status: 'Pending'
-    });
-
-    if (result.success) {
-      if (result.data?.id) setAppointmentId(result.data.id);
-      setStep(4); // Show success
-      setTimeout(() => {
-        setStep(1);
-        setSelectedService(null);
-        setSelectedDate('');
-        setSelectedTime('');
-        setNotes('');
-        setAppointmentId(null);
-      }, 3000);
-    } else {
-      alert('Failed to book appointment. Please try again.');
-    }
-    setLoading(false);
-  };
-
   return (
-    <div style={{ padding: '40px', background: '#f5f7fa', minHeight: '100vh' }}>
-      <motion.div initial="hidden" animate="visible" variants={fadeUp}>
-        <h1 style={{ fontSize: 32, fontWeight: 700, color: '#1a1a2e', marginBottom: 8 }}>
-          Book a Radiology Appointment
-        </h1>
-        <p style={{ color: '#6f86a3', marginBottom: 32 }}>
-          Select a service and choose your preferred date and time
-        </p>
-      </motion.div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px 14px'}}>
+      {text_fields.map(({name,label,type,Icon,ph,req,max}) => {
+        const err = !readOnly && touched[name] && errs[name];
+        return (
+          <div key={name}>
+            <label style={{fontSize:11,fontWeight:600,color:'#374151',display:'flex',alignItems:'center',gap:4,marginBottom:4}}>
+              <Icon size={10}/>{label}{req&&<span style={{color:'#dc2626'}}>*</span>}
+            </label>
+            <input type={type} name={name} value={f[name]} onChange={ch} onBlur={bl}
+              placeholder={ph} readOnly={readOnly} maxLength={max}
+              style={readOnly?INP_R:err?INP_E:INP}/>
+            {err && <div style={{fontSize:10,color:'#dc2626',marginTop:2}}>{errs[name]}</div>}
+            {name==='dateOfBirth'&&age&&<div style={{fontSize:10,color:'#6b7280',marginTop:2}}>Age: {age} yrs</div>}
+          </div>
+        );
+      })}
 
-      {/* Step Indicator */}
-      {step < 4 && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          transition={{ delay: 0.1 }}
-          style={{
-            display: 'flex',
-            gap: 16,
-            marginBottom: 32,
-            justifyContent: 'center'
-          }}
-        >
-          {[1, 2, 3].map((s) => (
-            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{
-                width: 40,
-                height: 40,
-                borderRadius: '50%',
-                background: s <= step ? '#1f6bff' : '#e5e7eb',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: 16
-              }}>
-                {s < step ? '✓' : s}
-              </div>
-              <span style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: s <= step ? '#1f6bff' : '#9ca3af'
-              }}>
-                {s === 1 ? 'Service' : s === 2 ? 'Date & Time' : 'Confirm'}
-              </span>
-              {s < 3 && (
-                <div style={{
-                  width: 40,
-                  height: 2,
-                  background: s < step ? '#1f6bff' : '#e5e7eb'
-                }} />
-              )}
+      {/* Gender */}
+      <div>
+        <label style={{fontSize:11,fontWeight:600,color:'#374151',display:'flex',alignItems:'center',gap:4,marginBottom:4}}>
+          <FaVenusMars size={10}/>Gender<span style={{color:'#dc2626'}}>*</span>
+        </label>
+        <select name="gender" value={f.gender} onChange={ch} onBlur={bl} disabled={readOnly}
+          style={readOnly?INP_R:(touched.gender&&errs.gender)?INP_E:INP}>
+          <option value="">Select</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+        {!readOnly&&touched.gender&&errs.gender&&<div style={{fontSize:10,color:'#dc2626',marginTop:2}}>{errs.gender}</div>}
+      </div>
+
+      {/* Address — full width */}
+      <div style={{gridColumn:'span 2'}}>
+        <label style={{fontSize:11,fontWeight:600,color:'#374151',display:'flex',alignItems:'center',gap:4,marginBottom:4}}>
+          <FaHome size={10}/>Address<span style={{color:'#dc2626'}}>*</span>
+        </label>
+        <textarea name="address" value={f.address} onChange={ch} onBlur={bl}
+          placeholder="Full address" readOnly={readOnly} rows={2}
+          style={{...(readOnly?INP_R:(touched.address&&errs.address)?INP_E:INP),resize:'none',pointerEvents:readOnly?'none':'auto'}}/>
+        {!readOnly&&touched.address&&errs.address&&<div style={{fontSize:10,color:'#dc2626',marginTop:2}}>{errs.address}</div>}
+      </div>
+    </div>
+  );
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+export default function BookAppointmentPage({ setPage }) {
+  const hashParams = useMemo(() => getHashParams(), []);
+
+  const isDoctorOrder   = hashParams.get('doctorOrder')==='true' || !!hashParams.get('orderId');
+  const isClinicPatient = hashParams.get('fromClinic')==='true' || isDoctorOrder;
+
+  const doctorInfo = useMemo(() => ({
+    orderId:        hashParams.get('orderId')        || '',
+    doctorName:     decodeURIComponent(hashParams.get('doctorName')     || ''),
+    doctorSpecialty:decodeURIComponent(hashParams.get('doctorSpecialty')|| ''),
+    requestedTest:  decodeURIComponent(hashParams.get('requestedTest')  || ''),
+    orderNotes:     decodeURIComponent(hashParams.get('orderNotes')     || ''),
+    clinicName:     decodeURIComponent(hashParams.get('clinicName')     || 'Eye Clinic'),
+  }), []);
+
+  const clinicInit = useMemo(() => {
+    if (!isClinicPatient) return null;
+    return {
+      id:          decodeURIComponent(hashParams.get('patientId')         || ''),
+      name:        decodeURIComponent(hashParams.get('patientName')       || ''),
+      phone:       decodeURIComponent(hashParams.get('patientPhone')      || ''),
+      email:       decodeURIComponent(hashParams.get('patientEmail')      || ''),
+      gender:      decodeURIComponent(hashParams.get('patientGender')     || ''),
+      dateOfBirth: hashParams.get('patientDateOfBirth') || '',
+      nationalId:  decodeURIComponent(hashParams.get('patientNationalId') || ''),
+      address:     decodeURIComponent(hashParams.get('patientAddress')    || ''),
+    };
+  }, []);
+
+  const initialService = useMemo(() => {
+    if (isDoctorOrder && doctorInfo.requestedTest) {
+      const tn = doctorInfo.requestedTest.toUpperCase();
+      return ALL_SERVICES.find(s => s.name.toUpperCase() === tn || s.name.toUpperCase().includes(tn)) || null;
+    }
+    const sid = localStorage.getItem('selectedServiceId');
+    if (sid) return ALL_SERVICES.find(s => s.id === parseInt(sid)) || null;
+    return null;
+  }, []);
+
+  const radId = useMemo(() => getRadId(), []);
+
+  const [service,   setService]   = useState(initialService);
+  const [month,     setMonth]     = useState(new Date());
+  const [selDate,   setSelDate]   = useState(null);
+  const [slots,     setSlots]     = useState([]);
+  const [selTime,   setSelTime]   = useState('');
+  const [formValid, setFormValid] = useState(isClinicPatient);
+  const [booking,   setBooking]   = useState(false);
+  const [error,     setError]     = useState('');
+  const [success,   setSuccess]   = useState(false);
+  const [booked,    setBooked]    = useState(null);
+  const [bookRef]                 = useState(genRef);
+
+  const patRef = useRef({
+    ...(clinicInit || { name:'', phone:'', email:'', nationalId:'', dateOfBirth:'', gender:'', address:'' }),
+    radiologyPatientId: radId,
+    externalPatientId:  clinicInit?.id || '',
+  });
+
+  useEffect(() => {
+    if (clinicInit) patRef.current = { ...clinicInit, radiologyPatientId:radId, externalPatientId:clinicInit.id||'' };
+  }, []);
+
+  const scrollRef = useRef(null);
+  const scrollL = () => scrollRef.current?.scrollBy({left:-240,behavior:'smooth'});
+  const scrollR = () => scrollRef.current?.scrollBy({left: 240,behavior:'smooth'});
+
+  // Time slots
+  useEffect(() => {
+    if (!selDate) return;
+    const s = [];
+    for (let h=9;h<=20;h++) for (let m=0;m<60;m+=30) {
+      if (h===20&&m>0) continue;
+      s.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+    }
+    setSlots(s); setSelTime('');
+  }, [selDate]);
+
+  const isPast  = d => { const t=new Date();t.setHours(0,0,0,0);return d&&d<t; };
+  const isSel   = d => selDate&&d&&d.toDateString()===selDate.toDateString();
+  const isToday = d => d&&d.toDateString()===new Date().toDateString();
+  const chMon   = n => { setMonth(new Date(month.getFullYear(),month.getMonth()+n,1)); setSelDate(null); setSelTime(''); };
+
+  const handleFieldChange = (k,v) => { patRef.current = {...patRef.current,[k]:v}; };
+
+  // ── Book ─────────────────────────────────────────────────────────────────
+  const handleBook = async () => {
+    if (!service)   { setError('Please select a service.'); return; }
+    if (!selDate)   { setError('Please select a date.'); return; }
+    if (!selTime)   { setError('Please select a time slot.'); return; }
+    if (!formValid) { setError('Please fill all required patient fields.'); return; }
+
+    setBooking(true); setError('');
+    const pd = patRef.current;
+    const dt = new Date(selDate);
+    const [hh,mm] = selTime.split(':');
+    dt.setHours(parseInt(hh), parseInt(mm));
+
+    const apt = {
+      appointmentId:      `APT-${Date.now()}`,
+      bookingReference:   bookRef,
+      radiologyPatientId: pd.radiologyPatientId || radId,
+      externalPatientId:  pd.externalPatientId  || '',
+      patientId:          pd.radiologyPatientId || radId,
+      patientName:        pd.name,
+      patientPhone:       pd.phone,
+      patientEmail:       pd.email,
+      patientGender:      pd.gender,
+      patientDateOfBirth: pd.dateOfBirth,
+      patientNationalId:  pd.nationalId,
+      patientAddress:     pd.address,
+      serviceName:        service.name,
+      servicePrice:       service.price,
+      serviceDuration:    service.duration,
+      appointmentDate:    selDate.toISOString().split('T')[0],
+      appointmentTime:    selTime,
+      appointmentDateTime:dt.toISOString(),
+      status:             'Pending',
+      investigationStatus:'Pending',
+      source:             isClinicPatient ? 'EyeClinicReferral' : 'DirectWalkIn',
+      referralSource:     isClinicPatient ? (doctorInfo.clinicName || 'Eye Clinic') : null,
+      isDoctorOrder:      isClinicPatient ? isDoctorOrder : false,
+      doctorName:         isClinicPatient ? (doctorInfo.doctorName || null) : null,
+      clinicName:         isClinicPatient ? (doctorInfo.clinicName || null) : null,
+      orderNotes:         isClinicPatient ? (doctorInfo.orderNotes || null) : null,
+      uploadedFiles:      [],
+      createdAt:          new Date().toISOString(),
+      updatedAt:          new Date().toISOString(),
+    };
+
+    // Persist patient profile info
+    if (!isClinicPatient) {
+      const map = {
+        radiologyPatientName:        pd.name,
+        radiologyPatientPhone:       pd.phone,
+        radiologyPatientEmail:       pd.email,
+        radiologyPatientGender:      pd.gender,
+        radiologyPatientDateOfBirth: pd.dateOfBirth,
+        radiologyPatientNationalId:  pd.nationalId,
+        radiologyPatientAddress:     pd.address,
+      };
+      Object.entries(map).forEach(([k,v]) => v && localStorage.setItem(k,v));
+    }
+
+    // Save to localStorage
+    const existing = JSON.parse(localStorage.getItem('radiologyAllAppointments')||'[]');
+    const dup = existing.some(a =>
+      a.patientName===apt.patientName &&
+      a.appointmentDate===apt.appointmentDate &&
+      a.appointmentTime===apt.appointmentTime &&
+      a.serviceName===apt.serviceName
+    );
+    if (!dup) {
+      localStorage.setItem('radiologyAllAppointments', JSON.stringify([apt,...existing]));
+      const pend = JSON.parse(localStorage.getItem('radiologyAdminPendingRequests')||'[]');
+      localStorage.setItem('radiologyAdminPendingRequests', JSON.stringify([apt,...pend]));
+      window.dispatchEvent(new StorageEvent('storage',{key:'radiologyAllAppointments'}));
+    }
+
+    // Try backend
+    try { await axios.post(`${RADIOLOGY_API}/appointments`, apt); }
+    catch { /* backend down — saved locally */ }
+
+    setBooked(apt);
+    setSuccess(true);
+    setBooking(false);
+  };
+
+  // ── Success screen ────────────────────────────────────────────────────────
+  if (success && booked) return (
+    <div style={{minHeight:'100vh',background:'#f3f4f6',display:'flex',alignItems:'center',justifyContent:'center',padding:'40px 20px'}}>
+      <motion.div initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}}
+        style={{background:'white',borderRadius:20,padding:40,maxWidth:480,width:'100%',textAlign:'center',boxShadow:'0 8px 40px rgba(0,0,0,0.1)'}}>
+        <div style={{width:64,height:64,borderRadius:'50%',background:'#dcfce7',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px'}}>
+          <FaCheckCircle size={32} color="#16a34a"/>
+        </div>
+        <h2 style={{fontSize:20,fontWeight:700,color:'#111827',marginBottom:6}}>Appointment Request Sent!</h2>
+        <p style={{color:'#6b7280',fontSize:13,marginBottom:20}}>Admin will review and confirm shortly.</p>
+        <div style={{background:'#f9fafb',borderRadius:12,padding:16,marginBottom:20,textAlign:'left',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px 16px'}}>
+          {[
+            ['Radiology ID', booked.radiologyPatientId],
+            ['Booking Ref',  booked.bookingReference],
+            ['Patient',      booked.patientName],
+            ['Test',         booked.serviceName],
+            ['Price',        booked.servicePrice],
+            ['Date',         new Date(booked.appointmentDate+'T12:00:00').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})],
+            ['Time',         fmtTime(booked.appointmentTime)],
+          ].map(([l,v])=>(
+            <div key={l}>
+              <div style={{fontSize:10,color:'#9ca3af'}}>{l}</div>
+              <div style={{fontSize:13,fontWeight:600,color: l==='Radiology ID'?'#0ea5e9':'#111827', fontFamily:l==='Radiology ID'||l==='Booking Ref'?'monospace':'inherit'}}>{v}</div>
             </div>
           ))}
-        </motion.div>
-      )}
+        </div>
+        <button onClick={()=>setPage?.('home')}
+          style={{background:'#1e3a5f',color:'white',border:'none',borderRadius:10,padding:'11px 28px',fontSize:14,fontWeight:600,cursor:'pointer'}}>
+          Back to Home
+        </button>
+      </motion.div>
+    </div>
+  );
 
-      {/* Step 1: Service Selection */}
-      {step === 1 && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          transition={{ delay: 0.2 }}
-        >
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: 16,
-            marginBottom: 32
-          }}>
-            {services.map((service) => (
-              <motion.div
-                key={service.id}
-                onClick={() => {
-                  setSelectedService(service);
-                  setStep(2);
-                }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  padding: 24,
-                  background: 'white',
-                  border: '2px solid #e2e8f0',
-                  borderRadius: 12,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textAlign: 'center'
-                }}
-              >
-                <FaStethoscope size={32} style={{ margin: '0 auto 16px', color: '#1f6bff' }} />
-                <h3 style={{
-                  fontSize: 16,
-                  fontWeight: 700,
-                  color: '#1a1a2e',
-                  margin: 0,
-                  marginBottom: 8
-                }}>
-                  {service.name}
-                </h3>
-                <p style={{
-                  fontSize: 13,
-                  color: '#6f86a3',
-                  margin: 0
-                }}>
-                  {service.description}
-                </p>
-              </motion.div>
-            ))}
+  const svc = service;
+
+  return (
+    <div style={{minHeight:'100vh',background:'#f3f4f6',paddingTop:80,paddingBottom:40}}>
+      <div style={{maxWidth:1100,margin:'0 auto',padding:'0 24px'}}>
+
+        {/* Doctor banner */}
+        {isDoctorOrder && (
+          <div style={{background:'#fffbeb',border:'1.5px solid #f59e0b',borderRadius:12,padding:'12px 18px',marginBottom:20,display:'flex',gap:12,alignItems:'center',flexWrap:'wrap'}}>
+            <span style={{fontSize:20}}>👨‍⚕️</span>
+            <div>
+              <div style={{fontSize:13,fontWeight:700,color:'#78350f'}}>Doctor Order — {doctorInfo.doctorName}</div>
+              <div style={{fontSize:12,color:'#92400e'}}>{doctorInfo.clinicName}{doctorInfo.orderNotes&&` · ${doctorInfo.orderNotes}`}</div>
+            </div>
+            {doctorInfo.requestedTest && (
+              <span style={{marginLeft:'auto',background:'#f59e0b',color:'white',borderRadius:8,padding:'4px 12px',fontSize:12,fontWeight:700}}>
+                {doctorInfo.requestedTest}
+              </span>
+            )}
           </div>
-        </motion.div>
-      )}
+        )}
 
-      {/* Step 2: Date & Time Selection */}
-      {step === 2 && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          transition={{ delay: 0.2 }}
-        >
-          <div style={{
-            maxWidth: 600,
-            margin: '0 auto'
-          }}>
-            <div style={{
-              background: 'white',
-              borderRadius: 16,
-              padding: 32,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-              marginBottom: 32
-            }}>
-              <h2 style={{
-                fontSize: 20,
-                fontWeight: 700,
-                color: '#1a1a2e',
-                marginBottom: 8
-              }}>
-                {selectedService?.name}
-              </h2>
-              <p style={{
-                fontSize: 13,
-                color: '#6f86a3',
-                marginBottom: 24
-              }}>
-                Choose your preferred date and time
-              </p>
+        {/* ── Horizontal carousel ─────────────────────────────────────────── */}
+        <div style={{position:'relative',marginBottom:24}}>
+          <button onClick={scrollL} style={{position:'absolute',left:-12,top:'50%',transform:'translateY(-50%)',zIndex:10,
+            width:32,height:32,borderRadius:'50%',border:'1px solid #e5e7eb',background:'white',cursor:'pointer',
+            display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 4px rgba(0,0,0,0.1)'}}>
+            <FaChevronLeft size={12} color="#374151"/>
+          </button>
+          <div ref={scrollRef} style={{display:'flex',gap:12,overflowX:'auto',padding:'6px 20px',
+            scrollBehavior:'smooth',scrollbarWidth:'none',WebkitOverflowScrolling:'touch'}}>
+            {ALL_SERVICES.map(s => {
+              const sel = svc?.id===s.id;
+              return (
+                <motion.div key={s.id} whileHover={{y:-3,scale:1.02}} whileTap={{scale:0.97}}
+                  onClick={()=>{ if(isDoctorOrder&&!sel) return; setService(s); setError(''); }}
+                  style={{minWidth:160,maxWidth:160,flexShrink:0,borderRadius:14,padding:10,cursor:'pointer',
+                    background:sel?`linear-gradient(135deg,${s.color},${s.color}cc)`:'white',
+                    border:sel?`2px solid ${s.color}`:'1px solid #e5e7eb',
+                    boxShadow:sel?`0 4px 16px ${s.color}30`:'0 1px 4px rgba(0,0,0,0.06)',
+                    position:'relative',opacity:isDoctorOrder&&!sel?0.4:1}}>
+                  {sel&&<div style={{position:'absolute',top:6,right:6,background:s.color,borderRadius:'50%',width:18,height:18,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    <FaCheckCircle size={10} color="white"/>
+                  </div>}
+                  {sel&&isDoctorOrder&&<div style={{position:'absolute',top:6,left:6,background:'rgba(255,255,255,0.9)',borderRadius:'50%',width:18,height:18,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    <FaLock size={9} color="#f59e0b"/>
+                  </div>}
+                  <div style={{width:'100%',height:90,borderRadius:10,overflow:'hidden',marginBottom:8}}>
+                    <img src={s.image} alt={s.name} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                  </div>
+                  <div style={{fontSize:12,fontWeight:700,color:sel?'white':'#111827',textAlign:'center',marginBottom:2}}>{s.name}</div>
+                  <div style={{fontSize:10,color:sel?'rgba(255,255,255,0.8)':'#6b7280',textAlign:'center',marginBottom:4}}>{s.specialty}</div>
+                  <div style={{fontSize:12,fontWeight:700,color:sel?'white':s.color,textAlign:'center'}}>{s.price}</div>
+                  <div style={{fontSize:9,color:sel?'rgba(255,255,255,0.7)':'#9ca3af',textAlign:'center'}}>{s.duration} min</div>
+                </motion.div>
+              );
+            })}
+          </div>
+          <button onClick={scrollR} style={{position:'absolute',right:-12,top:'50%',transform:'translateY(-50%)',zIndex:10,
+            width:32,height:32,borderRadius:'50%',border:'1px solid #e5e7eb',background:'white',cursor:'pointer',
+            display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 1px 4px rgba(0,0,0,0.1)'}}>
+            <FaChevronRight size={12} color="#374151"/>
+          </button>
+        </div>
 
-              {/* Date Input */}
-              <div style={{ marginBottom: 24 }}>
-                <label style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: '#6f86a3',
-                  display: 'block',
-                  marginBottom: 8
-                }}>
-                  <FaCalendar size={12} style={{ marginRight: 6, verticalAlign: 'middle' }} />
-                  Select Date
-                </label>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  min={getMinDate()}
-                  style={{
-                    width: '100%',
-                    padding: 12,
-                    border: '1px solid #e2e8f0',
-                    borderRadius: 8,
-                    fontSize: 14,
-                    boxSizing: 'border-box'
-                  }}
-                />
+        {/* Selected service strip */}
+        {svc && (
+          <div style={{borderRadius:12,padding:'12px 18px',marginBottom:20,color:'white',display:'flex',alignItems:'center',gap:12,
+            background:`linear-gradient(135deg,${svc.color},${svc.color}bb)`}}>
+            <div style={{width:42,height:42,borderRadius:8,overflow:'hidden',flexShrink:0}}>
+              <img src={svc.image} alt={svc.name} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+            </div>
+            <div>
+              <div style={{fontSize:15,fontWeight:700}}>{svc.name}</div>
+              <div style={{fontSize:11,opacity:0.9}}>{svc.specialty} · {svc.duration} min · {svc.price}</div>
+            </div>
+          </div>
+        )}
+
+        {!svc && (
+          <div style={{textAlign:'center',padding:'60px 20px',color:'#9ca3af',fontSize:15}}>
+            Select a service above to continue
+          </div>
+        )}
+
+        {/* ── Two columns ─────────────────────────────────────────────────── */}
+        {svc && (
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,alignItems:'start'}}>
+
+            {/* LEFT — Calendar + Time slots */}
+            <div style={{background:'white',borderRadius:16,padding:24,boxShadow:'0 1px 6px rgba(0,0,0,0.07)'}}>
+              {/* Month nav */}
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+                <button onClick={()=>chMon(-1)} style={{width:32,height:32,borderRadius:8,border:'1px solid #e5e7eb',background:'#f9fafb',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  <FaChevronLeft size={11} color="#374151"/>
+                </button>
+                <span style={{fontWeight:700,color:'#111827',fontSize:15}}>{MONTHS[month.getMonth()]} {month.getFullYear()}</span>
+                <button onClick={()=>chMon(1)} style={{width:32,height:32,borderRadius:8,border:'1px solid #e5e7eb',background:'#f9fafb',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  <FaChevronRight size={11} color="#374151"/>
+                </button>
               </div>
-
-              {/* Time Slots */}
-              {selectedDate && (
-                <div style={{ marginBottom: 24 }}>
-                  <label style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: '#6f86a3',
-                    display: 'block',
-                    marginBottom: 8
-                  }}>
-                    <FaClock size={12} style={{ marginRight: 6, verticalAlign: 'middle' }} />
-                    Select Time
-                  </label>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(4, 1fr)',
-                    gap: 8
-                  }}>
-                    {timeSlots.map((time) => (
-                      <motion.button
-                        key={time}
-                        onClick={() => setSelectedTime(time)}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        style={{
-                          padding: 10,
-                          background: selectedTime === time ? '#1f6bff' : '#f8fafc',
-                          border: selectedTime === time ? 'none' : '1px solid #e2e8f0',
-                          borderRadius: 8,
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: selectedTime === time ? 'white' : '#1a1a2e',
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease'
-                        }}
-                      >
-                        {time}
-                      </motion.button>
+              {/* Day headers */}
+              <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',marginBottom:6}}>
+                {DAYS.map(d=><div key={d} style={{textAlign:'center',fontSize:10,fontWeight:600,color:'#9ca3af',padding:'4px 0'}}>{d}</div>)}
+              </div>
+              {/* Dates */}
+              <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2,marginBottom:20}}>
+                {getDays(month).map((d,i)=>{
+                  if (!d) return <div key={i}/>;
+                  const past=isPast(d),sel=isSel(d),tod=isToday(d);
+                  return (
+                    <button key={i} onClick={()=>!past&&setSelDate(d)} disabled={past}
+                      style={{padding:'7px 2px',borderRadius:8,border:'none',fontSize:12,cursor:past?'not-allowed':'pointer',
+                        background:sel?svc.color:'transparent',
+                        color:sel?'white':past?'#d1d5db':tod?'#1d4ed8':'#374151',
+                        fontWeight:sel||tod?700:400}}>
+                      {d.getDate()}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* Time slots */}
+              {selDate && (
+                <>
+                  <div style={{fontSize:12,fontWeight:600,color:'#6b7280',marginBottom:8,display:'flex',alignItems:'center',gap:5}}>
+                    <FaRegClock size={11}/> {selDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'})}
+                  </div>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6,maxHeight:180,overflowY:'auto'}}>
+                    {slots.map(t=>(
+                      <button key={t} onClick={()=>setSelTime(t)}
+                        style={{padding:'8px 2px',borderRadius:8,fontSize:11,fontWeight:500,cursor:'pointer',
+                          background:selTime===t?svc.color:'#f9fafb',
+                          color:selTime===t?'white':'#374151',
+                          border:selTime===t?'none':'1px solid #e5e7eb'}}>
+                        {fmtTime(t)}
+                      </button>
                     ))}
                   </div>
+                </>
+              )}
+            </div>
+
+            {/* RIGHT — Patient data + Confirm */}
+            <div style={{background:'white',borderRadius:16,padding:24,boxShadow:'0 1px 6px rgba(0,0,0,0.07)'}}>
+
+              {/* Source badge — only show for clinic/referred patients */}
+              {isClinicPatient && (
+                <div style={{background:'#e0f2fe',borderRadius:8,padding:'7px 12px',marginBottom:14,
+                  fontSize:12,fontWeight:500,color:'#0ea5e9',display:'flex',alignItems:'center',gap:6}}>
+                  <FaCloudDownloadAlt size={12}/>
+                  {`Referred from ${doctorInfo.clinicName}`}
                 </div>
               )}
 
-              {/* Notes */}
-              <div style={{ marginBottom: 24 }}>
-                <label style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: '#6f86a3',
-                  display: 'block',
-                  marginBottom: 8
-                }}>
-                  Additional Notes (Optional)
-                </label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Any additional information for the radiologist..."
-                  style={{
-                    width: '100%',
-                    minHeight: 80,
-                    padding: 12,
-                    border: '1px solid #e2e8f0',
-                    borderRadius: 8,
-                    fontSize: 13,
-                    boxSizing: 'border-box'
-                  }}
-                />
+              {/* RAD ID */}
+              <div style={{background:'#f0f9ff',borderRadius:8,padding:'8px 12px',marginBottom:14,display:'flex',alignItems:'center',gap:8,border:'1px solid #bae6fd'}}>
+                <div style={{fontSize:10,color:'#64748b'}}>Radiology Patient ID</div>
+                <div style={{fontWeight:700,color:'#0ea5e9',fontFamily:'monospace',fontSize:14,marginLeft:'auto'}}>{radId}</div>
               </div>
 
-              {/* Action Buttons */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: 12
-              }}>
-                <motion.button
-                  onClick={() => setStep(1)}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  style={{
-                    padding: '12px 24px',
-                    background: '#f3f4f6',
-                    border: '1px solid #d1d5db',
-                    borderRadius: 8,
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: '#666',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Back
-                </motion.button>
-                <motion.button
-                  onClick={() => selectedDate && selectedTime ? setStep(3) : alert('Please select date and time')}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  style={{
-                    padding: '12px 24px',
-                    background: '#1f6bff',
-                    border: 'none',
-                    borderRadius: 8,
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: 'white',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8
-                  }}
-                >
-                  <FaArrowRight size={12} /> Continue
-                </motion.button>
+              {/* Patient form */}
+              <PatientForm
+                key={isClinicPatient?'clinic':'direct'}
+                init={isClinicPatient?clinicInit:null}
+                readOnly={isClinicPatient}
+                onChange={handleFieldChange}
+                onValid={setFormValid}
+              />
+
+              {/* Date/Time summary */}
+              <div style={{background:'#f0fdf4',borderRadius:8,padding:'10px 14px',margin:'14px 0',textAlign:'center'}}>
+                <div style={{fontSize:12,color:'#6b7280'}}>
+                  {selDate?selDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}):'No date selected'}
+                </div>
+                <div style={{fontSize:20,fontWeight:700,color:'#111827',margin:'2px 0'}}>
+                  {selTime?fmtTime(selTime):'— : —'}
+                </div>
+                {svc&&<div style={{fontSize:11,color:'#10b981'}}>Duration: {svc.duration} min</div>}
               </div>
-            </div>
-          </div>
-        </motion.div>
-      )}
 
-      {/* Step 3: Confirmation */}
-      {step === 3 && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          transition={{ delay: 0.2 }}
-        >
-          <div style={{
-            maxWidth: 800,
-            margin: '0 auto',
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 24
-          }}>
-            {/* Left Panel: Appointment Details */}
-            <div style={{
-              background: 'white',
-              borderRadius: 16,
-              padding: 24,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.06)'
-            }}>
-              <h3 style={{
-                fontSize: 16,
-                fontWeight: 700,
-                color: '#0070b8',
-                marginBottom: 16,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                <FaStethoscope /> Appointment Details
-              </h3>
-
-              <div style={{ display: 'grid', gap: 12 }}>
-                <div style={{ paddingBottom: 12, borderBottom: '1px solid rgba(0,112,184,0.1)' }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Service</span>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#0070b8', margin: '4px 0 0' }}>
-                    {selectedService?.name}
-                  </p>
+              {/* Booking ref + Price */}
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:12}}>
+                <div style={{background:'#1e3a5f',borderRadius:8,padding:'8px 14px',textAlign:'center'}}>
+                  <div style={{fontSize:9,color:'rgba(255,255,255,0.5)',marginBottom:1}}>Booking reference</div>
+                  <div style={{fontSize:13,fontWeight:700,color:'white',fontFamily:'monospace',letterSpacing:1}}>{bookRef}</div>
                 </div>
-
-                <div style={{ paddingBottom: 12, borderBottom: '1px solid rgba(0,112,184,0.1)' }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Date</span>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a2e', margin: '4px 0 0' }}>
-                    {new Date(`${selectedDate}T${selectedTime}`).toLocaleDateString('en-US', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
-                  </p>
-                </div>
-
-                <div style={{ paddingBottom: 12, borderBottom: '1px solid rgba(0,112,184,0.1)' }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Time</span>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a2e', margin: '4px 0 0' }}>
-                    {selectedTime}
-                  </p>
-                </div>
-
-                {notes && (
-                  <div style={{ paddingBottom: 12, borderBottom: '1px solid rgba(0,112,184,0.1)' }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Notes</span>
-                    <p style={{ fontSize: 13, color: '#1a1a2e', margin: '4px 0 0', lineHeight: 1.5 }}>
-                      {notes}
-                    </p>
-                  </div>
-                )}
-
-                <div style={{ background: '#e8f1ff', borderRadius: 8, padding: 12, marginTop: 8 }}>
-                  <p style={{ fontSize: 12, color: '#0070b8', fontWeight: 600, margin: 0 }}>
-                    Status: Pending Admin Approval
-                  </p>
+                <div style={{background:svc?.color||'#1e3a5f',borderRadius:8,padding:'8px 14px',textAlign:'center'}}>
+                  <div style={{fontSize:9,color:'rgba(255,255,255,0.5)',marginBottom:1}}>Price</div>
+                  <div style={{fontSize:15,fontWeight:800,color:'white'}}>{svc?.price||'—'}</div>
                 </div>
               </div>
-            </div>
 
-            {/* Right Panel: Patient Information */}
-            <div style={{
-              background: 'white',
-              borderRadius: 16,
-              padding: 24,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.06)'
-            }}>
-              <h3 style={{
-                fontSize: 16,
-                fontWeight: 700,
-                color: '#0070b8',
-                marginBottom: 16,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                <FaUser /> Patient Information
-              </h3>
+              {error&&<div style={{background:'#fef2f2',color:'#dc2626',borderRadius:8,padding:'8px 12px',fontSize:12,marginBottom:10}}>⚠ {error}</div>}
 
-              <div style={{ display: 'grid', gap: 12 }}>
-                <div style={{ paddingBottom: 12, borderBottom: '1px solid rgba(0,112,184,0.1)' }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Full Name</span>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a2e', margin: '4px 0 0', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <FaUser size={12} style={{ color: '#0070b8' }} />
-                    {patientName}
-                  </p>
-                </div>
-
-                <div style={{ paddingBottom: 12, borderBottom: '1px solid rgba(0,112,184,0.1)' }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Email</span>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a2e', margin: '4px 0 0', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <FaEnvelope size={12} style={{ color: '#0070b8' }} />
-                    {patientEmail}
-                  </p>
-                </div>
-
-                <div style={{ paddingBottom: 12, borderBottom: '1px solid rgba(0,112,184,0.1)' }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Phone</span>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a2e', margin: '4px 0 0', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <FaPhone size={12} style={{ color: '#0070b8' }} />
-                    {patientPhone}
-                  </p>
-                </div>
-
-                <div style={{ paddingBottom: 12, borderBottom: '1px solid rgba(0,112,184,0.1)' }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Patient ID</span>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a2e', margin: '4px 0 0', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <FaIdCard size={12} style={{ color: '#0070b8' }} />
-                    {patientId}
-                  </p>
-                </div>
-
-                <div style={{ paddingBottom: 12, borderBottom: '1px solid rgba(0,112,184,0.1)' }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Age</span>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a2e', margin: '4px 0 0' }}>
-                    {typeof patientAge === 'number' ? `${patientAge} years` : patientAge}
-                  </p>
-                </div>
-
-                <div style={{ paddingBottom: 12, borderBottom: '1px solid rgba(0,112,184,0.1)' }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Gender</span>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a2e', margin: '4px 0 0' }}>
-                    {patientGender}
-                  </p>
-                </div>
-
-                <div style={{ paddingBottom: 12 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Address</span>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a2e', margin: '4px 0 0' }}>
-                    {patientAddress}
-                  </p>
-                </div>
-              </div>
+              {/* Confirm button */}
+              <button onClick={handleBook} disabled={booking||!selDate||!selTime}
+                style={{width:'100%',padding:13,borderRadius:10,border:'none',fontSize:14,fontWeight:700,
+                  cursor:booking||!selDate||!selTime?'not-allowed':'pointer',
+                  background:booking||!selDate||!selTime?'#d1d5db':svc?.color||'#1e3a5f',
+                  color:booking||!selDate||!selTime?'#9ca3af':'white'}}>
+                {booking?'Processing…':!selDate?'Select a date first':!selTime?'Select a time slot':'Confirm Booking'}
+              </button>
             </div>
           </div>
-
-          {/* Action Buttons */}
-          <div style={{
-            maxWidth: 800,
-            margin: '24px auto',
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: 12
-          }}>
-            <motion.button
-              onClick={() => setStep(2)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              style={{
-                padding: '12px 24px',
-                background: '#f3f4f6',
-                border: '1px solid #d1d5db',
-                borderRadius: 8,
-                fontSize: 14,
-                fontWeight: 600,
-                color: '#666',
-                cursor: 'pointer'
-              }}
-            >
-              Back
-            </motion.button>
-            <motion.button
-              onClick={handleBookAppointment}
-              disabled={loading}
-              whileHover={!loading ? { scale: 1.02 } : {}}
-              whileTap={!loading ? { scale: 0.98 } : {}}
-              style={{
-                padding: '12px 24px',
-                background: loading ? '#ccc' : '#0070b8',
-                border: 'none',
-                borderRadius: 8,
-                fontSize: 14,
-                fontWeight: 600,
-                color: 'white',
-                cursor: loading ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {loading ? 'Booking...' : 'Confirm Booking'}
-            </motion.button>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Step 4: Success */}
-      {step === 4 && (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          transition={{ delay: 0.2 }}
-        >
-          <div style={{
-            maxWidth: 600,
-            margin: '0 auto'
-          }}>
-            <div style={{
-              background: 'white',
-              borderRadius: 16,
-              padding: 60,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-              textAlign: 'center'
-            }}>
-              <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 0.5 }}
-              >
-                <FaCheckCircle size={64} style={{ color: '#10b981', margin: '0 auto 24px' }} />
-              </motion.div>
-              <h2 style={{
-                fontSize: 24,
-                fontWeight: 700,
-                color: '#1a1a2e',
-                margin: 0,
-                marginBottom: 12
-              }}>
-                Appointment Booked Successfully!
-              </h2>
-              <p style={{
-                fontSize: 14,
-                color: '#6b7280',
-                margin: 0,
-                marginBottom: 24,
-                lineHeight: 1.6
-              }}>
-                Your appointment request has been submitted to the admin. You'll receive a notification when the admin accepts or rejects your request.
-              </p>
-              
-              {appointmentId && (
-                <div style={{
-                  background: '#e8f1ff',
-                  borderRadius: 8,
-                  padding: 12,
-                  marginBottom: 16
-                }}>
-                  <p style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', margin: 0, marginBottom: 4 }}>Appointment ID</p>
-                  <p style={{ fontSize: 16, fontWeight: 700, color: '#0070b8', margin: 0 }}>
-                    {appointmentId}
-                  </p>
-                </div>
-              )}
-
-              <p style={{
-                fontSize: 12,
-                color: '#9ca3af',
-                margin: 0
-              }}>
-                Redirecting you back in a moment...
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

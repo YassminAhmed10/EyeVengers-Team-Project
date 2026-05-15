@@ -32,6 +32,187 @@ const getPatientId = () => {
 
 const getToken = () => localStorage.getItem("token");
 
+// ── Radiology Redirect Helper ── FIXED VERSION with API call ─────────────────────────────────
+
+const redirectToRadiology = async (order) => {
+  try {
+    console.log('[Redirect] === START REDIRECT ===');
+    console.log('[Redirect] order:', order);
+    
+    // Get doctor info from order (with fallbacks)
+    const doctorId = order.doctorId || "DOC-DEFAULT";
+    const doctorName = order.doctorName || "Dr. Referring Physician";
+    const doctorSpecialty = order.doctorSpecialty || "General Medicine";
+    console.log('[Redirect] Doctor info:', { doctorId, doctorName, doctorSpecialty });
+    
+    // Get test from order data
+    const requestedTest = (order.data?.selectedTests && order.data.selectedTests[0]) || "X-Ray";
+    const priority = order.data?.priority || "Routine";
+    const orderNotes = order.data?.notes || `Referral for ${requestedTest} examination`;
+    console.log('[Redirect] Test info:', { requestedTest, priority, orderNotes });
+    
+    // Get patient ID
+    let patientId = getPatientId();
+    if (!patientId && order.patientId) {
+      patientId = order.patientId;
+    }
+    
+    console.log('[Redirect] Patient ID:', patientId);
+    
+    // ========== FETCH COMPLETE PATIENT DATA FROM CLINIC API ==========
+    let patientDetails = {
+      name: localStorage.getItem("patientName") || order.patientName || "Patient",
+      phone: localStorage.getItem("patientPhone") || "",
+      email: localStorage.getItem("patientEmail") || "",
+      gender: "Not specified",
+      dateOfBirth: "",
+      nationalId: "",
+      address: ""
+    };
+    
+    if (patientId) {
+      try {
+        const token = getToken();
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        
+        // Try to fetch patient details from clinic API
+        let apiSuccess = false;
+        
+        // Try by identifier first (P-XXXXX format)
+        try {
+          const response = await axios.get(`${BASE_URL}/Patient/by-identifier/${encodeURIComponent(patientId)}`, { headers });
+          if (response.data) {
+            patientDetails = {
+              name: response.data.name || response.data.patientName || `${response.data.firstName || ''} ${response.data.lastName || ''}`.trim() || patientDetails.name,
+              phone: response.data.phone || response.data.patientPhone || patientDetails.phone,
+              email: response.data.email || response.data.patientEmail || patientDetails.email,
+              gender: response.data.gender || response.data.sex || "Not specified",
+              dateOfBirth: response.data.dateOfBirth || response.data.birthDate || "",
+              nationalId: response.data.nationalId || response.data.nationalID || "",
+              address: response.data.address || response.data.patientAddress || ""
+            };
+            apiSuccess = true;
+            console.log('[Redirect] Patient data from by-identifier:', patientDetails);
+          }
+        } catch (err) {
+          console.log('[Redirect] by-identifier failed, trying by-id');
+        }
+        
+        // If that failed, try by numeric ID
+        if (!apiSuccess) {
+          const numericId = patientId.replace('P-', '');
+          try {
+            const response = await axios.get(`${BASE_URL}/Patient/${numericId}`, { headers });
+            if (response.data) {
+              patientDetails = {
+                name: response.data.name || response.data.patientName || `${response.data.firstName || ''} ${response.data.lastName || ''}`.trim() || patientDetails.name,
+                phone: response.data.phone || response.data.patientPhone || patientDetails.phone,
+                email: response.data.email || response.data.patientEmail || patientDetails.email,
+                gender: response.data.gender || response.data.sex || "Not specified",
+                dateOfBirth: response.data.dateOfBirth || response.data.birthDate || "",
+                nationalId: response.data.nationalId || response.data.nationalID || "",
+                address: response.data.address || response.data.patientAddress || ""
+              };
+              apiSuccess = true;
+              console.log('[Redirect] Patient data from by-id:', patientDetails);
+            }
+          } catch (err) {
+            console.log('[Redirect] by-id failed');
+          }
+        }
+        
+        // If still failed, try appointment-info endpoint
+        if (!apiSuccess) {
+          try {
+            const response = await axios.get(`${BASE_URL}/MedicalRecord/appointment-info/${encodeURIComponent(patientId)}`, { headers });
+            if (response.data) {
+              patientDetails = {
+                name: response.data.patientName || patientDetails.name,
+                phone: response.data.phone || patientDetails.phone,
+                email: response.data.email || patientDetails.email,
+                gender: response.data.gender || (response.data.patientGender === 0 ? "Male" : response.data.patientGender === 1 ? "Female" : "Not specified"),
+                dateOfBirth: response.data.patientBirthDate || "",
+                nationalId: response.data.nationalId || "",
+                address: response.data.address || ""
+              };
+              console.log('[Redirect] Patient data from appointment-info:', patientDetails);
+            }
+          } catch (err) {
+            console.log('[Redirect] appointment-info failed');
+          }
+        }
+        
+      } catch (err) {
+        console.warn('[Redirect] Error fetching patient details:', err);
+      }
+    }
+    
+    // Use fetched data with fallbacks to localStorage
+    const finalPatientName = patientDetails.name || localStorage.getItem("patientName") || order.patientName || "Patient";
+    const finalPatientPhone = patientDetails.phone || localStorage.getItem("patientPhone") || "";
+    const finalPatientEmail = patientDetails.email || localStorage.getItem("patientEmail") || "";
+    const finalPatientGender = patientDetails.gender || "Not specified";
+    const finalPatientDOB = patientDetails.dateOfBirth || "";
+    const finalPatientNationalId = patientDetails.nationalId || "";
+    const finalPatientAddress = patientDetails.address || "";
+    
+    console.log('[Redirect] Final patient data:', {
+      name: finalPatientName,
+      phone: finalPatientPhone,
+      email: finalPatientEmail,
+      gender: finalPatientGender,
+      dob: finalPatientDOB,
+      nationalId: finalPatientNationalId,
+      address: finalPatientAddress
+    });
+    
+    // Build redirect URL with doctor order context
+    const baseUrl = import.meta.env.VITE_RADIOLOGY_URL || 'http://localhost:5202';
+    console.log('[Redirect] Base URL:', baseUrl);
+    
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.append('doctorOrder', 'true');
+    params.append('orderId', order.id || 'ORD001');
+    params.append('doctorId', doctorId);
+    params.append('doctorName', doctorName);
+    params.append('doctorSpecialty', doctorSpecialty);
+    params.append('requestedTest', requestedTest);
+    params.append('orderDate', new Date().toISOString().split('T')[0]);
+    params.append('orderNotes', orderNotes);
+    params.append('orderPriority', priority);
+    params.append('patientId', patientId || '');
+    params.append('patientName', finalPatientName);
+    params.append('patientPhone', finalPatientPhone);
+    params.append('patientEmail', finalPatientEmail);
+    params.append('patientGender', finalPatientGender);
+    params.append('patientDateOfBirth', finalPatientDOB);
+    params.append('patientNationalId', finalPatientNationalId);
+    params.append('patientAddress', finalPatientAddress);
+    params.append('fromClinic', 'true');
+    params.append('clinicName', 'Eye Clinic');
+    // Clean back URL without duplicate parameters
+    const cleanBackUrl = `${window.location.origin}/patient/orders`;
+    params.append('clinicBackUrl', cleanBackUrl);
+    
+    const queryString = params.toString();
+    console.log('[Redirect] Query string:', queryString);
+    
+    // IMPORTANT: Use hash routing format
+    const redirectUrl = `${baseUrl}/#/patient/book/appointment?${queryString}`;
+    console.log('[Redirect] Final URL:', redirectUrl);
+    console.log('[Redirect] About to redirect to:', redirectUrl);
+    
+    // Execute redirect
+    window.location.href = redirectUrl;
+    
+  } catch (error) {
+    console.error('[Redirect] ✗ ERROR:', error);
+    console.error('[Redirect] Error stack:', error.stack);
+    alert('Error redirecting to Radiology Center: ' + error.message);
+  }
+};
+
 // ── Order config ──────────────────────────────────────────────────────────────
 
 const ORDER_CONFIG = {
@@ -43,7 +224,6 @@ const ORDER_CONFIG = {
     destination: "Radiology Center",
     destIcon: <LocalHospital fontSize="small" />,
     steps: ["Doctor Request", "Your Decision", "Book Appointment", "Visit Radiology Center"],
-    // Human-readable request message builder
     buildMessage: (data) => {
       const tests = (data?.selectedTests || []).join(", ");
       const priority = data?.priority && data.priority !== "Routine" ? ` (${data.priority})` : "";
@@ -121,12 +301,16 @@ const ClinicalDetails = ({ order }) => {
 
   if (order.orderType === "investigation") return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-      <Typography variant="body2">
-        <strong>Tests Requested:</strong>{" "}
-        {(data?.selectedTests || []).map((t, i) => (
-          <Chip key={i} label={t} size="small" sx={{ mr: 0.5, mb: 0.5 }} />
-        ))}
-      </Typography>
+      <Box>
+        <Typography variant="body2" component="span">
+          <strong>Tests Requested:</strong>{" "}
+        </Typography>
+        <Box sx={{ display: "inline-flex", flexWrap: "wrap", gap: 0.5, mt: 0.5 }}>
+          {(data?.selectedTests || []).map((t, i) => (
+            <Chip key={i} label={t} size="small" sx={{ mr: 0.5, mb: 0.5 }} />
+          ))}
+        </Box>
+      </Box>
       <Typography variant="body2" component="div"><strong>Priority:</strong> {data?.priority || "Routine"}</Typography>
       {data?.notes && <Typography variant="body2" component="div"><strong>Clinical Notes:</strong> {data.notes}</Typography>}
     </Box>
@@ -493,7 +677,17 @@ const PatientOrderCard = ({ order, onUpdated }) => {
               <Button
                 variant="contained" size="small"
                 startIcon={<CalendarMonth />}
-                onClick={() => setBookOpen(true)}
+                onClick={async () => {
+                  console.log('[BUTTON CLICK] Order object:', order);
+                  console.log('[BUTTON CLICK] Order.orderType:', order.orderType);
+                  if (order.orderType === "investigation") {
+                    console.log('[BUTTON CLICK] ✓ Calling redirectToRadiology');
+                    await redirectToRadiology(order);
+                  } else {
+                    console.log('[BUTTON CLICK] ✗ Not investigation, opening book dialog');
+                    setBookOpen(true);
+                  }
+                }}
                 sx={{ bgcolor: cfg.color, "&:hover": { filter: "brightness(0.9)" }, borderRadius: 2, fontWeight: 700, px: 3 }}
               >
                 {cfg.actionLabel}
@@ -629,15 +823,8 @@ const PatientOrdersPage = () => {
   }, []);
 
   useEffect(() => {
-    // Refetch orders whenever these change
-    const patientId = getPatientId();
-    const email = localStorage.getItem("userEmail") || localStorage.getItem("patientEmail");
-    
     fetchOrders();
-    
-    // Set up periodic refresh every 60 seconds
     const refreshInterval = setInterval(() => fetchOrders(), 60000);
-    
     return () => clearInterval(refreshInterval);
   }, [fetchOrders]);
 

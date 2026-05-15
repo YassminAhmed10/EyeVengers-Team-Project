@@ -60,7 +60,7 @@ function AllProject() {
 
         <Route path="/appointments" element={<AppointmentsPage />} />
 
-        {/* Patient Routes */}
+        {/* Patient Routes - All using PatientLayout wrapper if needed */}
         <Route path="/patient" element={<PatientHomepage />} />
         <Route path="/patient/radiology-redirect" element={<RadiologyRedirectPage />} />
         <Route path="/patient/pharmacy" element={<PatientPharmacyPage />} />
