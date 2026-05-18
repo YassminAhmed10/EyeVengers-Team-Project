@@ -69,8 +69,8 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
             var record = await FindMedicalRecordByPatientKey(patientId);
             return Ok(new
             {
-                exists            = record != null,
-                recordId          = record?.Id,
+                exists = record != null,
+                recordId = record?.Id,
                 patientIdentifier = record?.PatientIdentifier,
             });
         }
@@ -84,43 +84,11 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
                 if (string.IsNullOrWhiteSpace(patientId))
                     return BadRequest(new { message = "Patient ID is required" });
 
+                _logger.LogInformation("[GetAppointmentInfo] Fetching data for patientId: {PatientId}", patientId);
+
                 var numericId = ExtractNumericId(patientId);
-                Patient? patient = null;
-
-                if (!string.IsNullOrEmpty(numericId))
-                    patient = await _context.Patients.FirstOrDefaultAsync(p => p.Id.ToString() == numericId);
-                if (patient == null)
-                    patient = await _context.Patients.FirstOrDefaultAsync(p => p.Id.ToString() == patientId);
-
-                if (patient != null)
-                {
-                    var mr = await _context.MedicalRecords
-                        .Where(m => m.PatientId == patient.Id)
-                        .OrderByDescending(m => m.CreatedAt)
-                        .FirstOrDefaultAsync();
-
-                    return Ok(new
-                    {
-                        patientId              = patient.Id,
-                        patientIdentifier      = mr?.PatientIdentifier,
-                        medicalRecordId        = mr?.Id,
-                        name                   = $"{patient.FirstName} {patient.LastName}".Trim(),
-                        firstName              = patient.FirstName,
-                        lastName               = patient.LastName,
-                        email                  = patient.Email,
-                        phone                  = patient.Phone,
-                        address                = patient.Address,
-                        gender                 = patient.Gender,
-                        birthDate              = patient.DateOfBirth,
-                        age                    = CalcAge(patient.DateOfBirth),
-                        nationalId             = patient.NationalId,
-                        insuranceCompany       = patient.InsuranceCompany,
-                        insuranceId            = patient.InsuranceId,
-                        emergencyContactName   = patient.EmergencyContactName,
-                        emergencyContactPhone  = patient.EmergencyContactPhone,
-                    });
-                }
-
+                
+                // ✅ First, try to find appointment with the given patientId
                 var appointment = await _context.Appointments
                     .Where(a => a.PatientId == patientId || a.PatientId == numericId)
                     .OrderByDescending(a => a.AppointmentDate)
@@ -128,42 +96,176 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
 
                 if (appointment != null)
                 {
+                    _logger.LogInformation("[GetAppointmentInfo] Found appointment: PatientId={PatientId}, PatientName={PatientName}", 
+                        appointment.PatientId, appointment.PatientName);
+                    _logger.LogInformation("[GetAppointmentInfo] Gender={Gender}, NationalId={NationalId}, Address={Address}", 
+                        appointment.PatientGender, appointment.NationalId, appointment.Address);
+
+                    var genderStr = appointment.PatientGender == PatientGender.Male ? "Male" 
+                                  : appointment.PatientGender == PatientGender.Female ? "Female" 
+                                  : "";
+
+                    // ✅ Return ALL fields from appointment
                     return Ok(new
                     {
-                        patientId              = appointment.PatientId,
-                        patientIdentifier      = appointment.PatientId,
-                        medicalRecordId        = (int?)null,
-                        name                   = appointment.PatientName,
-                        email                  = appointment.Email,
-                        phone                  = appointment.Phone,
-                        address                = appointment.Address,
-                        gender                 = appointment.PatientGender == PatientGender.Male ? "Male" : appointment.PatientGender == PatientGender.Female ? "Female" : "",
-                        birthDate              = appointment.PatientBirthDate,
-                        age                    = CalcAge(appointment.PatientBirthDate),
-                        nationalId             = appointment.NationalId,
-                        emergencyContactName   = appointment.EmergencyContactName,
-                        emergencyContactPhone  = appointment.EmergencyContactPhone,
-                        // Insurance Info
-                        insuranceCompany       = appointment.InsuranceCompany,
-                        insuranceId            = appointment.InsuranceId,
-                        policyNumber           = appointment.PolicyNumber,
-                        coverage               = appointment.Coverage,
-                        coverageType           = appointment.CoverageType,
-                        insuranceExpiryDate    = appointment.InsuranceExpiryDate,
-                        insuranceContact       = appointment.InsuranceContact,
-                        // Appointment Info
-                        reasonForVisit         = appointment.ReasonForVisit,
-                        appointmentDate        = appointment.AppointmentDate,
-                        appointmentTime        = appointment.AppointmentTime,
-                        finalPrice             = appointment.FinalPrice
+                        // Patient Identification
+                        patientId = appointment.PatientId,
+                        patientName = appointment.PatientName ?? "",
+                        patientIdentifier = appointment.PatientId,
+                        firstName = appointment.PatientName?.Split(' ').FirstOrDefault() ?? "",
+                        lastName = appointment.PatientName?.Split(' ').Skip(1).FirstOrDefault() ?? "",
+                        
+                        // ✅ Demographics - المطلوبة
+                        patientGender = (int)appointment.PatientGender,
+                        gender = genderStr,
+                        patientBirthDate = appointment.PatientBirthDate,
+                        birthDate = appointment.PatientBirthDate,
+                        age = appointment.Age,
+                        
+                        // ✅ National ID
+                        nationalId = appointment.NationalId ?? "",
+                        
+                        // Contact Information
+                        phone = appointment.Phone ?? "",
+                        email = appointment.Email ?? "",
+                        
+                        // ✅ Address
+                        address = appointment.Address ?? "",
+                        
+                        // Insurance Information
+                        insuranceCompany = appointment.InsuranceCompany ?? "",
+                        insuranceId = appointment.InsuranceId ?? "",
+                        policyNumber = appointment.PolicyNumber ?? "",
+                        coverage = appointment.Coverage ?? "",
+                        coverageType = appointment.CoverageType ?? "",
+                        insuranceExpiryDate = appointment.InsuranceExpiryDate,
+                        insuranceContact = appointment.InsuranceContact ?? "",
+                        
+                        // Emergency Contacts
+                        emergencyContactName = appointment.EmergencyContactName ?? "",
+                        emergencyContactPhone = appointment.EmergencyContactPhone ?? "",
+                        
+                        // Payment Information
+                        paymentMethod = appointment.PaymentMethod ?? "",
+                        paymentStatus = appointment.PaymentStatus ?? "",
+                        finalPrice = appointment.FinalPrice,
+                        
+                        // Medical History
+                        chronicDiseases = appointment.ChronicDiseases ?? "",
+                        currentMedications = appointment.CurrentMedications ?? "",
+                        otherAllergies = appointment.OtherAllergies ?? "",
+                        visionSymptoms = appointment.VisionSymptoms ?? "",
+                        familyEyeDiseases = appointment.FamilyEyeDiseases ?? "",
+                        otherFamilyDiseases = appointment.OtherFamilyDiseases ?? "",
+                        eyeAllergies = appointment.EyeAllergies ?? "",
+                        eyeSurgeries = appointment.EyeSurgeries ?? "",
+                        otherEyeSurgeries = appointment.OtherEyeSurgeries ?? "",
+                        
+                        // Appointment Details
+                        appointmentDate = appointment.AppointmentDate,
+                        appointmentTime = appointment.AppointmentTime.ToString(),
+                        reasonForVisit = appointment.ReasonForVisit ?? "",
+                        notes = appointment.Notes ?? "",
+                        isSurgery = appointment.IsSurgery,
+                        appointmentType = appointment.AppointmentType,
+                        durationMinutes = appointment.DurationMinutes,
+                        status = (int)appointment.Status,
+                        
+                        // Timestamps
+                        createdAt = appointment.CreatedAt,
+                        updatedAt = appointment.UpdatedAt
                     });
                 }
 
-                return NotFound(new { message = "Patient information not found" });
+                // ✅ If no appointment found, try to find patient in Patients table
+                Patient? patient = null;
+                if (!string.IsNullOrEmpty(numericId) && int.TryParse(numericId, out var numId))
+                {
+                    patient = await _context.Patients.FirstOrDefaultAsync(p => p.Id == numId);
+                    if (patient != null)
+                        _logger.LogInformation("[GetAppointmentInfo] Found Patient by numeric ID {NumId}", numId);
+                }
+
+                // Try to find patient by PatientIdentifier
+                if (patient == null)
+                {
+                    patient = await _context.Patients.FirstOrDefaultAsync(p => p.PatientIdentifier == patientId);
+                    if (patient != null)
+                        _logger.LogInformation("[GetAppointmentInfo] Found Patient by PatientIdentifier {PatientId}", patientId);
+                }
+
+                if (patient != null)
+                {
+                    _logger.LogInformation("[GetAppointmentInfo] Returning data from Patients table. Gender={Gender}, NationalId={NationalId}, Address={Address}",
+                        patient.Gender, patient.NationalId, patient.Address);
+
+                    var mr = await _context.MedicalRecords
+                        .Where(m => m.PatientId == patient.Id)
+                        .OrderByDescending(m => m.CreatedAt)
+                        .FirstOrDefaultAsync();
+
+                    return Ok(new
+                    {
+                        patientId = patient.Id.ToString(),
+                        patientName = $"{patient.FirstName} {patient.LastName}".Trim(),
+                        patientIdentifier = mr?.PatientIdentifier ?? patient.PatientIdentifier ?? patientId,
+                        firstName = patient.FirstName,
+                        lastName = patient.LastName,
+                        medicalRecordId = mr?.Id ?? (int?)null,
+                        
+                        // Demographics
+                        gender = patient.Gender ?? "",
+                        
+                        patientGender = patient.Gender == "Male" ? 0
+    :                   patient.Gender == "Female" ? 1
+    :                    (int?)null,
+                        birthDate = patient.DateOfBirth != default ? (DateTime?)patient.DateOfBirth : null,
+                        age = CalcAge(patient.DateOfBirth),
+                        nationalId = patient.NationalId ?? "",
+                        
+                        // Contact Information
+                        phone = patient.Phone ?? "",
+                        email = patient.Email ?? "",
+                        address = patient.Address ?? "",
+                        
+                        // Insurance Information
+                        insuranceCompany = patient.InsuranceCompany ?? "",
+                        insuranceId = patient.InsuranceId ?? "",
+                        policyNumber = "",
+                        coverage = "",
+                        coverageType = "",
+                        insuranceExpiryDate = (DateTime?)null,
+                        insuranceContact = "",
+                        
+                        // Emergency Contacts
+                        emergencyContactName = patient.EmergencyContactName ?? "",
+                        emergencyContactPhone = patient.EmergencyContactPhone ?? "",
+                        
+                        // Medical History (empty for patient table)
+                        chronicDiseases = "",
+                        currentMedications = "",
+                        otherAllergies = "",
+                        visionSymptoms = "",
+                        familyEyeDiseases = "",
+                        otherFamilyDiseases = "",
+                        eyeAllergies = "",
+                        eyeSurgeries = "",
+                        otherEyeSurgeries = "",
+                        
+                        // Appointment Details (empty)
+                        reasonForVisit = "",
+                        appointmentDate = (DateTime?)null,
+                        appointmentTime = "",
+                        finalPrice = (decimal?)null
+                    });
+                }
+
+                _logger.LogWarning("[GetAppointmentInfo] No patient or appointment found for patientId: {PatientId}", patientId);
+                return NotFound(new { message = "Patient information not found", patientId = patientId });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting appointment info for patient {PatientId}", patientId);
+                _logger.LogError(ex, "Error getting appointment info for patient {PatientId}: {Message}", patientId, ex.Message);
                 return StatusCode(500, new { message = "Error retrieving appointment information", error = ex.Message });
             }
         }
@@ -244,7 +346,10 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
                 return CreatedAtAction(nameof(GetMedicalRecordById), new { id = record.Id }, new
                 {
                     message = "Medical record created successfully",
-                    id = record.Id, success = true, recordId = record.Id, patientIdentifier = record.PatientIdentifier
+                    id = record.Id,
+                    success = true,
+                    recordId = record.Id,
+                    patientIdentifier = record.PatientIdentifier
                 });
             }
             catch (Exception ex)
@@ -304,21 +409,70 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
 
         private async Task<MedicalRecordDto> MapToDto(MedicalRecord record)
         {
-            var complaints       = await _context.PatientComplaints.Where(c => c.MedicalRecordId == record.Id && !c.IsArchived).OrderByDescending(c => c.CreatedAt).ToListAsync();
-            var histories        = await _context.MedicalHistories.Where(h => h.MedicalRecordId == record.Id && !h.IsArchived).OrderByDescending(h => h.CreatedAt).ToListAsync();
-            var investigations   = await _context.Investigations.Where(i => i.MedicalRecordId == record.Id).OrderByDescending(i => i.CreatedAt).ToListAsync();
-            var eyeExaminations  = await _context.EyeExaminations.Where(e => e.MedicalRecordId == record.Id && !e.IsArchived).OrderByDescending(e => e.CreatedAt).ToListAsync();
-            var operations       = await _context.Operations.Where(o => o.MedicalRecordId == record.Id && !o.IsArchived).OrderByDescending(o => o.CreatedAt).ToListAsync();
-            var medicalTestFiles = await _context.MedicalTestFiles.Where(t => t.MedicalRecordId == record.Id).ToListAsync();
-            var prescriptions    = await _context.Prescriptions.Include(p => p.Items).Where(p => p.MedicalRecordId == record.Id).OrderByDescending(p => p.CreatedAt).ToListAsync();
-            var diagnoses        = await _context.Diagnoses.Where(d => d.MedicalRecordId == record.Id).OrderByDescending(d => d.CreatedAt).ToListAsync();
+            var complaints = await _context.PatientComplaints
+                .Where(c => c.MedicalRecordId == record.Id && !c.IsArchived)
+                .OrderByDescending(c => c.CreatedAt)
+                .ToListAsync();
+                
+            var histories = await _context.MedicalHistories
+                .Where(h => h.MedicalRecordId == record.Id && !h.IsArchived)
+                .OrderByDescending(h => h.CreatedAt)
+                .ToListAsync();
+                
+            var investigations = await _context.Investigations
+                .Where(i => i.MedicalRecordId == record.Id)
+                .OrderByDescending(i => i.CreatedAt)
+                .ToListAsync();
+                
+            // Use a projection with known-safe columns so old DB schemas can still read records.
+            var eyeExaminations = await _context.EyeExaminations
+                .Where(e => e.MedicalRecordId == record.Id && !e.IsArchived)
+                .OrderByDescending(e => e.CreatedAt)
+                .Select(e => new
+                {
+                    e.Id,
+                    e.MedicalRecordId,
+                    e.RightEye,
+                    e.LeftEye,
+                    e.EyePressure,
+                    e.PupilReaction,
+                    e.PupilReactionOther,
+                    e.EyeAlignment,
+                    e.EyeAlignmentOther,
+                    e.EyeMovements,
+                    e.EyeMovementsOther,
+                    e.AnteriorSegment,
+                    e.FundusObservation,
+                    e.OtherNotes,
+                    e.CreatedAt
+                })
+                .ToListAsync();
+                
+            var operations = await _context.Operations
+                .Where(o => o.MedicalRecordId == record.Id && !o.IsArchived)
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync();
+                
+            var medicalTestFiles = await _context.MedicalTestFiles
+                .Where(t => t.MedicalRecordId == record.Id)
+                .ToListAsync();
+                
+            var prescriptions = await _context.Prescriptions
+                .Include(p => p.Items)
+                .Where(p => p.MedicalRecordId == record.Id)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+                
+            var diagnoses = await _context.Diagnoses
+                .Where(d => d.MedicalRecordId == record.Id)
+                .OrderByDescending(d => d.CreatedAt)
+                .ToListAsync();
 
             // ── Patient info: Patients table → Appointments fallback ──────────
             Patient? patient = null;
             if (record.PatientId.HasValue)
                 patient = await _context.Patients.FindAsync(record.PatientId.Value);
 
-            // Also try by PatientIdentifier → Patients.PatientIdentifier
             if (patient == null && !string.IsNullOrEmpty(record.PatientIdentifier))
                 patient = await _context.Patients
                     .FirstOrDefaultAsync(p => p.PatientIdentifier == record.PatientIdentifier);
@@ -346,30 +500,42 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
                 ? patient.Address
                 : appointment?.Address;
 
-            string? emergencyName  = patient?.EmergencyContactName  ?? appointment?.EmergencyContactName;
+            string? nationalId = !string.IsNullOrEmpty(patient?.NationalId)
+                ? patient.NationalId
+                : appointment?.NationalId;
+
+            string? insuranceCompany = !string.IsNullOrEmpty(patient?.InsuranceCompany)
+                ? patient.InsuranceCompany
+                : appointment?.InsuranceCompany;
+
+            string? insuranceId = !string.IsNullOrEmpty(patient?.InsuranceId)
+                ? patient.InsuranceId
+                : appointment?.InsuranceId;
+
+            string? emergencyName = patient?.EmergencyContactName ?? appointment?.EmergencyContactName;
             string? emergencyPhone = patient?.EmergencyContactPhone ?? appointment?.EmergencyContactPhone;
 
             return new MedicalRecordDto
             {
-                Id                = record.Id,
-                PatientId         = record.PatientId,
+                Id = record.Id,
+                PatientId = record.PatientId,
                 PatientIdentifier = record.PatientIdentifier,
-                CreatedAt         = record.CreatedAt,
-                UpdatedAt         = record.UpdatedAt ?? DateTime.Now,
+                CreatedAt = record.CreatedAt,
+                UpdatedAt = record.UpdatedAt ?? DateTime.Now,
 
-                Name                  = patient != null ? $"{patient.FirstName} {patient.LastName}".Trim() : appointment?.PatientName ?? "",
-                Age                   = age,
-                Gender                = gender,
-                ContactNumber         = patient?.Phone ?? appointment?.Phone,
-                Email                 = patient?.Email ?? appointment?.Email,
-                Address               = address,
-                BirthDate             = birthDate,
-                NationalId            = patient?.NationalId ?? appointment?.NationalId,
-                InsuranceCompany      = patient?.InsuranceCompany ?? appointment?.InsuranceCompany,
-                InsuranceId           = patient?.InsuranceId ?? appointment?.InsuranceId,
-                PolicyNumber          = appointment?.PolicyNumber,
-                Coverage              = appointment?.Coverage,
-                EmergencyContactName  = emergencyName,
+                Name = patient != null ? $"{patient.FirstName} {patient.LastName}".Trim() : appointment?.PatientName ?? "",
+                Age = age,
+                Gender = gender,
+                ContactNumber = patient?.Phone ?? appointment?.Phone,
+                Email = patient?.Email ?? appointment?.Email,
+                Address = address,
+                BirthDate = birthDate,
+                NationalId = nationalId,
+                InsuranceCompany = insuranceCompany,
+                InsuranceId = insuranceId,
+                PolicyNumber = appointment?.PolicyNumber,
+                Coverage = appointment?.Coverage,
+                EmergencyContactName = emergencyName,
                 EmergencyContactPhone = emergencyPhone,
                 VisitDate = record.VisitDate != default
                     ? record.VisitDate.ToString("yyyy-MM-dd")
@@ -377,72 +543,115 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
 
                 // ── Medical data — full mapping with all fields ───────────────
                 Complaints = complaints.Select(c => (object)new {
-                    id = c.Id, complaint = c.OriginalText ?? c.Complaint ?? "",
-                    originalText = c.OriginalText, translatedText = c.TranslatedText,
+                    id = c.Id,
+                    complaint = c.OriginalText ?? c.Complaint ?? "",
+                    originalText = c.OriginalText,
+                    translatedText = c.TranslatedText,
                     createdAt = c.CreatedAt
                 }).ToList(),
 
                 Histories = histories.Select(h => (object)new {
-                    id = h.Id, previousEye = h.PreviousEye, familyHistory = h.FamilyHistory,
-                    allergies = h.Allergies, chronicDiseases = h.ChronicDiseases,
-                    currentMedications = h.CurrentMedications, eyeSurgeries = h.EyeSurgeries,
-                    familyEyeDiseases = h.FamilyEyeDiseases, visionSymptoms = h.VisionSymptoms,
-                    pastMedicalHistory = h.PreviousEye, createdAt = h.CreatedAt
+                    id = h.Id,
+                    previousEye = h.PreviousEye,
+                    familyHistory = h.FamilyHistory,
+                    allergies = h.Allergies,
+                    chronicDiseases = h.ChronicDiseases,
+                    currentMedications = h.CurrentMedications,
+                    eyeSurgeries = h.EyeSurgeries,
+                    familyEyeDiseases = h.FamilyEyeDiseases,
+                    visionSymptoms = h.VisionSymptoms,
+                    pastMedicalHistory = h.PreviousEye,
+                    createdAt = h.CreatedAt
                 }).ToList(),
 
                 Investigations = investigations.Select(i => (object)new {
-                    id = i.Id, medicalRecordId = i.MedicalRecordId,
+                    id = i.Id,
+                    medicalRecordId = i.MedicalRecordId,
                     selectedInvestigations = i.SelectedInvestigations,
-                    notes = i.Notes, result = i.Result ?? "",
-                    createdAt = i.CreatedAt, updatedAt = i.UpdatedAt
+                    notes = i.Notes,
+                    result = i.Result ?? "",
+                    createdAt = i.CreatedAt,
+                    updatedAt = i.UpdatedAt
                 }).ToList(),
 
                 EyeExaminations = eyeExaminations.Select(e => (object)new {
-                    id = e.Id, medicalRecordId = e.MedicalRecordId,
-                    rightEye = e.RightEye, leftEye = e.LeftEye,
-                    eyePressure = e.EyePressure, pupilReaction = e.PupilReaction,
+                    id = e.Id,
+                    medicalRecordId = e.MedicalRecordId,
+                    rightEye = e.RightEye,
+                    leftEye = e.LeftEye,
+                    eyePressure = e.EyePressure,
+                    odSph = "",
+                    odCyl = "",
+                    odAxis = "",
+                    odAdd = "",
+                    osSph = "",
+                    osCyl = "",
+                    osAxis = "",
+                    osAdd = "",
+                    pd = "",
+                    pupilReaction = e.PupilReaction,
                     pupilReactionOther = e.PupilReactionOther,
-                    eyeAlignment = e.EyeAlignment, eyeAlignmentOther = e.EyeAlignmentOther,
-                    eyeMovements = e.EyeMovements, eyeMovementsOther = e.EyeMovementsOther,
-                    anteriorSegment = e.AnteriorSegment, fundusObservation = e.FundusObservation,
-                    posteriorSegment = e.PosteriorSegment ?? "",
-                    visualAcuity = e.VisualAcuity ?? "",
-                    otherNotes = e.OtherNotes, createdAt = e.CreatedAt
+                    eyeAlignment = e.EyeAlignment,
+                    eyeAlignmentOther = e.EyeAlignmentOther,
+                    eyeMovements = e.EyeMovements,
+                    eyeMovementsOther = e.EyeMovementsOther,
+                    anteriorSegment = e.AnteriorSegment,
+                    fundusObservation = e.FundusObservation,
+                    posteriorSegment = "",
+                    visualAcuity = "",
+                    otherNotes = e.OtherNotes,
+                    createdAt = e.CreatedAt
                 }).ToList(),
 
                 Operations = operations.Select(o => (object)new {
-                    id = o.Id, name = o.Name ?? o.OperationName,
+                    id = o.Id,
+                    name = o.Name ?? o.OperationName,
                     operationName = o.OperationName ?? o.Name,
-                    date = o.Date, eye = o.Eye ?? "",
-                    surgeon = o.Surgeon ?? "", anesthesia = o.Anesthesia ?? "",
-                    status = o.Status ?? "", complications = o.Complications ?? "",
+                    date = o.Date,
+                    eye = o.Eye ?? "",
+                    surgeon = o.Surgeon ?? "",
+                    anesthesia = o.Anesthesia ?? "",
+                    status = o.Status ?? "",
+                    complications = o.Complications ?? "",
                     notes = o.Notes ?? o.SpecialInstructions ?? "",
                     createdAt = o.CreatedAt
                 }).ToList(),
 
                 MedicalTestFiles = medicalTestFiles.Select(t => (object)new {
-                    id = t.Id, fileName = t.FileName, fileUrl = t.FileUrl,
-                    filePath = t.FilePath ?? "", createdAt = t.CreatedAt
+                    id = t.Id,
+                    fileName = t.FileName,
+                    fileUrl = t.FileUrl,
+                    filePath = t.FilePath ?? "",
+                    createdAt = t.CreatedAt
                 }).ToList(),
 
                 Prescriptions = prescriptions.Select(p => (object)new {
-                    id = p.Id, notes = p.Notes, createdAt = p.CreatedAt,
+                    id = p.Id,
+                    notes = p.Notes,
+                    createdAt = p.CreatedAt,
                     items = p.Items != null
                         ? p.Items.Select(item => (object)new {
-                            drug = item.Drug, form = item.Form,
-                            dose = item.Dose, customDose = item.CustomDose ?? "",
-                            frequency = item.Frequency, customFrequency = item.CustomFrequency ?? "",
-                            duration = item.Duration ?? "", notes = item.Notes
-                          }).ToList()
+                            drug = item.Drug,
+                            form = item.Form,
+                            dose = item.Dose,
+                            customDose = item.CustomDose ?? "",
+                            frequency = item.Frequency,
+                            customFrequency = item.CustomFrequency ?? "",
+                            duration = item.Duration ?? "",
+                            notes = item.Notes
+                        }).ToList()
                         : new List<object>()
                 }).ToList(),
 
                 Diagnoses = diagnoses.Select(d => (object)new {
-                    id = d.Id, diagnosisName = d.DiagnosisName,
+                    id = d.Id,
+                    diagnosisName = d.DiagnosisName,
                     diagnosis = d.DiagnosisName,
                     icd10Code = d.ICD10Code ?? "",
-                    severity = d.Severity, status = d.Status ?? "",
-                    notes = d.Notes ?? "", checkupDate = d.CheckupDate,
+                    severity = d.Severity,
+                    status = d.Status ?? "",
+                    notes = d.Notes ?? "",
+                    checkupDate = d.CheckupDate,
                     createdAt = d.CreatedAt
                 }).ToList(),
             };
@@ -451,11 +660,17 @@ namespace EyeClinicAPI.Modules.ClinicSystem.Controllers
 
     public class CreateMedicalRecordRequest
     {
-        [JsonPropertyName("patientId")]         public string? PatientId { get; set; }
-        [JsonPropertyName("patientIdentifier")]  public string? PatientIdentifier { get; set; }
+        [JsonPropertyName("patientId")] 
+        public string? PatientId { get; set; }
+        
+        [JsonPropertyName("patientIdentifier")] 
+        public string? PatientIdentifier { get; set; }
     }
 
-    public class CreateMedicalRecordForPatientRequest { public string PatientId { get; set; } = ""; }
+    public class CreateMedicalRecordForPatientRequest 
+    { 
+        public string PatientId { get; set; } = ""; 
+    }
 
     public class MedicalRecordDto
     {

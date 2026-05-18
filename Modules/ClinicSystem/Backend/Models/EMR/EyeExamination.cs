@@ -15,6 +15,15 @@ namespace EyeClinicAPI.Models.EMR
         public string? VisualAcuity { get; set; }
         public string? IntraocularPressure { get; set; }
         public string? EyePressure { get; set; }
+        public string? ODSph { get; set; }
+        public string? ODCyl { get; set; }
+        public string? ODAxis { get; set; }
+        public string? ODAdd { get; set; }
+        public string? OSSph { get; set; }
+        public string? OSCyl { get; set; }
+        public string? OSAxis { get; set; }
+        public string? OSAdd { get; set; }
+        public string? PD { get; set; }
         public string? PupilReaction { get; set; }
         public string? PupilReactionOther { get; set; }
         public string? AnteriorSegment { get; set; }

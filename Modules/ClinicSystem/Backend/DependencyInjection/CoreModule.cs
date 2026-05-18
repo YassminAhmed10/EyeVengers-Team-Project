@@ -74,8 +74,13 @@ public static class CoreModule
             app.UseDeveloperExceptionPage();
         }
 
-        app.UseHttpsRedirection();
         app.UseCors("AllowReactApp");
+        
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseHttpsRedirection();
+        }
+        
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();

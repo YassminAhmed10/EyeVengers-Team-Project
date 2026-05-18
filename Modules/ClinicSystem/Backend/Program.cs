@@ -40,7 +40,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<EyeClinicDbContext>();
-        // DbInitializer.Initialize(context);
+        await DevelopmentDatabaseSeeder.SeedAsync(context);
     }
     catch (Exception ex)
     {

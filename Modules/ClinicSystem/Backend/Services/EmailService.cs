@@ -22,20 +22,37 @@ namespace EyeClinicAPI.Services
             _logger = logger;
         }
 
+        private (string? FromEmail, string? FromName, string? Host, int Port, string? Username, string? Password) GetSmtpSettings()
+        {
+            var emailSection = _configuration.GetSection("Email");
+            var smtpSection = _configuration.GetSection("SmtpSettings");
+
+            var fromEmail = emailSection["From"] ?? smtpSection["FromEmail"];
+            var fromName = smtpSection["FromName"] ?? "Eye Clinic";
+            var host = emailSection["SmtpHost"] ?? smtpSection["Host"];
+            var portValue = emailSection["SmtpPort"] ?? smtpSection["Port"];
+            var username = emailSection["Username"] ?? smtpSection["Username"];
+            var password = emailSection["Password"] ?? smtpSection["Password"];
+
+            _ = int.TryParse(portValue, out var port);
+
+            return (fromEmail, fromName, host, port == 0 ? 587 : port, username, password);
+        }
+
         public async Task SendWelcomeEmailAsync(string toEmail, string username)
         {
             try
             {
-                var smtpSettings = _configuration.GetSection("SmtpSettings");
-                var fromEmail = smtpSettings["FromEmail"];
-                var fromName = smtpSettings["FromName"];
-                var smtpHost = smtpSettings["Host"];
-                var smtpPort = int.Parse(smtpSettings["Port"] ?? "587");
-                var smtpUser = smtpSettings["Username"];
-                var smtpPassword = smtpSettings["Password"];
+                var smtpSettings = GetSmtpSettings();
+
+                if (string.IsNullOrWhiteSpace(smtpSettings.FromEmail) || string.IsNullOrWhiteSpace(smtpSettings.Host))
+                {
+                    _logger.LogWarning("Email settings are incomplete. Skipping welcome email for {Email}.", toEmail);
+                    return;
+                }
 
                 var message = new MimeMessage();
-                message.From.Add(new MailboxAddress(fromName, fromEmail));
+                message.From.Add(new MailboxAddress(smtpSettings.FromName, smtpSettings.FromEmail));
                 message.To.Add(new MailboxAddress("", toEmail));
                 message.Subject = "مرحباً بك! Welcome to Dr Mohab Khairy Eye Clinic 🏥";
 
@@ -44,8 +61,8 @@ namespace EyeClinicAPI.Services
 
                 using (var client = new SmtpClient())
                 {
-                    await client.ConnectAsync(smtpHost, smtpPort, SecureSocketOptions.StartTls);
-                    await client.AuthenticateAsync(smtpUser, smtpPassword);
+                    await client.ConnectAsync(smtpSettings.Host, smtpSettings.Port, SecureSocketOptions.StartTls);
+                    await client.AuthenticateAsync(smtpSettings.Username, smtpSettings.Password);
                     await client.SendAsync(message);
                     await client.DisconnectAsync(true);
                 }
@@ -197,16 +214,16 @@ namespace EyeClinicAPI.Services
         {
             try
             {
-                var smtpSettings = _configuration.GetSection("SmtpSettings");
-                var fromEmail = smtpSettings["FromEmail"];
-                var fromName = smtpSettings["FromName"];
-                var smtpHost = smtpSettings["Host"];
-                var smtpPort = int.Parse(smtpSettings["Port"] ?? "587");
-                var smtpUser = smtpSettings["Username"];
-                var smtpPassword = smtpSettings["Password"];
+                var smtpSettings = GetSmtpSettings();
+
+                if (string.IsNullOrWhiteSpace(smtpSettings.FromEmail) || string.IsNullOrWhiteSpace(smtpSettings.Host))
+                {
+                    _logger.LogWarning("Email settings are incomplete. Skipping login email for {Email}.", toEmail);
+                    return;
+                }
 
                 var message = new MimeMessage();
-                message.From.Add(new MailboxAddress(fromName, fromEmail));
+                message.From.Add(new MailboxAddress(smtpSettings.FromName, smtpSettings.FromEmail));
                 message.To.Add(new MailboxAddress("", toEmail));
                 message.Subject = "مرحباً بعودتك! 👋 Welcome Back";
 
@@ -215,8 +232,8 @@ namespace EyeClinicAPI.Services
 
                 using (var client = new SmtpClient())
                 {
-                    await client.ConnectAsync(smtpHost, smtpPort, SecureSocketOptions.StartTls);
-                    await client.AuthenticateAsync(smtpUser, smtpPassword);
+                    await client.ConnectAsync(smtpSettings.Host, smtpSettings.Port, SecureSocketOptions.StartTls);
+                    await client.AuthenticateAsync(smtpSettings.Username, smtpSettings.Password);
                     await client.SendAsync(message);
                     await client.DisconnectAsync(true);
                 }
